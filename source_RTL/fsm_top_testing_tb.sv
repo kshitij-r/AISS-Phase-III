@@ -80,6 +80,7 @@ module fsm_top_testing_tb;
 		// pregenerate the IP ID signatures 
 		ami_ack = 0;
 		ami_out = 0;
+		gpio_in = 0;
 		j = 0;
 		while (j<10) begin
 			for (integer i = 0; i < 16; i = i + 1) begin
@@ -496,7 +497,7 @@ module fsm_top_testing_tb;
 			valid = 1;
 		end 
 		else begin
-			valid = 1; 
+			valid = 0; 
 		end 
 		
 		if (valid == 1) begin 
