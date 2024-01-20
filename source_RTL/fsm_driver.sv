@@ -1310,7 +1310,7 @@ module fsm_driver(
 			end 
 			MEM_FETCH : begin
 				next_RW_initiate = 0;
-				if (counterA_r < 1) begin
+				if (counterA_r < 2) begin
 					if (served == 1) begin 
 						next_counterA = counterA_r + 1;
 						next_ctr_rst = 1;
@@ -1334,6 +1334,7 @@ module fsm_driver(
 					next_mem_address = 'h01;
 					next_RW_initiate = 1;
 					next_state = KEY_WAIT1;
+					next_counterA = 0;
 				end
 			end
 			KEY_WAIT1 : begin
@@ -1354,6 +1355,7 @@ module fsm_driver(
 			OEM_AMI_AUTH : begin
 				if (ami_ack == 'b100) begin
 					next_state = OEM_BOOTED;
+					next_fsm_ami = 0;
 				end 
 				else if (ami_ack == 'b010) begin
 					next_state = ABORT;
