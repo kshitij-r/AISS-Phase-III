@@ -69,6 +69,7 @@ module fsm_top_testing_tb;
 					array[k] = $urandom_range(0,65536);
 					k = k + 1;
 			end 
+			$display("[HOST] IPID %d signature  is: %d ", k, array[k])
 			j = j + 1;
 			//@(posedge clk); 
 		end 
@@ -100,7 +101,7 @@ module fsm_top_testing_tb;
 		// at this point, SENTRY is encryption the Sentry Silicon ID, and the testbench
 		// will wait until SENTRY is ready to extract the IP IDs from TA2 
 		
-		$display("Waiting for TA2 bus wakeup signal...");
+		$display("[HOST] Waiting for TA2 bus wakeup signal...");
 
 		while (gpio_out[2] != 1'b1) begin // wait until bus wakeup
 			@(posedge clk);
@@ -114,19 +115,20 @@ module fsm_top_testing_tb;
 		@(posedge clk);
 		@(posedge clk); 
 		
-		$display("TA2 bus wakeup signal received, sending bus wakeup acknowlegment");
+		$display("[HOST] TA2 bus wakeup signal received, sending bus wakeup acknowlegment...");
 
 		gpio_in[3] = 1; // send bus wakeup acknowledgment 
+		$display("[MCSE] Bus wakeup acknowledgement received...");
 		@(posedge clk);
 		gpio_in[3] = 0; 
 
-		$display("Waiting for IP ID extraction go signal...");
+		$display("[TB_TOP] Waiting for IP ID extraction go signal...");
 		
 		while (gpio_out[4] != 1) begin // SENTRYs go signal for IP ID extraction. Testbench will now send the IP IDs through the gpio_in
 			@(posedge clk); 
 		end 
 	
-		$display("IP ID extraction go signal received, TA2 will start sending IP IDs");
+		$display("[TB_TOP] IP ID extraction go signal received, TA2 will start sending IP IDs...");
 		
 		j=0;
 		k=0;
@@ -157,7 +159,7 @@ module fsm_top_testing_tb;
 			end 
 		//end 
 
-		$display("IP ID Extraction Complete");
+		$display("[MCSE] IP ID extraction complete...");
 		
 
 		//during these clock cycles, SENTRY will hash all IP IDs to create the Composite IP ID and will then encrypt it. 
@@ -167,7 +169,7 @@ module fsm_top_testing_tb;
 		
 			
 		AMI_SentrySiliconID = fsm_ami;
-		$display("Chip ID Registration Received and Registered");
+		$display("Chip ID registration received and registered...");
 		$displayh(fsm_ami);
 		@ (posedge clk);
 		AMI_CompositeIPID = fsm_ami;
