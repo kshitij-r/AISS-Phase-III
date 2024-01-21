@@ -100,6 +100,8 @@ module fsm_top_testing_tb;
 		// at this point, SENTRY is encryption the Sentry Silicon ID, and the testbench
 		// will wait until SENTRY is ready to extract the IP IDs from TA2 
 		
+		$display("Waiting for TA2 bus wakeup signal...");
+
 		while (gpio_out[2] != 1'b1) begin // wait until bus wakeup
 			@(posedge clk);
 			
@@ -112,13 +114,20 @@ module fsm_top_testing_tb;
 		@(posedge clk);
 		@(posedge clk); 
 		
+		$display("TA2 bus wakeup signal received, sending bus wakeup acknowlegment");
+
 		gpio_in[3] = 1; // send bus wakeup acknowledgment 
 		@(posedge clk);
 		gpio_in[3] = 0; 
+
+		$display("Waiting for IP ID extraction go signal...");
 		
 		while (gpio_out[4] != 1) begin // SENTRYs go signal for IP ID extraction. Testbench will now send the IP IDs through the gpio_in
 			@(posedge clk); 
 		end 
+	
+		$display("IP ID extraction go signal received, TA2 will start sending IP IDs");
+		
 		j=0;
 		k=0;
 		//if (gpio_out[3] == 1) begin 
@@ -147,7 +156,10 @@ module fsm_top_testing_tb;
 				//@(posedge clk); 
 			end 
 		//end 
+
+		$display("IP ID Extraction Complete");
 		
+
 		//during these clock cycles, SENTRY will hash all IP IDs to create the Composite IP ID and will then encrypt it. 
 		while(count < 149)
 		begin
@@ -187,15 +199,13 @@ module fsm_top_testing_tb;
 				//$display(fsm_ami);
 				//if (fsm_ami == 'h0) begin
 					AMI_SentrySiliconID = fsm_ami;
-					$display("Sentry Silicon ID");
+					$display("Chip ID Registration Received and Registered");
 					$displayh(fsm_ami);
 					@ (posedge clk);
 					AMI_CompositeIPID = fsm_ami;
-					$display("Composite IP ID");
 					$displayh(fsm_ami);
 					ami_ack = 'b100;
 					ChipIDRegistered = 1;
-					$display("ChipID Registered");
 					@(posedge clk); ami_ack = 'b00; @(posedge clk);	@(posedge clk); @(posedge clk); 	
 					
 				//end
@@ -205,8 +215,8 @@ module fsm_top_testing_tb;
 					firmwareSignature = fsm_ami;
 					firmwareSignatureRegistered = 1;
 					ami_ack = 'b100;
-					$display("Firmware Signature Registered");
-					$displayh(firmwareSignature);
+					$display("Firmware Signature Received and Registered");
+					$displayh(firmwareSignatuEncryptedre);
 					@(posedge clk); ami_ack = 'b000; @(posedge clk);@(posedge clk); @(posedge clk); 
 				end 
 			end 
@@ -215,7 +225,7 @@ module fsm_top_testing_tb;
 					secureCommunicationKey = fsm_ami;
 					secureCommunicationKeyRegistered = 1;
 					ami_ack = 'b100;
-					$display("Secure Communications Key Registered");
+					$display("Secure Communications Key Received and Registered");
 					$displayh(secureCommunicationKey);
 					@(posedge clk); ami_ack = 'b000; @(posedge clk); @(posedge clk); @(posedge clk); 
 				end 
@@ -225,7 +235,7 @@ module fsm_top_testing_tb;
 					JTAGProtectionKey = fsm_ami;
 					JTAGProtectionKeyRegistered = 1;
 					ami_ack = 'b100;
-					$display("JTAG Protection Key Registered");
+					$display("JTAG Protection Key Received and Registered");
 					$displayh(JTAGProtectionKey);
 					@(posedge clk); ami_ack = 'b000; @(posedge clk); @(posedge clk); @(posedge clk); 
 				end 
@@ -235,7 +245,7 @@ module fsm_top_testing_tb;
 					OwnershipAuthenticationKey = fsm_ami;
 					OwnershipAuthenticationKeyRegistered = 1;
 					ami_ack = 'b100;
-					$display("Ownership Authentication Key Registered");
+					$display("Ownership Authentication Key Received and Registered");
 					$displayh(OwnershipAuthenticationKey);
 					@(posedge clk); ami_ack = 'b000; @(posedge clk); @(posedge clk); @(posedge clk); 
 				end 
@@ -245,7 +255,7 @@ module fsm_top_testing_tb;
 					CompositeWatermark = fsm_ami;
 					CompositeWatermarkRegistered = 1;
 					ami_ack = 'b100;
-					$display("Composite Watermark Key Registered");
+					$display("Composite Watermark Key Received and Registered");
 					@(posedge clk); ami_ack = 'b000; @(posedge clk); @(posedge clk); @(posedge clk); 
 				end 
 			end
@@ -254,7 +264,7 @@ module fsm_top_testing_tb;
 					ChipManufacturerID = fsm_ami;
 					ChipManufacturerIDRegistered = 1;
 					ami_ack = 'b100;
-					$display("Chip Manufacturer ID Registered");
+					$display("Chip Manufacturer ID Received and Registered");
 					$displayh(ChipManufacturerID);
 					@(posedge clk); ami_ack = 'b000; @(posedge clk); @(posedge clk); @(posedge clk); 
 				end 
@@ -264,7 +274,7 @@ module fsm_top_testing_tb;
 					SystemIntegratorID = fsm_ami;
 					SystemIntegratorIDRegistered = 1;
 					ami_ack = 'b100;
-					$display("System Integrator ID Registered");
+					$display("System Integrator ID Received and Registered");
 					$displayh(SystemIntegratorID);
 					@(posedge clk); ami_ack = 'b000; @(posedge clk);@(posedge clk); @(posedge clk); 
 				end 
@@ -276,23 +286,25 @@ module fsm_top_testing_tb;
 					//@(posedge clk);
 					ami_ack = 'b100;
 					lifecycleRegistered = 1;
-					$display("Testing Lifecycle Registered");
-					@(posedge clk); ami_ack = 'b000; @(posedge clk); @(posedge clk); @(posedge clk);
+					$display("Testing Lifecycle Received and Registered");
 					$display(AMI_lifecycle);
+					@(posedge clk); ami_ack = 'b000; @(posedge clk); @(posedge clk); @(posedge clk);
+					$display("Lifecycle Transition Request...Servicing"); // happening in next else if 
 				end 
 			end
 			else if (!newLifeCycleRegistered) begin
-				$display("Lifecycle Transition Request Incoming...Servicing");
+				
 				jtag_in = 'b010010;
 				@(posedge clk);
 				if (fsm_ami != 'h0) begin
 					AMI_lifecycle = fsm_ami[2:0];
 					newLifeCycleRegistered = 1;
 					ami_ack = 'b100;
-					
+					$display("Registering new MCSE lifecycle status, transitioned to OEM");
 					@(posedge clk); ami_ack = 'b000; @(posedge clk); @(posedge clk);
 					//$stop;
 					jtag_in = 0;
+					$display("MCSE Restarting Host SoC");
 					break;
 					
 				end 
@@ -302,6 +314,8 @@ module fsm_top_testing_tb;
 		end 
 		count = 0;
 		
+		$display("MCSE Starting Secure Boot During OEM Lifecycle");
+
 		// FSM will then restart and boot into the OEM lifecycle
 		
 		/*
@@ -312,12 +326,18 @@ module fsm_top_testing_tb;
 		successful acknowledgment is received, SENTRY will allow the SoC to boot by using a GPIO Pin.
 		
 		*/
+		
+		$display("Waiting for TA2 bus wakeup signal");
+		
 		//wait until IP ID generation again, same process
 		while (gpio_out[2] != 1'b1) begin // wait until bus wakeup
 			@(posedge clk);
 			//count++;
 		end 
 		
+
+		$display("TA2 bus wakeup signal received, sending bus wakeup acknowlegment");		
+
 		@(posedge clk);
 		@(posedge clk);
 		@(posedge clk);
@@ -328,6 +348,8 @@ module fsm_top_testing_tb;
 		@(posedge clk);
 		gpio_in[3] = 0; 
 		
+		$display("IP ID extraction go signal received, TA2 will start sending IP IDs");
+
 		while (gpio_out[4] != 1) begin // SENTRYs go signal for IP ID extraction. Testbench will now send the IP IDs through the gpio_in
 			@(posedge clk); 
 		end 
@@ -361,13 +383,17 @@ module fsm_top_testing_tb;
 			end 
 		//end 
 		
+		$display("IP ID Extraction Complete");
+		
 		// authentication of chip id and lifecycle state 
 		while (fsm_ami == 0) begin
 			@(posedge clk); 
 		end
 		
+		$display("Starting Chip ID and Lifecycle State Authentication");
+			
 		// These if statements will check if the ChipID stored on the AMI is the same as the one being sent now 
-		$display("Chip ID Authentication");
+		$display("Encrypted Chip ID Received");
 		$displayh(fsm_ami);
 		if (fsm_ami == AMI_SentrySiliconID) begin
 			valid = 1;
@@ -390,7 +416,7 @@ module fsm_top_testing_tb;
 			@(posedge clk); 
 		end 
 		
-		$display("Encrypted Lifecycle State Value"); 
+		$display("Encrypted Lifecycle State Received"); 
 		$displayh(fsm_ami);
 		
 		// This is the value of the encrypted lifecycle state for OEM = 'b010
@@ -411,6 +437,8 @@ module fsm_top_testing_tb;
 			@(posedge clk); ami_ack = 'b000; @(posedge clk); @(posedge clk);
 		end 
 		
+		$display("Authenticating Current Owner ID...");
+
 		while(fsm_ami == 0) begin
 			@(posedge clk);
 		end 
@@ -470,7 +498,7 @@ module fsm_top_testing_tb;
 			@(posedge clk);
 		end 
 		
-		$display("Encrypted System Integrator ID");
+		$display("Encrypted System Integrator ID Received");
 		$displayh(fsm_ami);
 		
 		if (fsm_ami == SystemIntegratorID) begin // Check the System Integrator ID value with the one stored on AMI 
@@ -481,7 +509,7 @@ module fsm_top_testing_tb;
 		end 
 		
 		if (valid == 1) begin 
-			$display("System Integrator ID Authentication Passed"); 
+			$display("System Integrator ID Authentication Passed, Matched Stored Value"); 
 			ami_ack = 'b100;	// authentication for system integrator id
 			@(posedge clk); ami_ack = 'b000; @(posedge clk); @(posedge clk);
 		end 
@@ -495,6 +523,8 @@ module fsm_top_testing_tb;
 			@(posedge clk); 
 		end 
 		
+		$display("MCSE proceeding with normal operation");
+
 		$stop;
 	end
 	
