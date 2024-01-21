@@ -1,0 +1,27 @@
+Running PRESTO HDLC
+Compiling source file ./eop2_fsm_driver.sv
+Opening include file min_security_module.sv
+Opening include file definitions.svh
+Warning:  definitions.svh:4: Parameter keyword used in local parameter declaration. (VER-329)
+Opening include file sha_top.sv
+Opening include file aes_top.sv
+Opening include file gpio.v
+Opening include file gpio_regmap.v
+Warning:  gpio.v:57: port reg_rdata have inconsistent declarations. (VER-151)
+Opening include file aes_256_puf_256.v
+Opening include file c1908.v
+Opening include file gpio_regmap.v
+Opening include file oh_dsync.v
+Opening include file packet2emesh.v
+Opening include file pcm.v
+Warning:  pcm.v:73: The construct 'declaration initial assignment' is not supported in synthesis; it is ignored. (VER-708)
+Warning:  pcm.v:77: The construct 'declaration initial assignment' is not supported in synthesis; it is ignored. (VER-708)
+Opening include file sha256_puf_256.v
+Opening include file primitives.v
+Opening include file io.v
+Warning:  ./eop2_fsm_driver.sv:22: Redeclaration of port 'gpio_out'. (VER-331)
+Warning:  ./eop2_fsm_driver.sv:23: Redeclaration of port 'gpio_en'. (VER-331)
+Warning:  ./eop2_fsm_driver.sv:24: Redeclaration of port 'gpio_irq'. (VER-331)
+Warning:  ./eop2_fsm_driver.sv:25: Redeclaration of port 'gpio_ilat'. (VER-331)
+Presto compilation completed successfully.
+1
