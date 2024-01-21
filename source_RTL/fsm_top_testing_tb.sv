@@ -245,6 +245,7 @@ module fsm_top_testing_tb;
 					CompositeWatermarkRegistered = 1;
 					ami_ack = 'b100;
 					$display("Composite Watermark Key Received and Registered");
+					$displayh(CompositeWatermark);
 					@(posedge clk); ami_ack = 'b000; @(posedge clk); @(posedge clk); @(posedge clk); 
 				end 
 			end
@@ -275,7 +276,7 @@ module fsm_top_testing_tb;
 					//@(posedge clk);
 					ami_ack = 'b100;
 					lifecycleRegistered = 1;
-					$display("Testing Lifecycle Received and Registered");
+					$display("Testing Lifecycle State Received and Registered");
 					$display(AMI_lifecycle);
 					@(posedge clk); ami_ack = 'b000; @(posedge clk); @(posedge clk); @(posedge clk);
 					$display("Lifecycle Transition Request...Servicing"); // happening in next else if 
@@ -290,6 +291,7 @@ module fsm_top_testing_tb;
 					newLifeCycleRegistered = 1;
 					ami_ack = 'b100;
 					$display("Registering new MCSE lifecycle status, transitioned to OEM");
+					$display(AMI_lifecycle);
 					@(posedge clk); ami_ack = 'b000; @(posedge clk); @(posedge clk);
 					//$stop;
 					jtag_in = 0;
