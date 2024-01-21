@@ -161,14 +161,20 @@ module fsm_top_testing_tb;
 		
 
 		//during these clock cycles, SENTRY will hash all IP IDs to create the Composite IP ID and will then encrypt it. 
-		while(count < 149)
-		begin
+		while (fsm_ami == 0) begin
 			@(posedge clk);
-			count++;
 		end 
 		
-		count = 0;
-		
+			
+		AMI_SentrySiliconID = fsm_ami;
+		$display("Chip ID Registration Received and Registered");
+		$displayh(fsm_ami);
+		@ (posedge clk);
+		AMI_CompositeIPID = fsm_ami;
+		$displayh(fsm_ami);
+		ami_ack = 'b100;
+		ChipIDRegistered = 1;
+		@(posedge clk); ami_ack = 'b00; @(posedge clk);	@(posedge clk); @(posedge clk);
 		// The communication protocol with the AMI is not developed. To communicate with the testbench, 
 		// the FSM will use the fsm_ami signal to send data to it. Every sequence will happen in order so that
 		// the testbench knows what is happening. First, the Chip ID will be registered with AMI.
@@ -193,24 +199,7 @@ module fsm_top_testing_tb;
 		// except when SENTRY registers the lifecycle state. Doing all this encryption helps to simplify the FSM. 
 		while (count < 1500) begin
 			
-			
-			
-			if (!ChipIDRegistered) begin
-				//$display(fsm_ami);
-				//if (fsm_ami == 'h0) begin
-					AMI_SentrySiliconID = fsm_ami;
-					$display("Chip ID Registration Received and Registered");
-					$displayh(fsm_ami);
-					@ (posedge clk);
-					AMI_CompositeIPID = fsm_ami;
-					$displayh(fsm_ami);
-					ami_ack = 'b100;
-					ChipIDRegistered = 1;
-					@(posedge clk); ami_ack = 'b00; @(posedge clk);	@(posedge clk); @(posedge clk); 	
-					
-				//end
-			end
-			else if (!firmwareSignatureRegistered) begin
+			if (!firmwareSignatureRegistered) begin
 				if (fsm_ami != 'h0) begin
 					firmwareSignature = fsm_ami;
 					firmwareSignatureRegistered = 1;
