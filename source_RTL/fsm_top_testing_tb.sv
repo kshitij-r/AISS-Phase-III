@@ -216,7 +216,7 @@ module fsm_top_testing_tb;
 					firmwareSignatureRegistered = 1;
 					ami_ack = 'b100;
 					$display("Firmware Signature Received and Registered");
-					$displayh(firmwareSignatuEncryptedre);
+					$displayh(firmwareSignature);
 					@(posedge clk); ami_ack = 'b000; @(posedge clk);@(posedge clk); @(posedge clk); 
 				end 
 			end 
