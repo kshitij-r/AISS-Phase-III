@@ -644,8 +644,13 @@ module fsm_top_testing_tb;
         
         $display("[TB_TOP] Proceeding with normal operation...");
 
+
+        
         $finish();
     end
-    
+    initial begin
+        $dumpfile("MCSE.vcd");
+        $dumpvars;
+    end
     
 endmodule
