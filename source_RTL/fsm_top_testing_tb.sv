@@ -121,14 +121,10 @@ module fsm_top_testing_tb;
         @(posedge clk);
         @(posedge clk); 
         
-	// WAVEFORM MARKER 1 ////////////////
         $display("[TB_TOP] TA2 bus wakeup signal received, sending bus wakeup acknowlegment...");
 
         gpio_in[3] = 1; // send bus wakeup acknowledgment 
-		
-	// WAVEFORM MARKER 2 ////////////////
         $display("[MCSE] Bus wakeup acknowledgement received...");
-	
         @(posedge clk);
         gpio_in[3] = 0; 
 
@@ -136,8 +132,7 @@ module fsm_top_testing_tb;
             @(posedge clk); 
             $display("[TB_TOP] Waiting for HOST IPID extraction go signal...");
         end 
-    	
-	// WAVEFORM MARKER 3 ///////////////
+    
         $display("[TB_TOP] IPID extraction go signal received, TB_TOP sending IPIDs...");
         
         j=0;
@@ -316,7 +311,6 @@ module fsm_top_testing_tb;
                     @(posedge clk); ami_ack = 'b000; @(posedge clk); @(posedge clk);
                     //$stop;
                     jtag_in = 0;
-		    // WAVEFORM MARKER 4 ////////////
                     $display("[MCSE] Restarting...");
                     break;
                     
@@ -587,8 +581,7 @@ module fsm_top_testing_tb;
             ami_ack = 'b010;    
             @(posedge clk); ami_ack = 'b000; @(posedge clk); @(posedge clk);
         end 
-
-        // WAVEFORM MARKER 5 //////////////
+        
         $display("[MCSE] Secure Boot Complete. Relinquishing control to HOST SoC to boot...");
         
         for (int i = 0; i < 10; i++) begin
