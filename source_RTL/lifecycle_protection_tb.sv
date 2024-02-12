@@ -1,4 +1,4 @@
-`timescale 1 ns / 10 ps  
+//`timescale 1 ns / 10 ps  
 
 module lifecycle_protection_tb;
 
@@ -82,7 +82,7 @@ module lifecycle_protection_tb;
 
         $display("[TB] Simulation finished");
         disable generate_clock;
-        $stop;
+        $finish;
     end
 
 endmodule   
