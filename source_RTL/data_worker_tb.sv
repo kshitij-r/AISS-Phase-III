@@ -1,4 +1,4 @@
-`timescale 1 ns / 100 ps
+//`timescale 1 ns / 100 ps
 
 `define         AHB_TRANS_IDLE                      2'b00
 `define         AHB_DATA_WIDTH_BITS                 32
@@ -187,7 +187,7 @@ module data_worker_tb;
 	@(posedge clk);
 	
 	
-	$stop;
+	$finish;
 	
 	end 
 	
