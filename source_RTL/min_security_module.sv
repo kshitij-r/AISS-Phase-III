@@ -1,3 +1,4 @@
+/*
 `include "definitions.svh"
 `include "sha_top.sv"
 `include "camellia_top.sv"
@@ -11,7 +12,7 @@
 `include "sha256_puf_256.v"
 `include "primitives.v"
 `include "io.v"
-
+*/
 module min_security_module 
     #( data_width        = 32,
        addr_width        = 32,
@@ -28,17 +29,7 @@ module min_security_module
     // Global signals for minimum security module
     input clk, 
     input rst,
-    
-    /*
-    IO interface for AES256 inside the minimum security module
-    */
-    //input [127:0]   aes_state,
-    //input [255:0]   aes_key,
-    //input           aes_start,
-    //input           aes_sel,
-    //output [127:0]  aes_out,
-    //output          aes_out_valid,
-    //output [255:0]  aes_pufout,
+
     /*
     IO interface for CAMELLIA inside the minimum security module
     */
@@ -107,21 +98,6 @@ sha_top sha_control(
     .digest_valid(sha_digest_valid),
     .pufout(sha_pufout)
 );
-
-/*
-AES 256 MODULE INSTANCE FOR MINIMUM SECURITY MODULE
-*/
-/*aes_top aes_control(
-    .clk(clk),
-    .rst(rst),
-    .state(aes_state),
-    .key(aes_key),
-    .start(aes_start),
-    .sel(aes_sel),
-    .out(aes_out),
-    .out_valid(aes_out_valid),
-    .pufout(aes_pufout)
-    );*/
 
 /*
 CAMELLIA 256 MODULE INSTANCE FOR MINIMUM SECURITY MODULE
