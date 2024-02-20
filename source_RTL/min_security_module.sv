@@ -17,12 +17,9 @@ module min_security_module
     #( data_width        = 32,
        addr_width        = 32,
        puf_sig_length    = 256,
-       valid_byte_offset = 16,
-       parity_bits_width = 48,
        N      = 24,     
        AW     = 32,      
-       PW     = 2*AW+40,  
-       ID     = 0
+       PW     = 2*AW+40
     )
 
     (
@@ -76,11 +73,11 @@ module min_security_module
     input 	        reg_access, 
     input  [N-1:0]  gpio_in, 
     input [PW-1:0]  reg_packet,  
-    output [31:0]   reg_rdata,   
+    output [N-1:0]   reg_rdata,   
     output [N-1:0]  gpio_out,    
     output [N-1:0]  gpio_en,    
     output 	        gpio_irq,    
-    output [31:0]   gpio_ilat  
+    output [N-1:0]   gpio_ilat  
 );
 
 /*
@@ -137,6 +134,6 @@ gpio boot_control(
 /*
 PUF CONTROL MODULE FOR MINIMUM SECURITY MODULE
 */
-pcm pcm_mod(.*);
+//pcm pcm_mod(.*);
 
 endmodule

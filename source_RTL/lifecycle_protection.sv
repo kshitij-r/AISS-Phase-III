@@ -2,10 +2,10 @@ module lifecycle_protection (
 
     input  logic         clk,
     input  logic         rst,
-    input  logic         transition_request,
-    input  logic [255:0] identifier,
+    input  logic         lc_transition_request,
+    input  logic [255:0] lc_identifier,
 
-    output logic         success,
+    output logic         lc_success,
     output logic [2:0]   lc_state
 );
 
@@ -35,14 +35,14 @@ always@(posedge clk, negedge rst) begin
     if (~rst) begin
         state_r <= START; 
         lc_r <= 3'b000;   
-        success <= 1'b0; 
+        lc_success <= 1'b0; 
     end 
     else begin
         case (state_r) 
             START : begin
                 // Wait for lc transition request 
-                if (transition_request == 1'b1) begin
-                    identifier_r <= identifier; // Register the identifier 
+                if (lc_transition_request == 1'b1) begin
+                    identifier_r <= lc_identifier; // Register the identifier 
                     state_r <= TRANSITION_AUTH; 
                     rd_en <= 1; 
                 end 
@@ -53,12 +53,12 @@ always@(posedge clk, negedge rst) begin
                     if (identifier_r == currOwnerSignature && lc_r < 3'b101) begin 
                         // Increment lc state, assert success 
                         lc_r <= lc_r + 1; 
-                        success <= 1'b1; 
+                        lc_success <= 1'b1; 
                         state_r <= FINISH; 
                     end 
                     else begin
                         // If not correct identifer, ignore request 
-                        success <= 1'b0;
+                        lc_success <= 1'b0;
                         identifier_r <= 0;
                         state_r <= FINISH;
                     end 
@@ -67,9 +67,9 @@ always@(posedge clk, negedge rst) begin
             FINISH : begin 
                 rd_en <= 0; 
                 // Wait until transition request is deasserted 
-                if (transition_request == 1'b0) begin
+                if (lc_transition_request == 1'b0) begin
                     // Deassert success and go back to start 
-                    success <= 1'b0; 
+                    lc_success <= 1'b0; 
                     state_r <= START;
                 end 
             end 
