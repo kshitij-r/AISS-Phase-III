@@ -1,0 +1,4 @@
+source_RTL/camellia_tb.sv
+source_RTL/data_worker_tb.sv
+source_RTL/gpio_tb.sv
+source_RTL/data_worker_tb.sv
