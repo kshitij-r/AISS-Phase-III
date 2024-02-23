@@ -1,3 +1,4 @@
+//TODO Buffer/Fifo
 module secure_memory #(
     parameter WIDTH = 256,
     parameter LENGTH = 6

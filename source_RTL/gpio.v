@@ -17,7 +17,7 @@ module gpio(/*AUTOARG*/
    //# INTERFACE
    //##################################################################
 
-   parameter  N      = 24;      // number of gpio pins
+   parameter  N      = 32;      // number of gpio pins
    parameter  AW     = 32;      // address width
    parameter  PW     = 2*AW+40; // packet width   
    parameter  ID     = 0;       // block id to match to, bits [10:8]

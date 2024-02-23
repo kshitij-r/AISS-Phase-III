@@ -2,7 +2,7 @@ module mcse_top # (
     parameter pcm_data_width = 32,
     parameter pcm_addr_width = 32,
     parameter puf_sig_length = 256,
-    parameter gpio_N = 24,
+    parameter gpio_N = 32,
     parameter gpio_AW = 32,
     parameter gpio_PW = 2*gpio_AW+40
 )
@@ -64,7 +64,8 @@ module mcse_top # (
 
     min_security_module #(
     .data_width(pcm_data_width), .addr_width(pcm_addr_width), .puf_sig_length(puf_sig_length), .N(gpio_N),
-    .AW(gpio_AW), .PW(gpio_PW)) min_sec (
+    .AW(gpio_AW), .PW(gpio_PW)) 
+    min_sec (
     .clk(clk), .rst(~rst),
     .data_in(cam_data_in), .key(cam_key), .key_rdy(cam_key_rdy), .k_len(cam_k_len), .enc_dec(cam_enc_dec),.data_rdy(cam_data_rdy), .data_out(cam_data_out),
     .data_acq(cam_data_acq), .key_acq(cam_data_acq), .output_rdy(cam_output_rdy), .cam_pufout(cam_puf_out),

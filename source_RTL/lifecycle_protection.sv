@@ -1,3 +1,4 @@
+//TODO First boot initialization
 module lifecycle_protection (
 
     input  logic         clk,

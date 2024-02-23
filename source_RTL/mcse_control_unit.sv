@@ -2,7 +2,7 @@ module mcse_control_unit #(
     parameter pcm_data_width = 32,
     parameter pcm_addr_width = 32,
     parameter puf_sig_length = 256,
-    parameter gpio_N = 24,
+    parameter gpio_N = 32,
     parameter gpio_AW = 32,
     parameter gpio_PW = 2*gpio_AW+40
 )
