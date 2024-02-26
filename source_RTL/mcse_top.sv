@@ -39,7 +39,7 @@ module mcse_top # (
     wire [255:0]              sha_digest;
     wire                      sha_ready;
     wire                      sha_digest_valid;
-    wire [255:0]              sha_pufout;
+    wire [255:0]              sha_puf_out;
 
     // GPIO Inputs 
     wire                      gpio_reg_access;

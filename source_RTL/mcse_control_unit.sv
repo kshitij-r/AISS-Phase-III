@@ -21,7 +21,7 @@ module mcse_control_unit #(
     input [255:0]              sha_digest,
     input                      sha_ready,
     input                      sha_digest_valid,
-    input [255:0]              sha_pufout,
+    input [255:0]              sha_puf_out,
 
     // GPIO to Boot Control
     input [gpio_N-1:0]         gpio_reg_rdata,
@@ -76,9 +76,9 @@ module mcse_control_unit #(
     wire                            rd_en;
     wire                            wr_en;
     wire [$clog2(memory_length)-1:0] addr;
-    wire [memory_width-1:0]        wrData;
-    wire [memory_width-1:0]        rdData;
-    wire                            valid;
+    wire [memory_width-1:0]         wrData;
+    wire [memory_width-1:0]         rdData;
+    wire                            rdData_valid;
 
     secure_memory #(.WIDTH(memory_width), .LENGTH(memory_length) ) mem (.*);
 

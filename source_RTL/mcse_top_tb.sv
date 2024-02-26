@@ -30,8 +30,7 @@ module mcse_top_tb;
        
         for (int i = 0; i < 16; i++) begin
             gpio_in[13] = 1;
-            $displayh("Sending IP IDs...");
-            $displayh("IP Number =", gpio_out[11:8]); 
+            $displayh("Sending IP ID from address ", gpio_out[11:8]); 
             for (int j = 0; j < 18; j++) begin
 				if (j == 0) begin 
 					gpio_in[31:16] = 16'h7A7A;
@@ -48,16 +47,16 @@ module mcse_top_tb;
                 end  
             end 
 
-            $display("waiting for ip id done"); 
+            $display("Waiting for IP ID trigger deassert.."); 
             gpio_in[13] = 0; 
-            while (gpio_out[14] != 1) begin
+            while (gpio_out[12] != 0) begin
                 @(posedge clk); 
             end 
 
             gpio_in[15] = 1;
 
             if (i != 15) begin 
-                $display("waiting for ip id trigger");
+                $display("Waiting for IP ID trigger...");
                 while (gpio_out[12] != 1) begin
                     @(posedge clk); 
                 end 
@@ -102,7 +101,7 @@ module mcse_top_tb;
 
         chipid_generation();
 
-        for (int i = 0; i < 250; i++) begin
+        for (int i = 0; i < 600; i++) begin
             @(posedge clk); 
         end 
 

@@ -34,75 +34,40 @@ initial begin : drive;
     end 
 
     rst = 0; 
-    block = {256'h124, 256'h322}; 
+    block = 'h24d5ea98efbd684ff4e6dab9f1a288631a0e3ccc94ded1a1f7197ea7a34e7f53491a0deed0d2194c80facf106b11678655d5d758952376a7a02107c23494ef64;
+    //block = 'h14d5ea98efbd684ff4e6dab9f1a288631a0e3ccc94ded1a1f7197ea7a34e7f53491a0dffd0d2194c80facf106b11638655d5d758952376a7a02107c11094ef64; 
+    //block = {256'h874, 256'ha2a2};
+    next = 0; 
+    init = 1; 
+    @(posedge clk);
+    //block = 'h24d5ea98efbd684ff4e6dab9f1a288631a0e3ccc94ded1a1f7197ea7a34e7f53491a0deed0d2194c80facf106b11678655d5d758952376a7a02107c23494ef64;
+    next = 0;
+    init = 0; 
+    @(posedge clk); 
+    
+    while (digest_valid != 1) begin
+        @(posedge clk); 
+    end 
+    $displayh(digest);
+
+    rst = 0; 
+    block = 'h24d5ea98efbd684aa4e6dab9f1a288631a0e3ccc94ded1a1f7197ea7a34e7f53491a0deed0d2194c80facf106b11678655d5d758952376a7a02107c23494ef64;
+    //block = 'h14d5ea98efbd684ff4e6dab9f1a288631a0e3ccc94ded1a1f7197ea7a34e7f53491a0dffd0d2194c80facf106b11638655d5d758952376a7a02107c11094ef64; 
     //block = {256'h874, 256'ha2a2};
     next = 1; 
     init = 0; 
     @(posedge clk);
+    //block = 'h24d5ea98efbd684ff4e6dab9f1a288631a0e3ccc94ded1a1f7197ea7a34e7f53491a0deed0d2194c80facf106b11678655d5d758952376a7a02107c23494ef64;
     next = 0;
-    block = {256'h874, 256'ha2a};
-    @(posedge clk); 
-    next = 1; 
-    @(posedge clk); 
-    next =0;
-    init = 1; 
-    @(posedge clk);
-
-    init =0; 
-    @(posedge clk); 
-    
-
-    while (digest_valid != 1) begin
-        @(posedge clk); 
-    end 
-    $displayh(digest);
-
-    /*
-    //rst =1;
-    for (int i =0; i < 5; i++) begin
-        @(posedge clk); 
-    end 
-
-    rst = 0;
-    //block = {256'h123, 256'h322}; 
-    block = {256'h874, 256'ha2a2};
-    next = 0; 
     init = 0; 
-    @(posedge clk);
-    
-    next =0;
-    init = 1; 
-    @(posedge clk);
-
-    init =0; 
     @(posedge clk); 
-
+    
     while (digest_valid != 1) begin
         @(posedge clk); 
     end 
     $displayh(digest);
-    */
-    /*
-    next = 1; 
-    block = 0; 
-    block = {256'h123, 256'h322};
-        $displayh(digest);
-    @(posedge clk);
-    next =0; 
-    init =1; 
-    @(posedge clk); 
 
-    while (digest_valid != 1) begin
-        @(posedge clk); 
-    end 
-
-    for (int i = 0; i < 5; i++) begin
-        @(posedge clk); 
-    end 
-    */
-     
-
-    $stop; 
+    $stop;
 end 
 
 
