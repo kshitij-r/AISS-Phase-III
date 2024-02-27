@@ -716,7 +716,7 @@ always_comb begin
             end 
         end 
         FINISH : begin
-            //chip_id_challenge(); 
+            chip_id_challenge(); 
         end 
     endcase
 end 
