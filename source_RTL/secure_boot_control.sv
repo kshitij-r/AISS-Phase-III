@@ -6,11 +6,11 @@
 
 `define SYS_BUS_WAKEUP 24'b1000000
 
-`define IPID_DONE 25'b100000000000000 // gpio pin 
+`define IPID_START_BITS 16'h7A7A
+`define IPID_STOP_BITS 16'hB9B9
 
+`define CHIP_ID_ADDR 'h0
 `define SECURE_COMMUNICATION_KEY_ADDR 'h2
-`define MCSE_ID_ADDR 'h0
-`define IP_ID_ADDR 'h1
 
 module secure_boot_control # (
     parameter pcm_data_width = 32,
@@ -89,8 +89,8 @@ module secure_boot_control # (
     output                                      pcm_sig_valid,
 
     // Boot control to LC Protection
-    output                                      lc_transition_request,
-    output [255:0]                              lc_identifier,
+    output logic                                lc_transition_request,
+    output logic [255:0]                        lc_identifier,
 
     // Boot Control to Secure Memory 
     output logic                                rd_en,
@@ -149,6 +149,12 @@ function void encryption(input bit [255:0] data_input, input bit [255:0] key_inp
                 encryption_done_next = 1; 
             end 
         end 
+        default : begin
+            cam_data_in_next = 0;
+            cam_data_rdy_next = 0;
+            cam_key_rdy_next = 0;
+            encryption_done_next = 0; 
+        end 
     endcase  
 endfunction
 
@@ -163,8 +169,11 @@ logic [ipid_N-1:0][ipid_width-1:0] ipid_r, ipid_next;
 logic [4:0] ipid_counter_r, ipid_counter_next; 
 logic ipid_trigger_r, ipid_trigger_next; 
 logic [1:0] ipid_valid_r, ipid_valid_next; 
-logic [3:0] ipid_index_r, ipid_index_next; 
+logic [4:0] ipid_index_r, ipid_index_next; 
 logic ipid_extraction_done_r, ipid_extraction_done_next;
+
+logic [15:0] ipid_temp_r [15:0];
+logic [15:0] ipid_temp_next [15:0]; 
 
 function void ipid_extraction();
     if (~ipid_extraction_done_r) begin
@@ -203,133 +212,56 @@ function void ipid_extraction();
                             gpio_RW_next = 0; 
                             case (ipid_valid_r) 
                                 2'b00 : begin
-                                    if (gpio_reg_rdata[31:16] == 16'h7A7A && gpio_reg_rdata[13]) begin
+                                    if (gpio_reg_rdata[31:16] == `IPID_START_BITS && gpio_reg_rdata[13]) begin // wait to receive start bits
                                         ipid_valid_next = ipid_valid_r + 1; 
                                     end 
                                 end 
                                 2'b01 : begin 
-                                    case (ipid_index_r) 
-                                        4'b0000 : begin
-                                            if (gpio_reg_rdata[13]) begin
-                                                ipid_next[ipid_counter_r][255:240] = gpio_reg_rdata[31:16];
+                                    if (ipid_index_r < 16) begin
+                                        if (gpio_reg_rdata[13]) begin //ip id packet 
+                                            if (gpio_reg_rdata[31:16] != `IPID_STOP_BITS) begin
+                                                ipid_temp_next[ipid_index_r] = gpio_reg_rdata[31:16];
                                                 ipid_index_next = ipid_index_r + 1; 
                                             end 
-                                        end    
-                                        4'b0001 : begin
-                                            if (gpio_reg_rdata[13]) begin
-                                                ipid_next[ipid_counter_r][239:224] = gpio_reg_rdata[31:16];
-                                                ipid_index_next = ipid_index_r + 1; 
+                                            else begin
+                                                gpio_data_type_next = `GPIO_ODATA; 
+                                                gpio_wrData_next = 0;
+                                                gpio_RW_next = 1; 
+                                                ipid_index_next = 0;
+                                                ipid_valid_next = 0; 
+                                                ipid_trigger_next = 0; 
                                             end 
                                         end 
-                                        4'b0010 : begin
-                                            if (gpio_reg_rdata[13]) begin
-                                                ipid_next[ipid_counter_r][223:208] = gpio_reg_rdata[31:16];
-                                                ipid_index_next = ipid_index_r + 1; 
+                                    end 
+                                    else begin
+                                        if (gpio_reg_rdata[13]) begin
+                                            if (gpio_reg_rdata[31:16] == `IPID_STOP_BITS) begin // if received stop bits, store the ipid
+                                                ipid_next[ipid_counter_r] = {ipid_temp_r[15], ipid_temp_r[14], ipid_temp_r[13],
+                                                ipid_temp_r[12], ipid_temp_r[11], ipid_temp_r[10], ipid_temp_r[9], ipid_temp_r[8],
+                                                ipid_temp_r[7], ipid_temp_r[6], ipid_temp_r[5], ipid_temp_r[4], ipid_temp_r[3], 
+                                                ipid_temp_r[2], ipid_temp_r[1], ipid_temp_r[0]}; 
+                                                ipid_counter_next = ipid_counter_r + 1; 
+                                                gpio_data_type_next = `GPIO_ODATA; 
+                                                gpio_wrData_next = 0;
+                                                gpio_RW_next = 1; 
+                                                ipid_index_next = 0;
+                                                ipid_valid_next = 0; 
+                                                ipid_trigger_next = 0;
                                             end 
-                                        end   
-                                        4'b0011 : begin
-                                            if (gpio_reg_rdata[13]) begin
-                                                ipid_next[ipid_counter_r][207:192] = gpio_reg_rdata[31:16];
-                                                ipid_index_next = ipid_index_r + 1; 
-                                            end 
-                                        end 
-                                        4'b0100 : begin
-                                            if (gpio_reg_rdata[13]) begin
-                                                ipid_next[ipid_counter_r][191:176] = gpio_reg_rdata[31:16];
-                                                ipid_index_next = ipid_index_r + 1; 
-                                            end 
-                                        end  
-                                        4'b0101 : begin
-                                            if (gpio_reg_rdata[13]) begin
-                                                ipid_next[ipid_counter_r][175:160] = gpio_reg_rdata[31:16];
-                                                ipid_index_next = ipid_index_r + 1; 
-                                            end 
-                                        end   
-                                        4'b0110 : begin
-                                            if (gpio_reg_rdata[13]) begin
-                                                ipid_next[ipid_counter_r][159:144] = gpio_reg_rdata[31:16];
-                                                ipid_index_next = ipid_index_r + 1; 
-                                            end 
-                                        end  
-                                        4'b0111 : begin
-                                            if (gpio_reg_rdata[13]) begin
-                                                ipid_next[ipid_counter_r][143:128] = gpio_reg_rdata[31:16];
-                                                ipid_index_next = ipid_index_r + 1; 
+                                            else begin 
+                                                gpio_data_type_next = `GPIO_ODATA; 
+                                                gpio_wrData_next = 0;
+                                                gpio_RW_next = 1; 
+                                                ipid_index_next = 0;
+                                                ipid_valid_next = 0; 
+                                                ipid_trigger_next = 0;
                                             end 
                                         end 
-                                        4'b1000 : begin
-                                            if (gpio_reg_rdata[13]) begin
-                                                ipid_next[ipid_counter_r][127:112] = gpio_reg_rdata[31:16];
-                                                ipid_index_next = ipid_index_r + 1; 
-                                            end 
-                                        end 
-                                        4'b1001 : begin
-                                            if (gpio_reg_rdata[13]) begin
-                                                ipid_next[ipid_counter_r][111:96] = gpio_reg_rdata[31:16];
-                                                ipid_index_next = ipid_index_r + 1; 
-                                            end 
-                                        end  
-                                        4'b1010 : begin
-                                            if (gpio_reg_rdata[13]) begin
-                                                ipid_next[ipid_counter_r][95:80] = gpio_reg_rdata[31:16];
-                                                ipid_index_next = ipid_index_r + 1; 
-                                            end 
-                                        end  
-                                        4'b1011 : begin
-                                            if (gpio_reg_rdata[13]) begin
-                                                ipid_next[ipid_counter_r][79:64] = gpio_reg_rdata[31:16];
-                                                ipid_index_next = ipid_index_r + 1; 
-                                            end 
-                                        end   
-                                        4'b1100 : begin
-                                            if (gpio_reg_rdata[13]) begin
-                                                ipid_next[ipid_counter_r][63:48] = gpio_reg_rdata[31:16];
-                                                ipid_index_next = ipid_index_r + 1; 
-                                            end 
-                                        end  
-                                        4'b1101 : begin
-                                            if (gpio_reg_rdata[13]) begin
-                                                ipid_next[ipid_counter_r][47:32] = gpio_reg_rdata[31:16];
-                                                ipid_index_next = ipid_index_r + 1; 
-                                            end 
-                                        end      
-                                        4'b1110 : begin
-                                            if (gpio_reg_rdata[13]) begin
-                                                ipid_next[ipid_counter_r][31:16] = gpio_reg_rdata[31:16];
-                                                ipid_index_next = ipid_index_r + 1; 
-                                            end 
-                                        end    
-                                        4'b1111 : begin
-                                            if (gpio_reg_rdata[13]) begin
-                                                ipid_next[ipid_counter_r][15:0] = gpio_reg_rdata[31:16];
-                                                ipid_valid_next = ipid_valid_r + 1; 
-                                            end 
-                                        end                                                                                                                                                                                                                                                                                                                                                                                                            
-                                    endcase 
+                                    end 
                                 end
-                                2'b10 : begin 
-                                    if (gpio_reg_rdata[31:16] == 16'hB9B9 && gpio_reg_rdata[13]) begin // if correct data transmission, go to next ip id
-                                        gpio_data_type_next = `GPIO_ODATA; 
-                                        gpio_wrData_next = 0;
-                                        gpio_RW_next = 1; 
-                                        ipid_counter_next = ipid_counter_r + 1; 
-                                        ipid_index_next = 0;
-                                        ipid_valid_next = 0; 
-                                        ipid_trigger_next = 0; 
-                                    end 
-                                    else if (gpio_reg_rdata[31:16] != 16'hB9B9 && gpio_reg_rdata[13]) begin // if not correct, ask for the same ip id again
-                                        gpio_data_type_next = `GPIO_ODATA; 
-                                        gpio_wrData_next = 0;
-                                        gpio_RW_next = 1; 
-                                        ipid_index_next = 0;
-                                        ipid_valid_next = 0; 
-                                        ipid_trigger_next = 0; 
-                                    end 
-                                end 
                             endcase 
                         end 
                     endcase
-                    
                 end 
             end 
         endcase 
@@ -446,20 +378,8 @@ logic mcse_id_done_r, mcse_id_done_next;
 
 function void mcse_id_generation();
     if (~mcse_id_done_r) begin
-        case (mcse_id_generation_counter_r) 
-            2'b00 : begin
-                mcse_id_next = cam_puf_out ^ sha_puf_out;
-                mcse_id_generation_counter_next = mcse_id_generation_counter_r + 1; 
-            end 
-            2'b01 : begin
-                memory_write(`MCSE_ID_ADDR, mcse_id_r);
-                if (memory_write_done_r) begin
-                    mcse_id_done_next = 1; 
-                    memory_write_done_next = 0; 
-                    mcse_id_generation_counter_next = 0; 
-                end 
-            end 
-        endcase
+        mcse_id_next = cam_puf_out ^ sha_puf_out;
+        mcse_id_done_next = 1; 
     end 
 endfunction
 
@@ -479,12 +399,13 @@ function void ip_id_generation();
             2'b01 : begin
                 ipid_hash(); 
                 if (hash_done_r) begin
-                    ip_id_generation_counter_next = ip_id_generation_counter_r + 1;
+                    ip_id_generation_counter_next = 0;
                     hash_done_next = 0; 
+                    ip_id_generation_done_next = 1; 
                 end 
             end 
             2'b10 : begin
-                memory_write(`IP_ID_ADDR, ipid_hash_r); 
+                //memory_write(`IP_ID_ADDR, ipid_hash_r); 
                 if (memory_write_done_r) begin
                     ip_id_generation_done_next = 1; 
                     memory_write_done_next = 0;
@@ -494,29 +415,110 @@ function void ip_id_generation();
     end 
 endfunction 
 
-logic chip_id_generation_counter_r, chip_id_generation_counter_next; 
+logic [1:0] chip_id_generation_counter_r, chip_id_generation_counter_next; 
 logic chip_id_generation_done_r, chip_id_generation_done_next;
+logic [255:0] chip_id_r, chip_id_next; 
 
 function void chip_id_generation(); 
     if (~chip_id_generation_done_r) begin
         case (chip_id_generation_counter_r) 
-            1'b0 : begin
+            2'b00 : begin
                 mcse_id_generation(); 
                 if (mcse_id_done_r) begin
                     chip_id_generation_counter_next = 1; 
                     mcse_id_done_next = 0;
                 end 
             end 
-            1'b1 : begin
+            2'b01 : begin
                 ip_id_generation(); 
                 if (ip_id_generation_done_r) begin
-                    chip_id_generation_done_next = 1; 
-                    chip_id_generation_counter_next = 0; 
+                    chip_id_generation_counter_next = chip_id_generation_counter_r + 1;  
                     ip_id_generation_done_next = 0; 
                 end 
             end 
+            2'b10 : begin
+                chip_id_next = mcse_id_r ^ ipid_hash_r;
+                sha_block_next = {256'h0, chip_id_next};
+                case (strobe_r)
+                    2'b00 : begin
+                        sha_init_next = 1; 
+                        strobe_next = 1; 
+                    end 
+                    2'b01 : begin
+                        sha_init_next = 0;
+                        strobe_next = strobe_r + 1; 
+                    end 
+                    2'b10 : begin
+                        if (sha_ready && sha_digest_valid) begin
+                            chip_id_next = sha_digest; 
+                            strobe_next = 0; 
+                            chip_id_generation_counter_next = 0;
+                            chip_id_generation_done_next = 1;  
+                        end 
+                    end 
+                endcase 
+            end 
+            2'b11 : begin
+
+            end 
         endcase 
     end 
+endfunction 
+
+logic chip_id_challenge_counter_r, chip_id_challenge_counter_next; 
+logic authentic_chip_id_r, authentic_chip_id_next;
+logic chip_id_challenge_done_r, chip_id_challenge_done_next; 
+
+function void chip_id_challenge();
+    if (~chip_id_challenge_done_r) begin
+        case (chip_id_challenge_counter_r)
+            1'b0 : begin
+                chip_id_generation();
+                if (chip_id_generation_done_r) begin
+                    chip_id_challenge_counter_next = 1; 
+                    chip_id_generation_done_next = 0;
+                end 
+            end 
+            1'b1 : begin
+                memory_read(`CHIP_ID_ADDR);
+                if (memory_read_done_r) begin
+                    if (chip_id_r == rdData_r) begin
+                        authentic_chip_id_next = 1;
+                    end
+                    else begin
+                        authentic_chip_id_next = 0; 
+                    end  
+                    chip_id_challenge_done_next = 1; 
+                    chip_id_challenge_counter_next = 0; 
+                    memory_read_done_next = 0;
+                end  
+            end 
+        endcase 
+    end 
+
+endfunction 
+
+logic lc_transition_request_next;
+logic [255:0] lc_identifier_next; 
+logic lc_transition_counter_r, lc_transition_counter_next; 
+logic lc_transition_done_r, lc_transition_done_next; 
+
+function void lifecycle_transition(input bit [255:0] id);
+    if (~lc_transition_done_r) begin
+        case (lc_transition_counter_r)
+            1'b0 : begin
+                lc_transition_request_next = 1;
+                lc_identifier_next = id;
+                lc_transition_counter_next = lc_transition_counter_r + 1; 
+            end
+            1'b1 : begin
+                lc_transition_request_next = 0;
+                lc_identifier_next = 0; 
+                lc_transition_counter_next = 0; 
+                lc_transition_done_next = 1; 
+            end 
+        endcase 
+    end
 endfunction 
 
 always@(posedge clk, negedge rst) begin 
@@ -565,6 +567,15 @@ always@(posedge clk, negedge rst) begin
         ip_id_generation_done_r <= 0; 
         chip_id_generation_counter_r <= 0;
         chip_id_generation_done_r <= 0; 
+        chip_id_r <= 0; 
+        chip_id_challenge_counter_r <= 0; 
+        authentic_chip_id_r <= 0; 
+        chip_id_challenge_done_r <= 0;
+        lc_transition_request <= 0;
+        lc_identifier <= 0; 
+        lc_transition_counter_r <= 0;
+        lc_transition_done_r <= 0;
+        ipid_temp_r <= '{default:'0}; 
     end 
     else begin
         state_r <= state_next; 
@@ -617,6 +628,15 @@ always@(posedge clk, negedge rst) begin
         ip_id_generation_done_r <= ip_id_generation_done_next; 
         chip_id_generation_counter_r <= chip_id_generation_counter_next; 
         chip_id_generation_done_r <= chip_id_generation_done_next; 
+        chip_id_r <= chip_id_next;
+        chip_id_challenge_counter_r <= chip_id_challenge_counter_next;
+        authentic_chip_id_r <= authentic_chip_id_next; 
+        chip_id_challenge_done_r <= chip_id_challenge_done_next; 
+        lc_transition_request <= lc_transition_request_next;
+        lc_identifier <= lc_identifier_next; 
+        lc_transition_counter_r <= lc_transition_counter_next; 
+        lc_transition_done_r <= lc_transition_done_next; 
+        ipid_temp_r <= ipid_temp_next; 
     end 
 end
 
@@ -663,7 +683,15 @@ always_comb begin
     ip_id_generation_done_next = ip_id_generation_done_r; 
     chip_id_generation_done_next = chip_id_generation_done_r; 
     chip_id_generation_counter_next = chip_id_generation_counter_r;
-
+    chip_id_next = chip_id_r; 
+    chip_id_challenge_counter_next = chip_id_challenge_counter_r; 
+    authentic_chip_id_next = authentic_chip_id_r;
+    chip_id_challenge_done_next = chip_id_challenge_done_r; 
+    lc_transition_request_next = lc_transition_request;
+    lc_identifier_next = lc_identifier;
+    lc_transition_counter_next = lc_transition_counter_r;
+    lc_transition_done_next = lc_transition_done_r;
+    ipid_temp_next = ipid_temp_r; 
 
     case (state_r) 
         INIT : begin
@@ -674,15 +702,21 @@ always_comb begin
             state_next <= START;
         end 
         START : begin
+            //lifecycle_transition(256'h33a344a35afd82155e5a6ef2d092085d704dc70561dde45d27962d79ea56a24a); 
+
             chip_id_generation(); 
             if (chip_id_generation_done_r) begin
-                state_next  = FINISH; 
-                chip_id_generation_done_next = 0;
+                memory_write(`CHIP_ID_ADDR, chip_id_r);
+                if (memory_write_done_r) begin
+                    memory_write_done_next = 0; 
+                    chip_id_generation_counter_next = 0;  
+                    chip_id_generation_done_next = 0;
+                    state_next  = FINISH;
+                end 
             end 
-
         end 
         FINISH : begin
- 
+            //chip_id_challenge(); 
         end 
     endcase
 end 

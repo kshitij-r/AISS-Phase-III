@@ -1,4 +1,3 @@
-`timescale 1 ns / 100 ps
 
 module mcse_top_tb;
 
@@ -18,6 +17,8 @@ module mcse_top_tb;
     logic [255:0]        mcse_ami_out;
 	logic [gpio_N-1:0]   gpio_out;
 
+    logic [15:0] ipid_array [255:0];
+
 	initial begin :generate_clock
 		while (1)
 			#5 clk = ~clk;
@@ -26,23 +27,30 @@ module mcse_top_tb;
     mcse_top #(.pcm_data_width(pcm_data_width), .pcm_addr_width(pcm_addr_width), . puf_sig_length(puf_sig_length),
     .gpio_N(gpio_N), .gpio_AW(gpio_AW), .gpio_PW(gpio_PW) )mcse ( .* );
 
+    int k = 0;
+    
     task ipid_send();
-       
+        k =0;
         for (int i = 0; i < 16; i++) begin
             gpio_in[13] = 1;
-            $displayh("Sending IP ID from address ", gpio_out[11:8]); 
+            $displayh("IP ID Trigger received...Sending IP ID from address ", gpio_out[11:8]); 
             for (int j = 0; j < 18; j++) begin
 				if (j == 0) begin 
 					gpio_in[31:16] = 16'h7A7A;
+                    $displayh("[TB] GPIO_IN[31:16] = ", gpio_in[31:16]);
 					@(posedge clk);
 					continue;
 				end 
 				else if (j == 17) begin
 					gpio_in[31:16] = 16'hB9B9;
+                    $displayh("[TB] GPIO_IN[31:16] = ", gpio_in[31:16]);
 					@(posedge clk);
 					continue;
 				end else begin 
-				gpio_in[31:16] = $urandom_range(0,65536);
+				gpio_in[31:16] = ipid_array[k];
+                //gpio_in[31:16] = $urandom_range(0,65536);
+                k = k+1;
+                $displayh("[TB] GPIO_IN[31:16] = ", gpio_in[31:16]);
 				@(posedge clk); 
                 end  
             end 
@@ -52,9 +60,9 @@ module mcse_top_tb;
             while (gpio_out[12] != 0) begin
                 @(posedge clk); 
             end 
-
-            gpio_in[15] = 1;
-
+            $display("IP ID trigger deasserted");
+            //gpio_in[15] = 1;
+            $displayh("Internal IP ID = " , mcse.control_unit.secure_boot.ipid_r[i]);
             if (i != 15) begin 
                 $display("Waiting for IP ID trigger...");
                 while (gpio_out[12] != 1) begin
@@ -83,8 +91,15 @@ module mcse_top_tb;
             @(posedge clk); 
         end
        
-        ipid_send();     
+        ipid_send();   
+        $display("[MCSE] IP ID Extraction Complete");   
     endtask
+
+    task initialize_array();
+        for (int i = 0; i < 256; i++) begin
+            ipid_array[i] = $urandom_range(0,65536);
+        end 
+    endtask 
 
     initial begin : drive_inputs
 
@@ -93,19 +108,35 @@ module mcse_top_tb;
             gpio_in = 0; 
             @(posedge clk);
         end 
-    
+
+        initialize_array();
+
     	rst = 1;
 	    @(posedge clk);
         @(posedge clk); 
         @(posedge clk); 
 
         chipid_generation();
+        
 
-        for (int i = 0; i < 600; i++) begin
+        while (~mcse.control_unit.secure_boot.chip_id_generation_done_r) begin
             @(posedge clk); 
         end 
+        $displayh("[MCSE] Generated Chip ID, storing in memory...");
 
-        $stop; 
+        chipid_generation(); 
+
+        while (~mcse.control_unit.secure_boot.chip_id_challenge_done_r) begin
+            @(posedge clk); 
+        end
+        
+        $displayh("[MCSE] Internal MCSE ID = ", mcse.control_unit.secure_boot.mcse_id_r);
+        $displayh("[MCSE] Internal Composite IP ID = ", mcse.control_unit.secure_boot.ipid_hash_r);
+        $displayh("[MCSE] Internal Golden Chip ID = ", mcse.control_unit.mem.ram[0]);
+        $displayh("[MCSE] Internal Generated Chip ID = " , mcse.control_unit.secure_boot.chip_id_r);
+        $displayh("[MCSE] Internal Authentic Chip ID Value = ", mcse.control_unit.secure_boot.authentic_chip_id_r); 
+
+        $finish; 
     end 
 
 endmodule 
