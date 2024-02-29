@@ -1,5 +1,6 @@
 //TODO Configurability of length of IP ID
 //TODO Edge cases of IP ID Extraction 
+//TODO Where is lc transition coming from? 
 
 `define GPIO_IDATA 6'h5
 `define GPIO_ODATA 6'h0
@@ -63,6 +64,12 @@ module secure_boot_control # (
     // Seucre memory to Boot Control
     input [memory_width-1:0]                    rdData,
     input                                       rdData_valid,
+
+    // *** To Boot Control
+    input  [255:0]                              lc_transition_id,
+    input                                       lc_transition_request,
+    input  [255:0]                              lc_authentication_id,
+    input                                       lc_authentication_valid, 
 
     // Boot control to Camellia 
     output logic [127:0]                        cam_data_in,

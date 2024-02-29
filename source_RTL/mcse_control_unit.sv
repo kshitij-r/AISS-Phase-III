@@ -36,6 +36,12 @@ module mcse_control_unit #(
     input                      pcm_S_c,
     input                      pcm_A_c,
 
+    // *** To Boot Control 
+    input  [255:0]        lc_transition_id,
+    input                 lc_transition_request,
+    input  [255:0]        lc_authentication_id,
+    input                 lc_authentication_valid,     
+
     // Boot control to Camellia 
     output [127:0]              cam_data_in,
     output [255:0]              cam_key,

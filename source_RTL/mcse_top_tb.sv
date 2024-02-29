@@ -12,9 +12,7 @@ module mcse_top_tb;
     logic                 clk=0;
     logic                 rst;
 	logic  [gpio_N-1:0]   gpio_in;
-    logic                 ami_ack;
 
-    logic [255:0]        mcse_ami_out;
 	logic [gpio_N-1:0]   gpio_out;
 
     logic [15:0] ipid_array [255:0];
@@ -115,6 +113,10 @@ module mcse_top_tb;
 	    @(posedge clk);
         @(posedge clk); 
         @(posedge clk); 
+
+        while (gpio_out[...]) begin
+            @(posedge clk); 
+        end 
 
         chipid_generation();
         

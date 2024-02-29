@@ -10,9 +10,12 @@ module mcse_top # (
     input                 clk,
     input                 rst,
 	input  [gpio_N-1:0]   gpio_in,
-    input                 ami_ack,
 
-    output [255:0]        mcse_ami_out,
+    input  [255:0]        lc_transition_id,
+    input                 lc_transition_request,
+    input  [255:0]        lc_authentication_id,
+    input                 lc_authentication_valid, 
+
 	output [gpio_N-1:0]   gpio_out
 );
 
