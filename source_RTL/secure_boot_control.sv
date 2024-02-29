@@ -13,6 +13,9 @@
 `define CHIP_ID_ADDR 'h0
 `define SECURE_COMMUNICATION_KEY_ADDR 'h2
 
+`define LC_AUTHENTICATION_ID_ADDR_START 'h8 // end at 'hc
+
+
 module secure_boot_control # (
     parameter pcm_data_width = 32,
     parameter pcm_addr_width = 32,
@@ -22,7 +25,7 @@ module secure_boot_control # (
     parameter gpio_PW = 2*gpio_AW+40,
 
     parameter memory_width = 256,
-    parameter memory_length = 6,
+    parameter memory_length = 16,
 
     parameter ipid_N = 16,
     parameter ipid_width = 256
@@ -59,6 +62,7 @@ module secure_boot_control # (
 
     // LC Protection to Boot Control
     input                                       lc_success,
+    input                                       lc_done, 
     input [2:0]                                 lc_state,
 
     // Seucre memory to Boot Control
@@ -110,7 +114,7 @@ reg [255:0] encryption_output_r, encryption_output_next;
 reg half_r, half_next; 
 reg encryption_done_r, encryption_done_next;
 
-typedef enum logic [1:0] {INIT, START, FINISH} state_t;
+typedef enum logic [2:0] {INIT, START, FINISH, LC_TRANSITION, LC_TRANSITION1, LC_AUTH, LC_AUTH1} state_t;
 state_t state_r, state_next;
 
 logic [127:0]                    cam_data_in_next;
@@ -491,9 +495,11 @@ function void chip_id_challenge();
                 if (memory_read_done_r) begin
                     if (chip_id_r == rdData_r) begin
                         authentic_chip_id_next = 1;
+                        rdData_next = 0; 
                     end
                     else begin
-                        authentic_chip_id_next = 0; 
+                        authentic_chip_id_next = 0;
+                        rdData_next = 0;  
                     end  
                     chip_id_challenge_done_next = 1; 
                     chip_id_challenge_counter_next = 0; 
@@ -509,6 +515,7 @@ logic lc_transition_request_next;
 logic [255:0] lc_identifier_next; 
 logic lc_transition_counter_r, lc_transition_counter_next; 
 logic lc_transition_done_r, lc_transition_done_next; 
+logic lc_transition_success_r, lc_transition_success_next; 
 
 function void lifecycle_transition(input bit [255:0] id);
     if (~lc_transition_done_r) begin
@@ -521,16 +528,47 @@ function void lifecycle_transition(input bit [255:0] id);
             1'b1 : begin
                 lc_transition_request_next = 0;
                 lc_identifier_next = 0; 
-                lc_transition_counter_next = 0; 
-                lc_transition_done_next = 1; 
+                if (lc_done) begin
+                    lc_transition_counter_next = 0; 
+                    lc_transition_done_next = 1; 
+                    if (lc_success) begin
+                        lc_transition_success_next = 1;
+                    end
+                    else begin
+                        lc_transition_success_next = 0; 
+                    end  
+                end 
             end 
         endcase 
     end
 endfunction 
 
+logic lifecycle_authentication_done_r, lifecycle_authentication_done_next; 
+logic lifecycle_authentication_value_r, lifecycle_authentication_value_next; 
+
+function void lifecycle_authentication(input bit [255:0] id); 
+    if (~lifecycle_authentication_done_r) begin
+        memory_read(`LC_AUTHENTICATION_ID_ADDR_START + lc_state); 
+        if (memory_read_done_r) begin
+            if (rdData_r == id) begin
+                lifecycle_authentication_value_next = 1; 
+                rdData_next = 0;     
+            end
+            else begin
+                lifecycle_authentication_value_next = 0; 
+                rdData_next = 0; 
+            end 
+            lifecycle_authentication_done_next = 1;  
+            memory_read_done_next = 0;
+        end  
+    end 
+endfunction 
+
+logic [255:0] temp_r, temp_next; 
+
 always@(posedge clk, negedge rst) begin 
     if (~rst) begin
-        state_r <= INIT;
+        state_r <= LC_TRANSITION;
         cam_data_in <= 0;
         cam_key <= 0; 
         cam_k_len <= 2'b10;
@@ -583,6 +621,10 @@ always@(posedge clk, negedge rst) begin
         lc_transition_counter_r <= 0;
         lc_transition_done_r <= 0;
         ipid_temp_r <= '{default:'0}; 
+        temp_r <= 0; 
+        lifecycle_authentication_done_r <= 0;
+        lifecycle_authentication_value_r <= 0;
+        lc_transition_success_r <= lc_transition_success_next;
     end 
     else begin
         state_r <= state_next; 
@@ -644,6 +686,10 @@ always@(posedge clk, negedge rst) begin
         lc_transition_counter_r <= lc_transition_counter_next; 
         lc_transition_done_r <= lc_transition_done_next; 
         ipid_temp_r <= ipid_temp_next; 
+        temp_r <= temp_next; 
+        lifecycle_authentication_done_r <= lifecycle_authentication_done_next; 
+        lifecycle_authentication_value_r <= lifecycle_authentication_value_next; 
+        lc_transition_success_r <= lc_transition_success_next; 
     end 
 end
 
@@ -699,6 +745,10 @@ always_comb begin
     lc_transition_counter_next = lc_transition_counter_r;
     lc_transition_done_next = lc_transition_done_r;
     ipid_temp_next = ipid_temp_r; 
+    temp_next = temp_r; 
+    lifecycle_authentication_done_next = lifecycle_authentication_done_r;
+    lifecycle_authentication_value_next = lifecycle_authentication_value_r; 
+    lc_transition_success_next = lc_transition_success_r; 
 
     case (state_r) 
         INIT : begin
@@ -724,6 +774,29 @@ always_comb begin
         end 
         FINISH : begin
             chip_id_challenge(); 
+        end 
+        LC_TRANSITION : begin
+            if (lc_transition_request_in) begin
+                temp_next = lc_transition_id; 
+                state_next = LC_TRANSITION1;
+            end 
+        end 
+        LC_TRANSITION1 : begin
+            lifecycle_transition(temp_r); 
+            if (lc_transition_done_r) begin
+                state_next = LC_AUTH;                
+                lc_transition_done_next = 0;
+            end 
+        end 
+        LC_AUTH : begin
+            if (lc_authentication_valid) begin
+                temp_next = lc_authentication_id;
+                state_next = LC_AUTH1; 
+            end 
+        end     
+        LC_AUTH1 : begin
+            lifecycle_authentication(temp_r);
+            
         end 
     endcase
 end 

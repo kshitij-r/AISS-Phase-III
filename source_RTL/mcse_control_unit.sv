@@ -75,7 +75,9 @@ module mcse_control_unit #(
     wire lc_transition_request;
     wire [255:0] lc_identifier;
     wire lc_success;
+    wire lc_done; 
     wire [2:0] lc_state; 
+    
 
     lifecycle_protection lc_protection ( .* );
 
@@ -85,6 +87,7 @@ module mcse_control_unit #(
     wire [memory_width-1:0]         wrData;
     wire [memory_width-1:0]         rdData;
     wire                            rdData_valid;
+    
 
     secure_memory #(.WIDTH(memory_width), .LENGTH(memory_length) ) mem (.*);
 

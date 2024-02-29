@@ -7,6 +7,7 @@ module lifecycle_protection (
     input  logic [255:0] lc_identifier,
 
     output logic         lc_success,
+    output logic         lc_done, 
     output logic [2:0]   lc_state
 );
 
@@ -37,6 +38,7 @@ always@(posedge clk, negedge rst) begin
         state_r <= START; 
         lc_r <= 3'b000;   
         lc_success <= 1'b0; 
+        lc_done <= 0; 
     end 
     else begin
         case (state_r) 
@@ -55,12 +57,14 @@ always@(posedge clk, negedge rst) begin
                         // Increment lc state, assert success 
                         lc_r <= lc_r + 1; 
                         lc_success <= 1'b1; 
+                        lc_done <= 1; 
                         state_r <= FINISH; 
                     end 
                     else begin
                         // If not correct identifer, ignore request 
                         lc_success <= 1'b0;
                         identifier_r <= 0;
+                        lc_done <= 1; 
                         state_r <= FINISH;
                     end 
                 end 
@@ -69,7 +73,8 @@ always@(posedge clk, negedge rst) begin
                 rd_en <= 0; 
                 // Wait until transition request is deasserted 
                 if (lc_transition_request == 1'b0) begin
-                    // Deassert success and go back to start 
+                    // Deassert success and go back to start
+                    lc_done <= 0;  
                     lc_success <= 1'b0; 
                     state_r <= START;
                 end 

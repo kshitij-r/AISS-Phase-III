@@ -12,7 +12,10 @@ module mcse_top_tb;
     logic                 clk=0;
     logic                 rst;
 	logic  [gpio_N-1:0]   gpio_in;
-
+    logic  [255:0]        lc_transition_id;
+    logic                 lc_transition_request_in;
+    logic  [255:0]        lc_authentication_id;
+    logic                 lc_authentication_valid;
 	logic [gpio_N-1:0]   gpio_out;
 
     logic [15:0] ipid_array [255:0];
@@ -31,7 +34,7 @@ module mcse_top_tb;
         k =0;
         for (int i = 0; i < 16; i++) begin
             gpio_in[13] = 1;
-            $displayh("IP ID Trigger received...Sending IP ID from address ", gpio_out[11:8]); 
+            $displayh("[TB] IP ID Trigger received...Sending IP ID from address ", gpio_out[11:8]); 
             for (int j = 0; j < 18; j++) begin
 				if (j == 0) begin 
 					gpio_in[31:16] = 16'h7A7A;
@@ -91,6 +94,13 @@ module mcse_top_tb;
        
         ipid_send();   
         $display("[MCSE] IP ID Extraction Complete");   
+
+        while (~mcse.control_unit.secure_boot.chip_id_generation_done_r) begin
+            @(posedge clk); 
+        end 
+        $displayh("[MCSE] Internal Generated Chip ID = " , mcse.control_unit.secure_boot.chip_id_r);
+        $displayh("[MCSE] Generated Chip ID, storing in memory...");
+
     endtask
 
     task initialize_array();
@@ -98,6 +108,59 @@ module mcse_top_tb;
             ipid_array[i] = $urandom_range(0,65536);
         end 
     endtask 
+
+    task chipid_auth();
+        chipid_generation(); 
+
+        while (~mcse.control_unit.secure_boot.chip_id_challenge_done_r) begin
+            @(posedge clk); 
+        end
+        
+        $displayh("[MCSE] Internal MCSE ID = ", mcse.control_unit.secure_boot.mcse_id_r);
+        $displayh("[MCSE] Internal Composite IP ID = ", mcse.control_unit.secure_boot.ipid_hash_r);
+        $displayh("[MCSE] Internal Golden Chip ID = ", mcse.control_unit.mem.ram[0]);
+        $displayh("[MCSE] Internal Generated Chip ID = " , mcse.control_unit.secure_boot.chip_id_r);
+        $displayh("[MCSE] Internal Authentic Chip ID Value = ", mcse.control_unit.secure_boot.authentic_chip_id_r); 
+    endtask
+
+    task lifecyle_transition_request(input bit [255:0] id); 
+        $displayh("[MCSE] Current Lifecycle State = ", mcse.control_unit.secure_boot.lc_state); 
+        
+        lc_transition_request_in = 1;
+        lc_transition_id = id; 
+
+        while (~mcse.control_unit.secure_boot.lc_transition_done_r) begin
+            @(posedge clk);
+        end
+
+        $displayh("[MCSE] Internal LC Transition Success Value = ", mcse.control_unit.secure_boot.lc_transition_success_r);
+        if (mcse.control_unit.secure_boot.lc_transition_success_r) begin
+            $display("[MCSE] Lifecycle transition successful");
+        end 
+        else begin
+            $display("[MCSE] Lifecycle transition failed");
+        end 
+    endtask   
+
+    task lifecycle_auth(input bit [255:0] id);
+        lc_authentication_valid = 1; 
+        lc_authentication_id = id;
+
+        while (~mcse.control_unit.secure_boot.lifecycle_authentication_done_r) begin
+            @(posedge clk);
+        end
+
+        $displayh("[MCSE] Internal Lifecycle Authentication Value = ", mcse.control_unit.secure_boot.lc_authentication_value_r);
+        if (mcse.control_unit.secure_boot.lc_authentication_value_r) begin
+            $display("[MCSE] Lifecycle authentication successful");
+        end
+        else begin
+            $dipslay("[MCSE] Lifecycle authentication failed");
+        end 
+    endtask 
+
+    logic [255:0] lc_transition_id_testing = 256'h33a344a35afd82155e5a6ef2d092085d704dc70561dde45d27962d79ea56a24a;
+    logic [255:0] lc_authentication_id_oem = 256'h431909d9da263164ab4d39614e0c50a32774a49b3390a53ffa63e8d74b8e7c0b;
 
     initial begin : drive_inputs
 
@@ -114,25 +177,9 @@ module mcse_top_tb;
         @(posedge clk); 
         @(posedge clk); 
 
-        chipid_generation();
-        
+        lifecyle_transition_request(lc_transition_id_testing);
 
-        while (~mcse.control_unit.secure_boot.chip_id_generation_done_r) begin
-            @(posedge clk); 
-        end 
-        $displayh("[MCSE] Generated Chip ID, storing in memory...");
-
-        chipid_generation(); 
-
-        while (~mcse.control_unit.secure_boot.chip_id_challenge_done_r) begin
-            @(posedge clk); 
-        end
-        
-        $displayh("[MCSE] Internal MCSE ID = ", mcse.control_unit.secure_boot.mcse_id_r);
-        $displayh("[MCSE] Internal Composite IP ID = ", mcse.control_unit.secure_boot.ipid_hash_r);
-        $displayh("[MCSE] Internal Golden Chip ID = ", mcse.control_unit.mem.ram[0]);
-        $displayh("[MCSE] Internal Generated Chip ID = " , mcse.control_unit.secure_boot.chip_id_r);
-        $displayh("[MCSE] Internal Authentic Chip ID Value = ", mcse.control_unit.secure_boot.authentic_chip_id_r); 
+        lifecycle_auth(lc_authentication_id_oem);
 
         $finish; 
     end 
