@@ -38,7 +38,7 @@ module mcse_control_unit #(
 
     // *** To Boot Control 
     input  [255:0]        lc_transition_id,
-    input                 lc_transition_request,
+    input                 lc_transition_request_in,
     input  [255:0]        lc_authentication_id,
     input                 lc_authentication_valid,     
 

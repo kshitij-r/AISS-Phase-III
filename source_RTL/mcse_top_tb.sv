@@ -114,10 +114,6 @@ module mcse_top_tb;
         @(posedge clk); 
         @(posedge clk); 
 
-        while (gpio_out[...]) begin
-            @(posedge clk); 
-        end 
-
         chipid_generation();
         
 
