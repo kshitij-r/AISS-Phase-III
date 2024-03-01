@@ -107,14 +107,16 @@ module secure_boot_control # (
     output logic                                rd_en,
     output logic                                wr_en,
     output logic [$clog2(memory_length)-1:0]    addr,
-    output logic [memory_width-1:0]             wrData
+    output logic [memory_width-1:0]             wrData,
+
+    output logic                                lc_authentication_request
 );
 
 reg [255:0] encryption_output_r, encryption_output_next; 
 reg half_r, half_next; 
 reg encryption_done_r, encryption_done_next;
 
-typedef enum logic [2:0] {INIT, START, FINISH, LC_TRANSITION, LC_TRANSITION1, LC_AUTH, LC_AUTH1} state_t;
+typedef enum logic [2:0] {MCSE_INIT, RESET_SOC, LC_AUTH, CHIPID_GEN, CHALLENGE_CHIPID, LC_POLL, LC_TRANSITION} state_t;
 state_t state_r, state_next;
 
 logic [127:0]                    cam_data_in_next;
@@ -565,6 +567,7 @@ function void lifecycle_authentication(input bit [255:0] id);
 endfunction 
 
 logic [255:0] temp_r, temp_next; 
+logic lc_authentication_request_next; 
 
 always@(posedge clk, negedge rst) begin 
     if (~rst) begin
@@ -624,7 +627,9 @@ always@(posedge clk, negedge rst) begin
         temp_r <= 0; 
         lifecycle_authentication_done_r <= 0;
         lifecycle_authentication_value_r <= 0;
-        lc_transition_success_r <= lc_transition_success_next;
+        lc_transition_success_r <= 0;
+        lc_authentication_request <= 0; 
+
     end 
     else begin
         state_r <= state_next; 
@@ -690,6 +695,7 @@ always@(posedge clk, negedge rst) begin
         lifecycle_authentication_done_r <= lifecycle_authentication_done_next; 
         lifecycle_authentication_value_r <= lifecycle_authentication_value_next; 
         lc_transition_success_r <= lc_transition_success_next; 
+        lc_authentication_request <= lc_authentication_request_next; 
     end 
 end
 
@@ -749,39 +755,52 @@ always_comb begin
     lifecycle_authentication_done_next = lifecycle_authentication_done_r;
     lifecycle_authentication_value_next = lifecycle_authentication_value_r; 
     lc_transition_success_next = lc_transition_success_r; 
+    lc_authentication_request_next = lc_authentication_request; 
 
     case (state_r) 
-        INIT : begin
+        MCSE_INIT : begin
             gpio_RW_next = 1; 
             gpio_wrData_next = 0;
             gpio_data_type_next = `GPIO_ODATA; 
             gpio_reg_access_next = 1; 
-            state_next <= START;
+            state_next <= RESET_SOC;
         end 
-        START : begin
-            //lifecycle_transition(256'h33a344a35afd82155e5a6ef2d092085d704dc70561dde45d27962d79ea56a24a); 
+        RESET_SOC : begin
+            // insert reset function 
 
+            if (lc_state == 3'b000) begin
+                state_next = CHIPID_GEN; 
+            end 
+            else begin
+                state_next = LC_AUTH; 
+            end  
+        end 
+        CHIPID_GEN : begin
             chip_id_generation(); 
             if (chip_id_generation_done_r) begin
                 memory_write(`CHIP_ID_ADDR, chip_id_r);
                 if (memory_write_done_r) begin
-                    memory_write_done_next = 0; 
-                    chip_id_generation_counter_next = 0;  
-                    chip_id_generation_done_next = 0;
-                    state_next  = FINISH;
+                    lifecycle_transition(256'h0); // set lc state to testing using a reset temp register
+                    if (lc_transition_done_r) begin
+                        lc_transition_done_next = 0; 
+                        memory_write_done_next = 0; 
+                        chip_id_generation_counter_next = 0;  
+                        chip_id_generation_done_next = 0;
+                        state_next  = LC_POLL;                        
+                    end 
                 end 
-            end 
+            end
         end 
-        FINISH : begin
-            chip_id_challenge(); 
+        LC_AUTH : begin
+
         end 
-        LC_TRANSITION : begin
+        LC_POLL : begin
             if (lc_transition_request_in) begin
                 temp_next = lc_transition_id; 
-                state_next = LC_TRANSITION1;
-            end 
+                state_next = LC_TRANSITION;
+            end             
         end 
-        LC_TRANSITION1 : begin
+        LC_TRANSITION : begin
             lifecycle_transition(temp_r); 
             if (lc_transition_done_r) begin
                 state_next = LC_AUTH;                
@@ -789,15 +808,20 @@ always_comb begin
             end 
         end 
         LC_AUTH : begin
+            lc_authentication_request_next = 1; 
             if (lc_authentication_valid) begin
                 temp_next = lc_authentication_id;
-                state_next = LC_AUTH1; 
+                lc_authentication_request_next = 0; 
+                state_next = CHALLENGE_CHIPID; 
             end 
-        end     
-        LC_AUTH1 : begin
-            lifecycle_authentication(temp_r);
-            
-        end 
+        end  
+        CHALLENGE_CHIPID : begin
+            chip_id_challenge();
+            if (chip_id_challenge_done_r) begin
+                chip_id_challenge_done_next = 0;
+                state_next = LC_POLL; 
+            end 
+        end    
     endcase
 end 
 

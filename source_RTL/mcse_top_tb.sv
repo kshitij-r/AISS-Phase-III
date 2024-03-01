@@ -16,6 +16,7 @@ module mcse_top_tb;
     logic                 lc_transition_request_in;
     logic  [255:0]        lc_authentication_id;
     logic                 lc_authentication_valid;
+    logic                 lc_authentication_request; 
 	logic [gpio_N-1:0]   gpio_out;
 
     logic [15:0] ipid_array [255:0];
@@ -140,6 +141,7 @@ module mcse_top_tb;
         else begin
             $display("[MCSE] Lifecycle transition failed");
         end 
+        $displayh("[MCSE] Current Lifecycle State = ", mcse.control_unit.secure_boot.lc_state); 
     endtask   
 
     task lifecycle_auth(input bit [255:0] id);
@@ -162,6 +164,24 @@ module mcse_top_tb;
     logic [255:0] lc_transition_id_testing = 256'h33a344a35afd82155e5a6ef2d092085d704dc70561dde45d27962d79ea56a24a;
     logic [255:0] lc_authentication_id_oem = 256'h431909d9da263164ab4d39614e0c50a32774a49b3390a53ffa63e8d74b8e7c0b;
 
+    task testing_lifecycle();
+        chipid_generation(); 
+
+        while (mcse.control_unit.secure_boot.lc_state == 0) begin
+            @(posedge clk); 
+        end 
+
+        lifecycle_transition_request(lc_transition_id_testing); 
+
+    endtask 
+
+    task oem_lifecycle();
+
+        lifecycle_auth(lc_authentication_id_oem); 
+        chipid_auth(); 
+
+    endtask 
+
     initial begin : drive_inputs
 
         for (integer i = 0; i < 10; i=i+1) begin
@@ -177,9 +197,9 @@ module mcse_top_tb;
         @(posedge clk); 
         @(posedge clk); 
 
-        lifecyle_transition_request(lc_transition_id_testing);
+        testing_lifecycle();
 
-        lifecycle_auth(lc_authentication_id_oem);
+        oem_lifecycle(); 
 
         $finish; 
     end 

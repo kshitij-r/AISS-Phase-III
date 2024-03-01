@@ -16,7 +16,8 @@ module mcse_top # (
     input  [255:0]        lc_authentication_id,
     input                 lc_authentication_valid, 
 
-	output [gpio_N-1:0]   gpio_out
+	output [gpio_N-1:0]   gpio_out,
+    output                lc_authentication_request
 );
 
     // Camellia Inputs 

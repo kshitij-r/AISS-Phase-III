@@ -77,6 +77,7 @@ module mcse_control_unit #(
     wire lc_success;
     wire lc_done; 
     wire [2:0] lc_state; 
+    wire lc_authentication_request; 
     
 
     lifecycle_protection lc_protection ( .* );
