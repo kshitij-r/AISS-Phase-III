@@ -1,6 +1,8 @@
-//TODO Configurability of length of IP ID
+//TODO Configurability 
 //TODO Edge cases of IP ID Extraction 
 //TODO Where is lc transition coming from? 
+//TODO GPIO ILAT and PCM
+//TODO First boot functionality
 
 `define GPIO_IDATA 6'h5
 `define GPIO_ODATA 6'h0
@@ -107,9 +109,7 @@ module secure_boot_control # (
     output logic                                rd_en,
     output logic                                wr_en,
     output logic [$clog2(memory_length)-1:0]    addr,
-    output logic [memory_width-1:0]             wrData,
-
-    output logic                                lc_authentication_request
+    output logic [memory_width-1:0]             wrData
 );
 
 reg [255:0] encryption_output_r, encryption_output_next; 
@@ -547,31 +547,42 @@ endfunction
 
 logic lifecycle_authentication_done_r, lifecycle_authentication_done_next; 
 logic lifecycle_authentication_value_r, lifecycle_authentication_value_next; 
+logic lifecycle_authentication_counter_r, lifecycle_authentication_counter_next; 
 
-function void lifecycle_authentication(input bit [255:0] id); 
+function void lifecycle_authentication(); 
     if (~lifecycle_authentication_done_r) begin
-        memory_read(`LC_AUTHENTICATION_ID_ADDR_START + lc_state); 
-        if (memory_read_done_r) begin
-            if (rdData_r == id) begin
-                lifecycle_authentication_value_next = 1; 
-                rdData_next = 0;     
-            end
-            else begin
-                lifecycle_authentication_value_next = 0; 
-                rdData_next = 0; 
+        case (lifecycle_authentication_counter_r)
+            1'b0 : begin
+                memory_read(`LC_AUTHENTICATION_ID_ADDR_START + lc_state); 
+                if (memory_read_done_r) begin
+                    lifecycle_authentication_counter_next = 1; 
+                end 
             end 
-            lifecycle_authentication_done_next = 1;  
-            memory_read_done_next = 0;
-        end  
+            1'b1 : begin
+                if (lc_authentication_valid) begin
+                    if (rdData_r == lc_authentication_id) begin
+                        lifecycle_authentication_value_next = 1;
+                        rdData_next =0; 
+                    end 
+                    else begin
+                        lifecycle_authentication_value_next = 0;
+                        rdData_next =0; 
+                    end     
+                    lifecycle_authentication_done_next = 1;
+                    memory_read_done_next = 0; 
+                    lifecycle_authentication_counter_next = 0; 
+                end 
+            end
+        endcase 
     end 
 endfunction 
 
 logic [255:0] temp_r, temp_next; 
-logic lc_authentication_request_next; 
+
 
 always@(posedge clk, negedge rst) begin 
     if (~rst) begin
-        state_r <= LC_TRANSITION;
+        state_r <= MCSE_INIT;
         cam_data_in <= 0;
         cam_key <= 0; 
         cam_k_len <= 2'b10;
@@ -628,8 +639,7 @@ always@(posedge clk, negedge rst) begin
         lifecycle_authentication_done_r <= 0;
         lifecycle_authentication_value_r <= 0;
         lc_transition_success_r <= 0;
-        lc_authentication_request <= 0; 
-
+        lifecycle_authentication_counter_r <= 0;
     end 
     else begin
         state_r <= state_next; 
@@ -695,7 +705,7 @@ always@(posedge clk, negedge rst) begin
         lifecycle_authentication_done_r <= lifecycle_authentication_done_next; 
         lifecycle_authentication_value_r <= lifecycle_authentication_value_next; 
         lc_transition_success_r <= lc_transition_success_next; 
-        lc_authentication_request <= lc_authentication_request_next; 
+        lifecycle_authentication_counter_r <= lifecycle_authentication_counter_next; 
     end 
 end
 
@@ -755,10 +765,11 @@ always_comb begin
     lifecycle_authentication_done_next = lifecycle_authentication_done_r;
     lifecycle_authentication_value_next = lifecycle_authentication_value_r; 
     lc_transition_success_next = lc_transition_success_r; 
-    lc_authentication_request_next = lc_authentication_request; 
+    lifecycle_authentication_counter_next = lifecycle_authentication_counter_r;
 
     case (state_r) 
         MCSE_INIT : begin
+            // insert mcse init function
             gpio_RW_next = 1; 
             gpio_wrData_next = 0;
             gpio_data_type_next = `GPIO_ODATA; 
@@ -767,7 +778,7 @@ always_comb begin
         end 
         RESET_SOC : begin
             // insert reset function 
-
+            
             if (lc_state == 3'b000) begin
                 state_next = CHIPID_GEN; 
             end 
@@ -782,6 +793,7 @@ always_comb begin
                 if (memory_write_done_r) begin
                     lifecycle_transition(256'h0); // set lc state to testing using a reset temp register
                     if (lc_transition_done_r) begin
+                        lc_transition_success_next = 0;
                         lc_transition_done_next = 0; 
                         memory_write_done_next = 0; 
                         chip_id_generation_counter_next = 0;  
@@ -790,9 +802,6 @@ always_comb begin
                     end 
                 end 
             end
-        end 
-        LC_AUTH : begin
-
         end 
         LC_POLL : begin
             if (lc_transition_request_in) begin
@@ -803,15 +812,14 @@ always_comb begin
         LC_TRANSITION : begin
             lifecycle_transition(temp_r); 
             if (lc_transition_done_r) begin
-                state_next = LC_AUTH;                
+                state_next = MCSE_INIT;                
                 lc_transition_done_next = 0;
             end 
         end 
         LC_AUTH : begin
-            lc_authentication_request_next = 1; 
-            if (lc_authentication_valid) begin
-                temp_next = lc_authentication_id;
-                lc_authentication_request_next = 0; 
+            lifecycle_authentication(); 
+            if (lifecycle_authentication_done_r) begin
+                lifecycle_authentication_done_next = 0;
                 state_next = CHALLENGE_CHIPID; 
             end 
         end  

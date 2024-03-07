@@ -16,7 +16,7 @@ module mcse_top_tb;
     logic                 lc_transition_request_in;
     logic  [255:0]        lc_authentication_id;
     logic                 lc_authentication_valid;
-    logic                 lc_authentication_request; 
+  
 	logic [gpio_N-1:0]   gpio_out;
 
     logic [15:0] ipid_array [255:0];
@@ -125,15 +125,22 @@ module mcse_top_tb;
     endtask
 
     task lifecyle_transition_request(input bit [255:0] id); 
+        $display("[TB_TOP] Requesting a lifecycle transition..."); 
         $displayh("[MCSE] Current Lifecycle State = ", mcse.control_unit.secure_boot.lc_state); 
         
+        while (mcse.control_unit.secure_boot.lc_transition_request) begin
+            $display("Stall until internal lc transition request signal is deasserted...");
+            @(posedge clk); 
+        end 
+
         lc_transition_request_in = 1;
         lc_transition_id = id; 
 
-        while (~mcse.control_unit.secure_boot.lc_transition_done_r) begin
+        while (mcse.control_unit.secure_boot.lc_transition_done_r==0) begin
             @(posedge clk);
         end
-
+        lc_transition_request_in = 0;
+        lc_transition_id = 0;
         $displayh("[MCSE] Internal LC Transition Success Value = ", mcse.control_unit.secure_boot.lc_transition_success_r);
         if (mcse.control_unit.secure_boot.lc_transition_success_r) begin
             $display("[MCSE] Lifecycle transition successful");
@@ -145,19 +152,28 @@ module mcse_top_tb;
     endtask   
 
     task lifecycle_auth(input bit [255:0] id);
+
+        $display("[TB_TOP] Requesting LC Authentication...");   
+        $displayh("[TB_TOP] LC Key = ", id);       
+
         lc_authentication_valid = 1; 
         lc_authentication_id = id;
 
         while (~mcse.control_unit.secure_boot.lifecycle_authentication_done_r) begin
             @(posedge clk);
         end
+        
+        while (mcse.control_unit.secure_boot.lifecycle_authentication_done_r) begin
+            @(posedge clk); 
+        end 
 
-        $displayh("[MCSE] Internal Lifecycle Authentication Value = ", mcse.control_unit.secure_boot.lc_authentication_value_r);
-        if (mcse.control_unit.secure_boot.lc_authentication_value_r) begin
+        $display("[MCSE] Lifecycle Authentication Complete"); 
+        $displayh("[MCSE] Internal Lifecycle Authentication Value = ", mcse.control_unit.secure_boot.lifecycle_authentication_value_r);
+        if (mcse.control_unit.secure_boot.lifecycle_authentication_value_r) begin
             $display("[MCSE] Lifecycle authentication successful");
         end
         else begin
-            $dipslay("[MCSE] Lifecycle authentication failed");
+            $display("[MCSE] Lifecycle authentication failed");
         end 
     endtask 
 
@@ -166,20 +182,33 @@ module mcse_top_tb;
 
     task testing_lifecycle();
         chipid_generation(); 
+         
+        // while (mcse.control_unit.secure_boot.lc_state == 0) begin
+        //     @(posedge clk); 
+        // end 
+      
+        while (~mcse.control_unit.secure_boot.lc_transition_done_r) begin
+            @(posedge clk);
+        end
 
-        while (mcse.control_unit.secure_boot.lc_state == 0) begin
+        while (mcse.control_unit.secure_boot.lc_transition_done_r) begin
             @(posedge clk); 
         end 
+        // wait a clock cycle to ensure the lc protection module doesnt stall
 
-        lifecycle_transition_request(lc_transition_id_testing); 
+     
 
+        lifecyle_transition_request(lc_transition_id_testing); 
+        $display("[MCSE] Testing lifecycle complete");
     endtask 
 
     task oem_lifecycle();
 
         lifecycle_auth(lc_authentication_id_oem); 
         chipid_auth(); 
-
+        if (mcse.control_unit.secure_boot.lifecycle_authentication_value_r && mcse.control_unit.secure_boot.authentic_chip_id_r) begin
+            $display("[MCSE] Succesfully completed Lifecycle and Chip ID authentication...Ready to relinquish boot control");
+        end
     endtask 
 
     initial begin : drive_inputs
@@ -200,6 +229,10 @@ module mcse_top_tb;
         testing_lifecycle();
 
         oem_lifecycle(); 
+
+        for (int i = 0; i < 10; i++) begin
+            @(posedge clk); 
+        end 
 
         $finish; 
     end 

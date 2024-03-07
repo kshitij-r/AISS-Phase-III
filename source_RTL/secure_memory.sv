@@ -25,7 +25,7 @@ always @(posedge clk, negedge rst) begin
 		//ram[0] <= 0;
 		//ram[1] <= 0; 
 		ram[2] <= 256'h49361d1ee0abd2c572b0edf565a9984c3ed4923ab2f88cd6b0eaa30d0c13ef1b; // secure communication key 
-		ram[9] <= 256'h431909d9da263164ab4d39614e0c50a32774a49b3390a53ffa63e8d74b8e7c0b;
+		ram[10] <= 256'h431909d9da263164ab4d39614e0c50a32774a49b3390a53ffa63e8d74b8e7c0b;
 
 	end 
 	else begin
