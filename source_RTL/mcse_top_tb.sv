@@ -11,21 +11,21 @@ module mcse_top_tb;
 
     logic                 clk=0;
     logic                 rst;
-	logic  [gpio_N-1:0]   gpio_in;
+    logic  [gpio_N-1:0]   gpio_in;
     logic                 ami_ack;
 
     logic [255:0]        mcse_ami_out;
-	logic [gpio_N-1:0]   gpio_out;
+    logic [gpio_N-1:0]   gpio_out;
 
     logic [15:0] ipid_array [255:0];
 
-	initial begin :generate_clock
-		while (1)
-			#5 clk = ~clk;
-	end	
+    initial begin :generate_clock
+        while (1)
+            #5 clk = ~clk;
+    end 
 
-    mcse_top #(.pcm_data_width(pcm_data_width), .pcm_addr_width(pcm_addr_width), . puf_sig_length(puf_sig_length),
-    .gpio_N(gpio_N), .gpio_AW(gpio_AW), .gpio_PW(gpio_PW) )mcse ( .* );
+    mcse_top #(.pcm_data_width(pcm_data_width), .pcm_addr_width(pcm_addr_width), .puf_sig_length(puf_sig_length),
+    .gpio_N(gpio_N), .gpio_AW(gpio_AW), .gpio_PW(gpio_PW)) mcse( .* );
 
     int k = 0;
     
@@ -35,23 +35,23 @@ module mcse_top_tb;
             gpio_in[13] = 1;
             $displayh("IP ID Trigger received...Sending IP ID from address ", gpio_out[11:8]); 
             for (int j = 0; j < 18; j++) begin
-				if (j == 0) begin 
-					gpio_in[31:16] = 16'h7A7A;
+                if (j == 0) begin 
+                    gpio_in[31:16] = 16'h7A7A;
                     $displayh("[TB] GPIO_IN[31:16] = ", gpio_in[31:16]);
-					@(posedge clk);
-					continue;
-				end 
-				else if (j == 17) begin
-					gpio_in[31:16] = 16'hB9B9;
+                    @(posedge clk);
+                    continue;
+                end 
+                else if (j == 17) begin
+                    gpio_in[31:16] = 16'hB9B9;
                     $displayh("[TB] GPIO_IN[31:16] = ", gpio_in[31:16]);
-					@(posedge clk);
-					continue;
-				end else begin 
-				gpio_in[31:16] = ipid_array[k];
+                    @(posedge clk);
+                    continue;
+                end else begin 
+                gpio_in[31:16] = ipid_array[k];
                 //gpio_in[31:16] = $urandom_range(0,65536);
                 k = k+1;
                 $displayh("[TB] GPIO_IN[31:16] = ", gpio_in[31:16]);
-				@(posedge clk); 
+                @(posedge clk); 
                 end  
             end 
 
@@ -101,6 +101,50 @@ module mcse_top_tb;
         end 
     endtask 
 
+    task reset_handshake();
+        $display("Waiting for reset request");
+        while (gpio_out[0] != 1) begin // sending reset
+            @(posedge clk); 
+        end 
+
+        $displayh("Reset sending, gpio_out[0] = ", gpio_out[0]);
+        $display("Reset request received...Sending host ACK");
+
+        gpio_in[1] = 1; // host ack
+        @(posedge clk); 
+
+        // Wait for the completion of the reset routine
+        while (~mcse.control_unit.secure_boot.reset_routine_done_r) begin
+            @(posedge clk);
+        end
+
+        $display("Reset routine completed");
+        $displayh("Reset ack proof, gpio_reg_rdata[1] = ", mcse.control_unit.secure_boot.gpio_reg_rdata[1]);
+
+    endtask
+
+    task operation_release_handshake();
+        $display("Waiting for operation release trigger");
+        while (gpio_out[4] != 1) begin // sending reset
+            @(posedge clk); 
+        end 
+
+        $displayh("Normal operation release pin, gpio_out[4] = ", gpio_out[4]);
+        $display("Normal operation release trigger received...Sending host ACK");
+
+        gpio_in[5] = 1; // host ack
+        @(posedge clk); 
+
+        // Wait for the completion of the reset routine
+        while (~mcse.control_unit.secure_boot.operation_release_done_r) begin
+            @(posedge clk);
+        end
+
+        $display("Normal operation release completed");
+        $displayh("Host ack proof, gpio_reg_rdata[5] = ", mcse.control_unit.secure_boot.gpio_reg_rdata[5]);
+
+    endtask
+
     initial begin : drive_inputs
 
         for (integer i = 0; i < 10; i=i+1) begin
@@ -111,30 +155,40 @@ module mcse_top_tb;
 
         initialize_array();
 
-    	rst = 1;
-	    @(posedge clk);
+        rst = 1;
+        @(posedge clk);
         @(posedge clk); 
         @(posedge clk); 
 
-        chipid_generation();
+        // chipid_generation();
         
 
-        while (~mcse.control_unit.secure_boot.chip_id_generation_done_r) begin
-            @(posedge clk); 
-        end 
-        $displayh("[MCSE] Generated Chip ID, storing in memory...");
+        // while (~mcse.control_unit.secure_boot.chip_id_generation_done_r) begin
+        //     @(posedge clk); 
+        // end 
+        // $displayh("[MCSE] Generated Chip ID, storing in memory...");
 
-        chipid_generation(); 
+        // chipid_generation(); 
 
-        while (~mcse.control_unit.secure_boot.chip_id_challenge_done_r) begin
-            @(posedge clk); 
-        end
+        // while (~mcse.control_unit.secure_boot.chip_id_challenge_done_r) begin
+        //     @(posedge clk); 
+        // end
+
         
-        $displayh("[MCSE] Internal MCSE ID = ", mcse.control_unit.secure_boot.mcse_id_r);
-        $displayh("[MCSE] Internal Composite IP ID = ", mcse.control_unit.secure_boot.ipid_hash_r);
-        $displayh("[MCSE] Internal Golden Chip ID = ", mcse.control_unit.mem.ram[0]);
-        $displayh("[MCSE] Internal Generated Chip ID = " , mcse.control_unit.secure_boot.chip_id_r);
-        $displayh("[MCSE] Internal Authentic Chip ID Value = ", mcse.control_unit.secure_boot.authentic_chip_id_r); 
+        
+        reset_handshake();
+        // operation_release_handshake();
+
+        
+        
+        // $displayh("[MCSE] Internal MCSE ID = ", mcse.control_unit.secure_boot.mcse_id_r);
+        // $displayh("[MCSE] Internal Composite IP ID = ", mcse.control_unit.secure_boot.ipid_hash_r);
+        // $displayh("[MCSE] Internal Golden Chip ID = ", mcse.control_unit.mem.ram[0]);
+        // $displayh("[MCSE] Internal Generated Chip ID = " , mcse.control_unit.secure_boot.chip_id_r);
+        // $displayh("[MCSE] Internal Authentic Chip ID Value = ", mcse.control_unit.secure_boot.authentic_chip_id_r); 
+        
+       
+        
 
         $finish; 
     end 

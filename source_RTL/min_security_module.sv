@@ -1,4 +1,3 @@
-/*
 `include "definitions.svh"
 `include "sha_top.sv"
 `include "camellia_top.sv"
@@ -12,21 +11,34 @@
 `include "sha256_puf_256.v"
 `include "primitives.v"
 `include "io.v"
-*/
+
 module min_security_module 
     #( data_width        = 32,
        addr_width        = 32,
        puf_sig_length    = 256,
+       valid_byte_offset = 16,
+       parity_bits_width = 48,
        N      = 24,     
        AW     = 32,      
-       PW     = 2*AW+40
+       PW     = 2*AW+40,  
+       ID     = 0
     )
 
     (
     // Global signals for minimum security module
     input clk, 
     input rst,
-
+    
+    /*
+    IO interface for AES256 inside the minimum security module
+    */
+    //input [127:0]   aes_state,
+    //input [255:0]   aes_key,
+    //input           aes_start,
+    //input           aes_sel,
+    //output [127:0]  aes_out,
+    //output          aes_out_valid,
+    //output [255:0]  aes_pufout,
     /*
     IO interface for CAMELLIA inside the minimum security module
     */
@@ -73,11 +85,11 @@ module min_security_module
     input 	        reg_access, 
     input  [N-1:0]  gpio_in, 
     input [PW-1:0]  reg_packet,  
-    output [N-1:0]   reg_rdata,   
+    output [31:0]   reg_rdata,   
     output [N-1:0]  gpio_out,    
     output [N-1:0]  gpio_en,    
     output 	        gpio_irq,    
-    output [N-1:0]   gpio_ilat  
+    output [31:0]   gpio_ilat  
 );
 
 /*
@@ -95,6 +107,21 @@ sha_top sha_control(
     .digest_valid(sha_digest_valid),
     .pufout(sha_pufout)
 );
+
+/*
+AES 256 MODULE INSTANCE FOR MINIMUM SECURITY MODULE
+*/
+/*aes_top aes_control(
+    .clk(clk),
+    .rst(rst),
+    .state(aes_state),
+    .key(aes_key),
+    .start(aes_start),
+    .sel(aes_sel),
+    .out(aes_out),
+    .out_valid(aes_out_valid),
+    .pufout(aes_pufout)
+    );*/
 
 /*
 CAMELLIA 256 MODULE INSTANCE FOR MINIMUM SECURITY MODULE
@@ -134,6 +161,6 @@ gpio boot_control(
 /*
 PUF CONTROL MODULE FOR MINIMUM SECURITY MODULE
 */
-//pcm pcm_mod(.*);
+pcm pcm_mod(.*);
 
 endmodule

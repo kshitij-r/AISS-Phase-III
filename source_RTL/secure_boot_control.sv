@@ -5,6 +5,8 @@
 `define GPIO_ODATA 6'h0
 
 `define SYS_BUS_WAKEUP 24'b1000000
+`define RST_Request 24'b1
+`define Operation_Release_to_Host 24'b10000
 
 `define IPID_START_BITS 16'h7A7A
 `define IPID_STOP_BITS 16'hB9B9
@@ -103,7 +105,7 @@ reg [255:0] encryption_output_r, encryption_output_next;
 reg half_r, half_next; 
 reg encryption_done_r, encryption_done_next;
 
-typedef enum logic [1:0] {INIT, START, FINISH} state_t;
+typedef enum logic [1:0] {INIT, START, FINISH, temp} state_t;
 state_t state_r, state_next;
 
 logic [127:0]                    cam_data_in_next;
@@ -521,9 +523,61 @@ function void lifecycle_transition(input bit [255:0] id);
     end
 endfunction 
 
+logic reset_routine_done_r, reset_routine_done_next;
+logic [1:0] reset_handshake_counter_r, reset_handshake_counter_next;
+
+function void Reset_request();
+    if (~reset_routine_done_r) begin
+        case (reset_handshake_counter_r)
+            2'b00 : begin // send reset
+                gpio_wrData_next = `RST_Request;
+                gpio_RW_next = 1'b1;
+                gpio_data_type_next = `GPIO_ODATA;
+                gpio_reg_access_next = 1; 
+                reset_handshake_counter_next = reset_handshake_counter_r + 1; 
+            end 
+            2'b01 : begin // wait for host ack
+                gpio_data_type_next = `GPIO_IDATA; 
+                gpio_RW_next = 0;
+                gpio_reg_access_next = 1;
+                if (gpio_reg_rdata[1]) begin
+                    reset_routine_done_next = 1;
+                    reset_handshake_counter_next = 0;
+                end 
+            end
+            endcase
+    end
+    endfunction
+
+logic operation_release_done_r, operation_release_done_next;
+logic [1:0] operation_release_counter_r, operation_release_counter_next;
+
+function void operation_release_request();
+    if (~operation_release_done_r) begin
+        case (operation_release_counter_r)
+            2'b00 : begin // bus wake up
+                gpio_wrData_next = `Operation_Release_to_Host;
+                gpio_RW_next = 1'b1;
+                gpio_data_type_next = `GPIO_ODATA;
+                gpio_reg_access_next = 1; 
+                operation_release_counter_next = operation_release_counter_r + 1; 
+            end 
+            2'b01 : begin // wait for bus wake up ack
+                gpio_data_type_next = `GPIO_IDATA; 
+                gpio_RW_next = 0;
+                if (gpio_reg_rdata[5]) begin
+                    operation_release_done_next = 1;
+                    operation_release_counter_next =0;
+
+                end 
+            end
+            endcase
+        end
+    endfunction
+
 always@(posedge clk, negedge rst) begin 
     if (~rst) begin
-        state_r <= INIT;
+        state_r <= temp;
         cam_data_in <= 0;
         cam_key <= 0; 
         cam_k_len <= 2'b10;
@@ -576,6 +630,10 @@ always@(posedge clk, negedge rst) begin
         lc_transition_counter_r <= 0;
         lc_transition_done_r <= 0;
         ipid_temp_r <= '{default:'0}; 
+        reset_routine_done_r <= 0;
+        reset_handshake_counter_r <= 0;
+        operation_release_counter_r <= 0;
+        operation_release_done_r <= 0;
     end 
     else begin
         state_r <= state_next; 
@@ -637,6 +695,11 @@ always@(posedge clk, negedge rst) begin
         lc_transition_counter_r <= lc_transition_counter_next; 
         lc_transition_done_r <= lc_transition_done_next; 
         ipid_temp_r <= ipid_temp_next; 
+
+        reset_handshake_counter_r <= reset_handshake_counter_next;
+        operation_release_counter_r <= operation_release_counter_next;
+        reset_routine_done_r <= reset_routine_done_next; 
+        operation_release_done_r <= operation_release_done_next;
     end 
 end
 
@@ -693,7 +756,16 @@ always_comb begin
     lc_transition_done_next = lc_transition_done_r;
     ipid_temp_next = ipid_temp_r; 
 
+    reset_handshake_counter_next = reset_handshake_counter_r;
+    operation_release_counter_next = operation_release_counter_r;
+    reset_routine_done_next = reset_routine_done_r;
+    operation_release_done_next = operation_release_done_r;
     case (state_r) 
+
+        temp : begin
+            // operation_release_request();
+            Reset_request();
+        end
         INIT : begin
             gpio_RW_next = 1; 
             gpio_wrData_next = 0;
