@@ -14,8 +14,6 @@ module lc_memory #(
 
 reg [WIDTH-1:0] rom [LENGTH-1:0];
 
-//assign rdData = rom[addr];
-
 always @(posedge clk, negedge rst) begin
 	if (~rst) begin
 		rdData <= 0;

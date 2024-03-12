@@ -2,7 +2,8 @@
 //TODO Edge cases of IP ID Extraction 
 //TODO Where is lc transition coming from? 
 //TODO GPIO ILAT and PCM
-//TODO First boot functionality
+//TODO fuses simulation
+//TODO end of life truncated boot 
 
 `define GPIO_IDATA 6'h5
 `define GPIO_ODATA 6'h0
@@ -35,6 +36,7 @@ module secure_boot_control # (
 (
     input                                       clk,
     input                                       rst,
+    input                                       fuse, 
 
     // Camellia to Boot Control
     input [127:0]                               cam_data_out,
@@ -116,7 +118,7 @@ reg [255:0] encryption_output_r, encryption_output_next;
 reg half_r, half_next; 
 reg encryption_done_r, encryption_done_next;
 
-typedef enum logic [2:0] {MCSE_INIT, RESET_SOC, LC_AUTH, CHIPID_GEN, CHALLENGE_CHIPID, LC_POLL, LC_TRANSITION} state_t;
+typedef enum logic [3:0] {MCSE_INIT, RESET_SOC, LC_AUTH, CHIPID_GEN, CHALLENGE_CHIPID, LC_POLL, LC_TRANSITION, RESET_SOC2, LC_FW_POLL, NORM_OP_RELEASE, ABORT } state_t;
 state_t state_r, state_next;
 
 logic [127:0]                    cam_data_in_next;
@@ -125,9 +127,6 @@ logic [1:0]                      cam_k_len_next;
 logic                           cam_enc_dec_next;
 logic                           cam_data_rdy_next;
 logic                           cam_key_rdy_next;
-
-logic [255:0] data_tmp = {128'hfd81c1769533a1a9690b0b57ca5c9483, 128'hdfbffd392442a7efa38867fe19a98416};
-logic [255:0] key_tmp = 256'h2bb5c55800d08af413a7dc5ed359c8e8a2c4e2f608c1f3809eb133d7e64d51d8;
 
 logic rd_en_next;
 logic wr_en_next;
@@ -578,7 +577,16 @@ function void lifecycle_authentication();
 endfunction 
 
 logic [255:0] temp_r, temp_next; 
+logic first_boot_flag_r, first_boot_flag_next; 
 
+always @(posedge clk, negedge fuse) begin
+    if (~fuse) begin
+        first_boot_flag_r <= 1; 
+    end 
+    else begin
+        first_boot_flag_r <= first_boot_flag_next; 
+    end 
+end 
 
 always@(posedge clk, negedge rst) begin 
     if (~rst) begin
@@ -640,6 +648,8 @@ always@(posedge clk, negedge rst) begin
         lifecycle_authentication_value_r <= 0;
         lc_transition_success_r <= 0;
         lifecycle_authentication_counter_r <= 0;
+
+  
     end 
     else begin
         state_r <= state_next; 
@@ -706,6 +716,7 @@ always@(posedge clk, negedge rst) begin
         lifecycle_authentication_value_r <= lifecycle_authentication_value_next; 
         lc_transition_success_r <= lc_transition_success_next; 
         lifecycle_authentication_counter_r <= lifecycle_authentication_counter_next; 
+        first_boot_flag_r <= first_boot_flag_next; 
     end 
 end
 
@@ -765,7 +776,9 @@ always_comb begin
     lifecycle_authentication_done_next = lifecycle_authentication_done_r;
     lifecycle_authentication_value_next = lifecycle_authentication_value_r; 
     lc_transition_success_next = lc_transition_success_r; 
-    lifecycle_authentication_counter_next = lifecycle_authentication_counter_r;
+    lifecycle_authentication_counter_next = lifecycle_authentication_counter_r; 
+    first_boot_flag_next = first_boot_flag_r; 
+     
 
     case (state_r) 
         MCSE_INIT : begin
@@ -778,13 +791,28 @@ always_comb begin
         end 
         RESET_SOC : begin
             // insert reset function 
-            
-            if (lc_state == 3'b000) begin
-                state_next = CHIPID_GEN; 
+             
+            if (first_boot_flag_r) begin
+                if (lc_state == 3'b000) begin
+                    state_next = CHIPID_GEN; 
+                end 
+                else begin
+                    state_next = LC_AUTH; 
+                end                 
             end 
             else begin
-                state_next = LC_AUTH; 
-            end  
+
+                if (lc_state == 3'b011) begin
+                    state_next = NORM_OP_RELEASE;
+                end 
+                else if (lc_state == 3'b010) begin
+                    state_next = LC_FW_POLL;
+                end 
+                else begin
+                    state_next = LC_POLL; 
+                end 
+                state_next = NORM_OP_RELEASE; 
+            end 
         end 
         CHIPID_GEN : begin
             chip_id_generation(); 
@@ -798,10 +826,15 @@ always_comb begin
                         memory_write_done_next = 0; 
                         chip_id_generation_counter_next = 0;  
                         chip_id_generation_done_next = 0;
-                        state_next  = LC_POLL;                        
+                        state_next  = LC_POLL;
+                        first_boot_flag_next = 0;                         
                     end 
                 end 
             end
+        end 
+        NORM_OP_RELEASE : begin
+            //insert nomral operation release function 
+            state_next = LC_POLL; 
         end 
         LC_POLL : begin
             if (lc_transition_request_in) begin
@@ -809,10 +842,17 @@ always_comb begin
                 state_next = LC_TRANSITION;
             end             
         end 
+        LC_FW_POLL : begin
+            if (lc_transition_request_in) begin
+                temp_next = lc_transition_id; 
+                state_next = LC_TRANSITION;
+            end        
+            //insert FW authentication request function here      
+        end 
         LC_TRANSITION : begin
             lifecycle_transition(temp_r); 
             if (lc_transition_done_r) begin
-                state_next = MCSE_INIT;                
+                state_next = RESET_SOC2;                
                 lc_transition_done_next = 0;
             end 
         end 
@@ -827,9 +867,14 @@ always_comb begin
             chip_id_challenge();
             if (chip_id_challenge_done_r) begin
                 chip_id_challenge_done_next = 0;
+                first_boot_flag_next = 0;
                 state_next = LC_POLL; 
             end 
         end    
+        RESET_SOC2 : begin
+            // insert reset function
+            //state_next = MCSE_INIT; 
+        end     
     endcase
 end 
 

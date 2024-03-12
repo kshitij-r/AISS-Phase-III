@@ -7,8 +7,9 @@ module mcse_control_unit #(
     parameter gpio_PW = 2*gpio_AW+40
 )
 (
-    input clk,
-    input rst,
+    input                      clk,
+    input                      rst,
+    input                      fuse, 
 
     // Camellia to Boot Control
     input [127:0]              cam_data_out,
@@ -77,10 +78,9 @@ module mcse_control_unit #(
     wire lc_success;
     wire lc_done; 
     wire [2:0] lc_state; 
-    wire lc_authentication_request; 
     
 
-    lifecycle_protection lc_protection ( .* );
+    lifecycle_protection lc_protection ( .rst(fuse), .* );
 
     wire                            rd_en;
     wire                            wr_en;
@@ -90,7 +90,7 @@ module mcse_control_unit #(
     wire                            rdData_valid;
     
 
-    secure_memory #(.WIDTH(memory_width), .LENGTH(memory_length) ) mem (.*);
+    secure_memory #(.WIDTH(memory_width), .LENGTH(memory_length) ) mem (.rst(fuse), .*);
 
     secure_boot_control #(.pcm_data_width(pcm_data_width), .pcm_addr_width(pcm_addr_width), .puf_sig_length(puf_sig_length), 
     .gpio_N(gpio_N), .gpio_AW(gpio_AW), .gpio_PW(gpio_PW),

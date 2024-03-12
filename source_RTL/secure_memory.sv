@@ -18,6 +18,8 @@ module secure_memory #(
 reg [WIDTH-1:0] ram [LENGTH-1:0];
 
 
+
+
 always @(posedge clk, negedge rst) begin
 	if (~rst) begin
 		rdData <= 0;

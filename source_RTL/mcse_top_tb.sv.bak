@@ -184,6 +184,8 @@ module mcse_top_tb;
     logic [255:0] lc_authentication_id_oem = 256'h431909d9da263164ab4d39614e0c50a32774a49b3390a53ffa63e8d74b8e7c0b;
 
     task testing_lifecycle_first_boot();
+        //insert reset handshake 
+        
         $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
         if (mcse.control_unit.secure_boot.first_boot_flag_r) begin
             $display("[MCSE] Proceeding with secure boot...");
@@ -205,6 +207,7 @@ module mcse_top_tb;
 
         $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
         $display("[MCSE] Chip ID generation complete...Relinquishing boot control");
+       
     endtask 
 
     task oem_lifecycle();
@@ -240,7 +243,7 @@ module mcse_top_tb;
         if (mcse.control_unit.secure_boot.lc_state == 3'b010) begin
             $display("[MCSE] Testing lifecycle complete...Lifecycle transitioned to OEM");
         end 
-
+        //insert host soc reset handshake 
 
         //oem_lifecycle(); 
 
