@@ -1,14 +1,17 @@
 //TODO Configurability 
 //TODO Edge cases of IP ID Extraction 
 //TODO Where is lc transition coming from? 
-//TODO GPIO ILAT and PCM
-//TODO fuses simulation
+//TODO GPIO ILAT, GPIO EN, and PCM
+//TODO proper simulation of fuse blowing
 //TODO end of life truncated boot 
+//TODO failues and init function
 
 `define GPIO_IDATA 6'h5
 `define GPIO_ODATA 6'h0
 
 `define SYS_BUS_WAKEUP 24'b1000000
+`define RST_Request 24'b1
+`define Operation_Release_to_Host 24'b10000
 
 `define IPID_START_BITS 16'h7A7A
 `define IPID_STOP_BITS 16'hB9B9
@@ -118,7 +121,9 @@ reg [255:0] encryption_output_r, encryption_output_next;
 reg half_r, half_next; 
 reg encryption_done_r, encryption_done_next;
 
-typedef enum logic [3:0] {MCSE_INIT, RESET_SOC, LC_AUTH, CHIPID_GEN, CHALLENGE_CHIPID, LC_POLL, LC_TRANSITION, RESET_SOC2, LC_FW_POLL, NORM_OP_RELEASE, ABORT } state_t;
+typedef enum logic [3:0] {MCSE_INIT, RESET_SOC, LC_AUTH_POLL, LC_AUTH, CHIPID_GEN, CHALLENGE_CHIPID, LC_POLL, LC_TRANSITION, RESET_SOC2, 
+LC_FW_POLL, NORM_OP_RELEASE, TRUNC_BOOT, ABORT } state_t;
+
 state_t state_r, state_next;
 
 logic [127:0]                    cam_data_in_next;
@@ -546,35 +551,75 @@ endfunction
 
 logic lifecycle_authentication_done_r, lifecycle_authentication_done_next; 
 logic lifecycle_authentication_value_r, lifecycle_authentication_value_next; 
-logic lifecycle_authentication_counter_r, lifecycle_authentication_counter_next; 
 
-function void lifecycle_authentication(); 
+function void lifecycle_authentication(input bit [255:0] id); 
     if (~lifecycle_authentication_done_r) begin
-        case (lifecycle_authentication_counter_r)
-            1'b0 : begin
-                memory_read(`LC_AUTHENTICATION_ID_ADDR_START + lc_state); 
-                if (memory_read_done_r) begin
-                    lifecycle_authentication_counter_next = 1; 
-                end 
+        memory_read(`LC_AUTHENTICATION_ID_ADDR_START + lc_state); 
+        if (memory_read_done_r) begin
+            if (rdData_r == id) begin
+                lifecycle_authentication_value_next = 1;
+                rdData_next = 0;
             end 
-            1'b1 : begin
-                if (lc_authentication_valid) begin
-                    if (rdData_r == lc_authentication_id) begin
-                        lifecycle_authentication_value_next = 1;
-                        rdData_next =0; 
-                    end 
-                    else begin
-                        lifecycle_authentication_value_next = 0;
-                        rdData_next =0; 
-                    end     
-                    lifecycle_authentication_done_next = 1;
-                    memory_read_done_next = 0; 
-                    lifecycle_authentication_counter_next = 0; 
-                end 
-            end
-        endcase 
+            else begin
+                lifecycle_authentication_value_next = 0;
+                rdData_next = 0; 
+            end 
+            lifecycle_authentication_done_next = 1;
+            memory_read_done_next = 0; 
+        end 
     end 
 endfunction 
+
+logic reset_routine_done_r, reset_routine_done_next;
+logic [1:0] reset_handshake_counter_r, reset_handshake_counter_next;
+
+function void reset_request();
+    if (~reset_routine_done_r) begin
+        case (reset_handshake_counter_r)
+            2'b00 : begin // send reset
+                gpio_wrData_next = `RST_Request;
+                gpio_RW_next = 1'b1;
+                gpio_data_type_next = `GPIO_ODATA;
+                gpio_reg_access_next = 1; 
+                reset_handshake_counter_next = reset_handshake_counter_r + 1; 
+            end 
+            2'b01 : begin // wait for host ack
+                gpio_data_type_next = `GPIO_IDATA; 
+                gpio_RW_next = 0;
+                gpio_reg_access_next = 1;
+                if (gpio_reg_rdata[1]) begin
+                    reset_routine_done_next = 1;
+                    reset_handshake_counter_next = 0;
+                end 
+            end
+        endcase
+    end
+endfunction
+
+logic operation_release_done_r, operation_release_done_next;
+logic [1:0] operation_release_counter_r, operation_release_counter_next;
+
+function void operation_release_request();
+    if (~operation_release_done_r) begin
+        case (operation_release_counter_r)
+            2'b00 : begin // bus wake up
+                gpio_wrData_next = `Operation_Release_to_Host;
+                gpio_RW_next = 1'b1;
+                gpio_data_type_next = `GPIO_ODATA;
+                gpio_reg_access_next = 1; 
+                operation_release_counter_next = operation_release_counter_r + 1; 
+            end 
+            2'b01 : begin // wait for bus wake up ack
+                gpio_data_type_next = `GPIO_IDATA; 
+                gpio_RW_next = 0;
+                if (gpio_reg_rdata[5]) begin
+                    operation_release_done_next = 1;
+                    operation_release_counter_next =0;
+                end 
+            end
+        endcase
+    end
+endfunction
 
 logic [255:0] temp_r, temp_next; 
 logic first_boot_flag_r, first_boot_flag_next; 
@@ -647,9 +692,10 @@ always@(posedge clk, negedge rst) begin
         lifecycle_authentication_done_r <= 0;
         lifecycle_authentication_value_r <= 0;
         lc_transition_success_r <= 0;
-        lifecycle_authentication_counter_r <= 0;
-
-  
+        reset_routine_done_r <= 0; 
+        reset_handshake_counter_r <= 0; 
+        operation_release_done_r <= 0;
+        operation_release_counter_r <= 0; 
     end 
     else begin
         state_r <= state_next; 
@@ -715,8 +761,11 @@ always@(posedge clk, negedge rst) begin
         lifecycle_authentication_done_r <= lifecycle_authentication_done_next; 
         lifecycle_authentication_value_r <= lifecycle_authentication_value_next; 
         lc_transition_success_r <= lc_transition_success_next; 
-        lifecycle_authentication_counter_r <= lifecycle_authentication_counter_next; 
         first_boot_flag_r <= first_boot_flag_next; 
+        reset_routine_done_r <= reset_routine_done_next; 
+        reset_handshake_counter_r <= reset_handshake_counter_next; 
+        operation_release_done_r <= operation_release_done_next; 
+        operation_release_counter_r <= operation_release_counter_next; 
     end 
 end
 
@@ -776,9 +825,11 @@ always_comb begin
     lifecycle_authentication_done_next = lifecycle_authentication_done_r;
     lifecycle_authentication_value_next = lifecycle_authentication_value_r; 
     lc_transition_success_next = lc_transition_success_r; 
-    lifecycle_authentication_counter_next = lifecycle_authentication_counter_r; 
     first_boot_flag_next = first_boot_flag_r; 
-     
+    reset_routine_done_next = reset_routine_done_r;
+    reset_handshake_counter_next = reset_handshake_counter_r; 
+    operation_release_done_next = operation_release_done_r;
+    operation_release_counter_next =operation_release_counter_r; 
 
     case (state_r) 
         MCSE_INIT : begin
@@ -789,29 +840,29 @@ always_comb begin
             gpio_reg_access_next = 1; 
             state_next <= RESET_SOC;
         end 
-        RESET_SOC : begin
-            // insert reset function 
-             
-            if (first_boot_flag_r) begin
-                if (lc_state == 3'b000) begin
-                    state_next = CHIPID_GEN; 
+        RESET_SOC : begin 
+            reset_request();
+            if (reset_routine_done_r) begin
+                reset_routine_done_next = 0; 
+                if (first_boot_flag_r) begin
+                    if (lc_state == 3'b000) begin
+                        state_next = CHIPID_GEN; 
+                    end 
+                    else begin
+                        state_next = LC_AUTH_POLL; 
+                    end                 
                 end 
                 else begin
-                    state_next = LC_AUTH; 
-                end                 
-            end 
-            else begin
-
-                if (lc_state == 3'b011) begin
-                    state_next = NORM_OP_RELEASE;
+                    if (lc_state == 3'b011) begin
+                        state_next = NORM_OP_RELEASE;
+                    end 
+                    else if (lc_state == 3'b010) begin
+                        state_next = LC_FW_POLL;
+                    end 
+                    else begin
+                        state_next = LC_POLL; 
+                    end 
                 end 
-                else if (lc_state == 3'b010) begin
-                    state_next = LC_FW_POLL;
-                end 
-                else begin
-                    state_next = LC_POLL; 
-                end 
-                state_next = NORM_OP_RELEASE; 
             end 
         end 
         CHIPID_GEN : begin
@@ -833,8 +884,11 @@ always_comb begin
             end
         end 
         NORM_OP_RELEASE : begin
-            //insert nomral operation release function 
-            state_next = LC_POLL; 
+            operation_release_request(); 
+            if (operation_release_done_r) begin
+                operation_release_done_next = 0; 
+                state_next = LC_POLL;            
+            end 
         end 
         LC_POLL : begin
             if (lc_transition_request_in) begin
@@ -852,15 +906,42 @@ always_comb begin
         LC_TRANSITION : begin
             lifecycle_transition(temp_r); 
             if (lc_transition_done_r) begin
-                state_next = RESET_SOC2;                
-                lc_transition_done_next = 0;
+                if (lc_transition_success_r) begin
+                    first_boot_flag_next = 1; 
+                    state_next = RESET_SOC2;                
+                    lc_transition_done_next = 0;
+                end 
+                else begin
+                    if (lc_state == 3'b010) begin
+                        state_next = LC_FW_POLL; 
+                    end 
+                    else begin
+                        state_next = LC_POLL;
+                    end 
+                end 
             end 
         end 
+        LC_AUTH_POLL : begin
+            if (lc_authentication_valid) begin
+                temp_next = lc_authentication_id;
+                state_next = LC_AUTH; 
+            end 
+        end  
         LC_AUTH : begin
-            lifecycle_authentication(); 
+            lifecycle_authentication(temp_r); 
             if (lifecycle_authentication_done_r) begin
                 lifecycle_authentication_done_next = 0;
-                state_next = CHALLENGE_CHIPID; 
+                if (lifecycle_authentication_value_r) begin
+                    if (lc_state == 3'b101) begin
+                        state_next = TRUNC_BOOT;
+                    end 
+                    else begin
+                        state_next = CHALLENGE_CHIPID; 
+                    end 
+                end 
+                else begin
+                    state_next = LC_AUTH_POLL;
+                end 
             end 
         end  
         CHALLENGE_CHIPID : begin
@@ -869,12 +950,34 @@ always_comb begin
                 chip_id_challenge_done_next = 0;
                 first_boot_flag_next = 0;
                 state_next = LC_POLL; 
+                if (authentic_chip_id_r) begin 
+                    if (lc_state == 3'b011) begin
+                        state_next = NORM_OP_RELEASE; 
+                    end 
+                    else begin
+                        if (lc_state == 3'b010) begin
+                            state_next = LC_FW_POLL;
+                        end 
+                        else begin
+                            state_next = LC_POLL; 
+                        end 
+                    end 
+                end 
+                else begin
+                    state_next = ABORT; 
+                end 
             end 
         end    
         RESET_SOC2 : begin
-            // insert reset function
-            //state_next = MCSE_INIT; 
+            reset_request();
+            if (reset_routine_done_r) begin
+                reset_routine_done_next = 0; 
+                state_next = MCSE_INIT; 
+            end 
         end     
+        TRUNC_BOOT : begin
+            
+        end 
     endcase
 end 
 
