@@ -1,5 +1,5 @@
 #define_design_lib WORK -path ./WORK
-#set search_path "src/"
+#set search_path "./WORK"
 
 # Suppress warnings about undeclared wires
 set suppress_errors {VER-936}
@@ -7,40 +7,28 @@ set suppress_errors {VER-936}
 ## Setting up target libraries
 set_app_var target_library {
     lec25dscc25.db
-    dft_jtag.sldb
-    dw_foundation.sldb
 }
 
 ## Setting up link libraries
 set_app_var link_library $target_library
 
-set filelist "
-jtag_interface.sv
-DW_tap.v
-DW_bc_1.v
-"
+set my_files [list sha256_puf_256.v primitives.v packet2emesh.v min_security_module.sv gpio_regmap.v camellia_top.sv sha_top.sv puf.v pcm.v oh_dsync.v io.v gpio.v camellia.v c1908.v secure_memory.sv mcse_top.sv mcse_control_unit.sv lifecycle_protection.sv lc_memory.sv secure_boot_control.sv]
 
-set synthetic_library [list dw_foundation.sldb]
+analyze -f sverilog $my_files
 
-analyze -f sverilog $filelist
+set my_toplevel mcse_top
 
-elaborate jtag_interface
+elaborate $my_toplevel
 
-read_sdc sdc_name.sdc
-check_design
-check_timing
+#read_sdc sdc_name.sdc
+#check_design
+#check_timing
 
 set_max_area 0
-compile -ungroup_all -area_effort high -map_effort high
+compile -area_effort high -map_effort high
 
-write -f verilog -o ../outputs/demo_synth_netlist.v
-write_sdc ../outputs/demo_synth_netlist.sdc
-write -f ddc -o ../outputs/demo_synth.ddc
-report_area > ../outputs/demo_synth_area.rpt
-report_timing > ../outputs/demo_synth_timing.rpt
-report_power > ../outputs/demo_synth_power.rpt
-report_qor > ../outputs/demo_synth_qor.rpt
-report_cell > ../outputs/demo_synth_cells.rpt
-report_disable_timing > ../outputs/demo_synth_disabled_timing_arcs.rpt
+report_area
+report_hierarchy
+report_reference
 
 quit

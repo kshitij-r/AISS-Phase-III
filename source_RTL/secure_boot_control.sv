@@ -1,10 +1,8 @@
-//TODO Configurability 
-//TODO Edge cases of IP ID Extraction 
+//TODO Configurability  
 //TODO Where is lc transition coming from? 
 //TODO GPIO ILAT, GPIO EN, and PCM
 //TODO proper simulation of fuse blowing
 //TODO end of life truncated boot 
-//TODO failues and init function
 
 `define GPIO_IDATA 6'h5
 `define GPIO_ODATA 6'h0
@@ -276,11 +274,17 @@ function void ipid_extraction();
                                         end 
                                     end 
                                 end
+                                default : begin
+
+                                end 
                             endcase 
                         end 
                     endcase
                 end 
-            end 
+            end
+            default : begin
+
+            end  
         endcase 
     end 
 endfunction 
@@ -315,6 +319,9 @@ function void ipid_hash(); // only works for even right now
                         hash_counter_next = hash_counter_r + 2;
                     end 
                 end 
+                default : begin
+
+                end 
             endcase 
         end 
         else if (hash_counter_r < ipid_N) begin
@@ -333,6 +340,9 @@ function void ipid_hash(); // only works for even right now
                         strobe_next =0;
                         hash_counter_next = hash_counter_r + 2; 
                     end 
+                end 
+                default : begin
+
                 end 
             endcase 
         end 
@@ -427,6 +437,9 @@ function void ip_id_generation();
                     ip_id_generation_done_next = 1; 
                     memory_write_done_next = 0;
                 end 
+            end 
+            default : begin
+
             end 
         endcase 
     end 
@@ -592,6 +605,9 @@ function void reset_request();
                     reset_handshake_counter_next = 0;
                 end 
             end
+            default : begin
+
+            end 
         endcase
     end
 endfunction
@@ -617,6 +633,9 @@ function void operation_release_request();
                     operation_release_counter_next =0;
                 end 
             end
+            default : begin
+
+            end 
         endcase
     end
 endfunction
@@ -632,6 +651,13 @@ always @(posedge clk, negedge fuse) begin
         first_boot_flag_r <= first_boot_flag_next; 
     end 
 end 
+
+task mcse_init(); 
+    gpio_RW_next = 1; 
+    gpio_wrData_next = 0;
+    gpio_data_type_next = `GPIO_ODATA; 
+    gpio_reg_access_next = 1;
+endtask 
 
 always@(posedge clk, negedge rst) begin 
     if (~rst) begin
@@ -761,7 +787,6 @@ always@(posedge clk, negedge rst) begin
         lifecycle_authentication_done_r <= lifecycle_authentication_done_next; 
         lifecycle_authentication_value_r <= lifecycle_authentication_value_next; 
         lc_transition_success_r <= lc_transition_success_next; 
-        first_boot_flag_r <= first_boot_flag_next; 
         reset_routine_done_r <= reset_routine_done_next; 
         reset_handshake_counter_r <= reset_handshake_counter_next; 
         operation_release_done_r <= operation_release_done_next; 
@@ -795,6 +820,7 @@ always_comb begin
     ipid_extraction_done_next = ipid_extraction_done_r; 
 
     hash_counter_next = hash_counter_r; 
+    sha_block_next = sha_block;
     sha_next_next = sha_next; 
     sha_init_next = sha_init; 
     ipid_hash_next = ipid_hash_r;
@@ -802,6 +828,10 @@ always_comb begin
     sha_sel_next = sha_sel; 
     strobe_next = strobe_r; 
     mcse_id_next = mcse_id_r; 
+    rd_en_next = rd_en;
+    wr_en_next = wr_en; 
+    addr_next = addr;
+    wrData_next = wrData;
     memory_read_done_next = memory_read_done_r;
     rdData_next = rdData_r;  
     mcse_id_generation_counter_next = mcse_id_generation_counter_r; 
@@ -825,20 +855,16 @@ always_comb begin
     lifecycle_authentication_done_next = lifecycle_authentication_done_r;
     lifecycle_authentication_value_next = lifecycle_authentication_value_r; 
     lc_transition_success_next = lc_transition_success_r; 
-    first_boot_flag_next = first_boot_flag_r; 
     reset_routine_done_next = reset_routine_done_r;
     reset_handshake_counter_next = reset_handshake_counter_r; 
     operation_release_done_next = operation_release_done_r;
     operation_release_counter_next =operation_release_counter_r; 
+    first_boot_flag_next = first_boot_flag_r; 
 
     case (state_r) 
         MCSE_INIT : begin
-            // insert mcse init function
-            gpio_RW_next = 1; 
-            gpio_wrData_next = 0;
-            gpio_data_type_next = `GPIO_ODATA; 
-            gpio_reg_access_next = 1; 
-            state_next <= RESET_SOC;
+            mcse_init(); 
+            state_next = RESET_SOC;
         end 
         RESET_SOC : begin 
             reset_request();
@@ -976,7 +1002,10 @@ always_comb begin
             end 
         end     
         TRUNC_BOOT : begin
-            
+
+        end 
+        default : begin
+
         end 
     endcase
 end 
