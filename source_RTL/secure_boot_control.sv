@@ -120,7 +120,7 @@ reg half_r, half_next;
 reg encryption_done_r, encryption_done_next;
 
 typedef enum logic [3:0] {MCSE_INIT, RESET_SOC, LC_AUTH_POLL, LC_AUTH, CHIPID_GEN, CHALLENGE_CHIPID, LC_POLL, LC_TRANSITION, RESET_SOC2, 
-LC_FW_POLL, NORM_OP_RELEASE, TRUNC_BOOT, ABORT } state_t;
+LC_FW_POLL, NORM_OP_RELEASE, ABORT } state_t;
 
 state_t state_r, state_next;
 
@@ -136,14 +136,14 @@ logic wr_en_next;
 logic [$clog2(memory_length)-1:0] addr_next;
 logic [memory_width-1:0] wrData_next; 
 
-function void encryption(input bit [255:0] data_input, input bit [255:0] key_input, input bit half);
+function void encryption(input bit [255:0] data_input, input bit [255:0] key_input);
     
     cam_enc_dec_next = 1;
     cam_k_len_next = 2'b10; 
     cam_key_next = key_input; 
     cam_key_rdy_next = 1; 
 
-    case (half)
+    case (half_r)
         1'b0 : begin
             cam_data_rdy_next = 1; 
             cam_data_in_next = data_input[255:128];
@@ -643,6 +643,13 @@ endfunction
 logic [255:0] temp_r, temp_next; 
 logic first_boot_flag_r, first_boot_flag_next; 
 
+task mcse_init(); 
+    gpio_RW_next = 1; 
+    gpio_wrData_next = 0;
+    gpio_data_type_next = `GPIO_ODATA; 
+    gpio_reg_access_next = 1;
+endtask 
+
 always @(posedge clk, negedge fuse) begin
     if (~fuse) begin
         first_boot_flag_r <= 1; 
@@ -652,11 +659,11 @@ always @(posedge clk, negedge fuse) begin
     end 
 end 
 
-task mcse_init(); 
-    gpio_RW_next = 1; 
+task power_off(); 
+    gpio_RW_next = 0; 
     gpio_wrData_next = 0;
     gpio_data_type_next = `GPIO_ODATA; 
-    gpio_reg_access_next = 1;
+    gpio_reg_access_next = 0;
 endtask 
 
 always@(posedge clk, negedge rst) begin 
@@ -871,7 +878,7 @@ always_comb begin
             if (reset_routine_done_r) begin
                 reset_routine_done_next = 0; 
                 if (first_boot_flag_r) begin
-                    if (lc_state == 3'b000) begin
+                    if (lc_state == 3'b001) begin
                         state_next = CHIPID_GEN; 
                     end 
                     else begin
@@ -879,14 +886,14 @@ always_comb begin
                     end                 
                 end 
                 else begin
-                    if (lc_state == 3'b011) begin
-                        state_next = NORM_OP_RELEASE;
+                    if (lc_state == 3'b001) begin
+                        state_next = LC_POLL;
                     end 
-                    else if (lc_state == 3'b010) begin
-                        state_next = LC_FW_POLL;
+                    else if (lc_state == 3'b101) begin
+                        state_next = ABORT; 
                     end 
                     else begin
-                        state_next = LC_POLL; 
+                        state_next = NORM_OP_RELEASE; 
                     end 
                 end 
             end 
@@ -894,17 +901,20 @@ always_comb begin
         CHIPID_GEN : begin
             chip_id_generation(); 
             if (chip_id_generation_done_r) begin
-                memory_write(`CHIP_ID_ADDR, chip_id_r);
-                if (memory_write_done_r) begin
-                    lifecycle_transition(256'h0); // set lc state to testing using a reset temp register
-                    if (lc_transition_done_r) begin
-                        lc_transition_success_next = 0;
-                        lc_transition_done_next = 0; 
-                        memory_write_done_next = 0; 
-                        chip_id_generation_counter_next = 0;  
-                        chip_id_generation_done_next = 0;
-                        state_next  = LC_POLL;
-                        first_boot_flag_next = 0;                         
+                memory_read(`SECURE_COMMUNICATION_KEY_ADDR); // fetch secure communication key
+                if (memory_read_done_r) begin
+                    encryption(chip_id_r, rdData_r); // encrypt chip id with key
+                    if (encryption_done_r) begin
+                        memory_write(`CHIP_ID_ADDR, encryption_output_r); 
+                        if ( memory_write_done_r) begin
+                            lc_transition_success_next = 0;
+                            lc_transition_done_next = 0; 
+                            memory_write_done_next = 0; 
+                            chip_id_generation_counter_next = 0;  
+                            chip_id_generation_done_next = 0;
+                            state_next  = LC_POLL;
+                            first_boot_flag_next = 0;  
+                        end 
                     end 
                 end 
             end
@@ -913,7 +923,12 @@ always_comb begin
             operation_release_request(); 
             if (operation_release_done_r) begin
                 operation_release_done_next = 0; 
-                state_next = LC_POLL;            
+                if (lc_state == 3'b010) begin
+                    state_next = LC_FW_POLL;
+                end 
+                else begin
+                    state_next = LC_POLL; 
+                end                          
             end 
         end 
         LC_POLL : begin
@@ -959,7 +974,7 @@ always_comb begin
                 lifecycle_authentication_done_next = 0;
                 if (lifecycle_authentication_value_r) begin
                     if (lc_state == 3'b101) begin
-                        state_next = TRUNC_BOOT;
+                        state_next = ABORT;
                     end 
                     else begin
                         state_next = CHALLENGE_CHIPID; 
@@ -977,17 +992,7 @@ always_comb begin
                 first_boot_flag_next = 0;
                 state_next = LC_POLL; 
                 if (authentic_chip_id_r) begin 
-                    if (lc_state == 3'b011) begin
-                        state_next = NORM_OP_RELEASE; 
-                    end 
-                    else begin
-                        if (lc_state == 3'b010) begin
-                            state_next = LC_FW_POLL;
-                        end 
-                        else begin
-                            state_next = LC_POLL; 
-                        end 
-                    end 
+                    state_next = NORM_OP_RELEASE; 
                 end 
                 else begin
                     state_next = ABORT; 
@@ -997,12 +1002,12 @@ always_comb begin
         RESET_SOC2 : begin
             reset_request();
             if (reset_routine_done_r) begin
-                reset_routine_done_next = 0; 
-                state_next = MCSE_INIT; 
+                // reset_routine_done_next = 0; 
+                // state_next = MCSE_INIT; 
             end 
         end     
-        TRUNC_BOOT : begin
-
+        ABORT : begin
+            power_off(); 
         end 
         default : begin
 

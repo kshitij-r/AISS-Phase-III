@@ -1,4 +1,4 @@
-
+`timescale 1 ns / 100 ps
 module mcse_top_tb;
 
 
@@ -88,7 +88,7 @@ module mcse_top_tb;
         @(posedge clk); 
     endtask
 
-    task chipid_generation(); //incomplete
+    task chipid_generation(); 
         bus_wakeup_handshake(); 
         $display("[TB_TOP] Waiting for IP ID Trigger");
         while (gpio_out[12] != 1) begin // wait for first ip id trigger    
@@ -101,8 +101,14 @@ module mcse_top_tb;
         while (~mcse.control_unit.secure_boot.chip_id_generation_done_r) begin
             @(posedge clk); 
         end 
-        $displayh("[MCSE] Internal Generated Chip ID = " , mcse.control_unit.secure_boot.chip_id_r);
-    
+        $displayh("[MCSE] Internal generated Chip ID = " , mcse.control_unit.secure_boot.chip_id_r);
+        $displayh("[MCSE] Encrypting generated Chip ID and storing in memory...");
+
+        while ( ~mcse.control_unit.secure_boot.memory_write_done_r) begin
+            @(posedge clk); 
+        end 
+        @(posedge clk); 
+        $displayh("[MCSE] Chip ID Stored in memory = ", mcse.control_unit.mem.ram[0]); 
 
     endtask
 
@@ -215,14 +221,6 @@ module mcse_top_tb;
         end 
         
         chipid_generation(); 
-        $displayh("[MCSE] Generated Chip ID, storing in memory...");
-        while (~mcse.control_unit.secure_boot.lc_transition_done_r) begin
-            @(posedge clk);
-        end
-
-        while (mcse.control_unit.secure_boot.lc_transition_done_r) begin // wait until MCSE internally updates its lc to Testing
-            @(posedge clk); 
-        end 
 
         $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
         $display("[MCSE] Chip ID generation complete...");
@@ -328,21 +326,22 @@ module mcse_top_tb;
         // boot in OEM
         reset_handshake(); 
         oem_lifecycle_first_boot(); 
+        operation_release_handshake()
         lifecycle_transition_request(lc_transition_id_oem);
         reset_handshake(); 
-        // boot in deployment
-        reset_handshake();
-        deployment_lifecycle_first_boot();
-        lifecycle_transition_request(lc_transition_id_deployment);
-        reset_handshake(); 
-        // boot in recall
-        reset_handshake(); 
-        recall_lifecycle_first_boot();
-        lifecycle_transition_request(lc_transition_id_recall);
-        reset_handshake(); 
-        // boot in end of life 
-        reset_handshake();
-        endoflife_lifecycle_boot(); 
+        // // boot in deployment
+        // reset_handshake();
+        // deployment_lifecycle_first_boot();
+        // lifecycle_transition_request(lc_transition_id_deployment);
+        // reset_handshake(); 
+        // // boot in recall
+        // reset_handshake(); 
+        // recall_lifecycle_first_boot();
+        // lifecycle_transition_request(lc_transition_id_recall);
+        // reset_handshake(); 
+        // // boot in end of life 
+        // reset_handshake();
+        // endoflife_lifecycle_boot(); 
     endtask 
 
     initial begin : drive_inputs

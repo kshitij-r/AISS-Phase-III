@@ -36,7 +36,7 @@ assign lc_state = lc_r;
 always@(posedge clk, negedge rst) begin
     if (~rst) begin
         state_r <= START; 
-        lc_r <= 3'b000;   
+        lc_r <= 3'b001;   
         lc_success <= 1'b0; 
         lc_done <= 0; 
     end 
