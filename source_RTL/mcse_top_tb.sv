@@ -1,4 +1,4 @@
-`timescale 1 ns / 100 ps
+//`timescale 1 ns / 100 ps
 module mcse_top_tb;
 
 
@@ -326,7 +326,7 @@ module mcse_top_tb;
         // boot in OEM
         reset_handshake(); 
         oem_lifecycle_first_boot(); 
-        operation_release_handshake()
+        operation_release_handshake();
         lifecycle_transition_request(lc_transition_id_oem);
         reset_handshake(); 
         // // boot in deployment
