@@ -61,12 +61,12 @@ module mcse_top_tb;
                 end  
             end 
 
-            $display("[TB_TOP] Waiting for IP ID trigger deassert.."); 
+            //$display("[TB_TOP] Waiting for IP ID trigger deassert.."); 
             gpio_in[13] = 0; 
             while (gpio_out[12] != 0) begin
                 @(posedge clk); 
             end 
-            $display("[TB_TOP] IP ID trigger deasserted");
+            //$display("[TB_TOP] IP ID trigger deasserted");
       
             //$displayh("[MCSE] Internal IP ID = " , mcse.control_unit.secure_boot.ipid_r[i]);
             $displayh("[MCSE] Internal IP ID ", i[3:0], " = " , mcse.control_unit.secure_boot.ipid_r[i]);
@@ -105,7 +105,7 @@ module mcse_top_tb;
             @(posedge clk); 
         end 
         $displayh("[MCSE] Internal generated Chip ID = " , mcse.control_unit.secure_boot.chip_id_r);
-
+        $display("[MCSE] Encrypting Chip ID and storing into memory..."); 
 
         @(posedge clk); 
    
@@ -125,16 +125,18 @@ module mcse_top_tb;
             @(posedge clk); 
         end
         
-        $displayh("[MCSE] Internal MCSE ID = ", mcse.control_unit.secure_boot.mcse_id_r);
-        $displayh("[MCSE] Internal Composite IP ID = ", mcse.control_unit.secure_boot.ipid_hash_r);
+       // $displayh("[MCSE] Internal MCSE ID = ", mcse.control_unit.secure_boot.mcse_id_r);
+       // $displayh("[MCSE] Internal Composite IP ID = ", mcse.control_unit.secure_boot.ipid_hash_r);
         $displayh("[MCSE] Internal Golden Chip ID = ", mcse.control_unit.mem.ram[0]);
-        $displayh("[MCSE] Internal Generated Chip ID = " , mcse.control_unit.secure_boot.chip_id_r);
+        $displayh("[MCSE] Internal Generated Chip ID = " , mcse.control_unit.secure_boot.encryption_output_r);
         $displayh("[MCSE] Internal Authentic Chip ID Value = ", mcse.control_unit.secure_boot.authentic_chip_id_r); 
     endtask
 
     task lifecycle_transition_request(input bit [255:0] id); 
         $display("[TB_TOP] Requesting a lifecycle transition..."); 
+        $display("[TB_TOP] Lifecycle transition ID = ", id);
         $display("[MCSE] Servicing lifecycle transition request..."); 
+
 
         while (mcse.control_unit.secure_boot.lc_transition_request) begin
             $display("Stall until internal lc transition request signal is deasserted...");
@@ -228,6 +230,7 @@ module mcse_top_tb;
             @(posedge clk); 
         end 
         gpio_in = 0; 
+        @(posedge clk); 
         $displayh("[MCSE] Chip ID Stored in memory = ", mcse.control_unit.mem.ram[0]); 
         $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
         $display("[MCSE] Chip ID generation complete...");
@@ -384,9 +387,27 @@ module mcse_top_tb;
         rst = 1; 
         @(posedge clk);
         reset_handshake(); 
-
+        $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
         operation_release_handshake();
     endtask
+
+    task deployment_lifecycle_subsequent_boot();
+        reset_handshake();
+        deployment_lifecycle_first_boot();
+        operation_release_handshake();
+
+        // global reset to test subsquent boots
+        $display("[TB_TOP] Power cycling chip...");
+        rst = 0; 
+        @(posedge clk);
+        rst = 1; 
+        @(posedge clk);
+
+        reset_handshake();
+        $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
+        operation_release_handshake();
+
+    endtask 
 
     initial begin : drive_inputs
 

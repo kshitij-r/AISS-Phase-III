@@ -1,3 +1,4 @@
+//TODO JTAG interface 
 module mcse_control_unit #(
     parameter pcm_data_width = 32,
     parameter pcm_addr_width = 32,

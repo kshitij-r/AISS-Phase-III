@@ -1,6 +1,5 @@
 //TODO Configurability  
 //TODO GPIO ILAT, GPIO EN, and PCM
-//TODO JTAG interface 
 //TODO optimize hashing registers for odd numbers and different IPID configurations
 
 `define GPIO_IDATA 6'h5
@@ -543,8 +542,7 @@ function void chip_id_challenge();
                     end  
                     chip_id_challenge_done_next = 1; 
                     chip_id_challenge_counter_next = 0; 
-                    memory_read_done_next = 0;
-                    encryption_output_next = 0; 
+                    memory_read_done_next = 0; 
                 end  
             end 
         endcase 
@@ -665,12 +663,12 @@ endfunction
 logic [255:0] temp_r, temp_next; 
 logic first_boot_flag_r, first_boot_flag_next; 
 
-task mcse_init(); 
+function void mcse_init(); 
     gpio_RW_next = 1; 
     gpio_wrData_next = 0;
     gpio_data_type_next = `GPIO_ODATA; 
     gpio_reg_access_next = 1;
-endtask 
+endfunction
 
 always @(posedge clk, negedge init_config) begin
     if (~init_config) begin
@@ -681,12 +679,12 @@ always @(posedge clk, negedge init_config) begin
     end 
 end 
 
-task power_off(); 
+function void power_off(); 
     gpio_RW_next = 0; 
     gpio_wrData_next = 0;
     gpio_data_type_next = `GPIO_ODATA; 
     gpio_reg_access_next = 0;
-endtask 
+endfunction 
 
 always@(posedge clk, negedge rst) begin 
     if (~rst) begin
@@ -1013,6 +1011,7 @@ always_comb begin
         CHALLENGE_CHIPID : begin
             chip_id_challenge();
             if (chip_id_challenge_done_r) begin
+                encryption_output_next = 0;
                 chip_id_challenge_done_next = 0;
                 first_boot_flag_next = 0;
                 if (authentic_chip_id_r) begin 
