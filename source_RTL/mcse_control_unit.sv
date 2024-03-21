@@ -9,7 +9,7 @@ module mcse_control_unit #(
 (
     input                      clk,
     input                      rst,
-    input                      fuse, 
+    input                      init_config, 
 
     // Camellia to Boot Control
     input [127:0]              cam_data_out,
@@ -80,7 +80,7 @@ module mcse_control_unit #(
     wire [2:0] lc_state; 
     
 
-    lifecycle_protection lc_protection ( .rst(fuse), .* );
+    lifecycle_protection lc_protection ( .rst(init_config), .* );
 
     wire                            rd_en;
     wire                            wr_en;
@@ -90,7 +90,7 @@ module mcse_control_unit #(
     wire                            rdData_valid;
     
 
-    secure_memory #(.WIDTH(memory_width), .LENGTH(memory_length) ) mem (.rst(fuse), .*);
+    secure_memory #(.WIDTH(memory_width), .LENGTH(memory_length) ) mem (.rst(init_config), .*);
 
     secure_boot_control #(.pcm_data_width(pcm_data_width), .pcm_addr_width(pcm_addr_width), .puf_sig_length(puf_sig_length), 
     .gpio_N(gpio_N), .gpio_AW(gpio_AW), .gpio_PW(gpio_PW),

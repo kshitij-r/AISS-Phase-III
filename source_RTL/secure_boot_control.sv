@@ -37,7 +37,7 @@ module secure_boot_control # (
 (
     input                                       clk,
     input                                       rst,
-    input                                       fuse, 
+    input                                       init_config, 
 
     // Camellia to Boot Control
     input [127:0]                               cam_data_out,
@@ -495,24 +495,36 @@ function void chip_id_generation();
     end 
 endfunction 
 
-logic chip_id_challenge_counter_r, chip_id_challenge_counter_next; 
+logic [1:0] chip_id_challenge_counter_r, chip_id_challenge_counter_next; 
 logic authentic_chip_id_r, authentic_chip_id_next;
 logic chip_id_challenge_done_r, chip_id_challenge_done_next; 
 
 function void chip_id_challenge();
     if (~chip_id_challenge_done_r) begin
         case (chip_id_challenge_counter_r)
-            1'b0 : begin
+            2'b00 : begin
                 chip_id_generation();
                 if (chip_id_generation_done_r) begin
                     chip_id_challenge_counter_next = 1; 
                     chip_id_generation_done_next = 0;
                 end 
             end 
-            1'b1 : begin
+            2'b01 : begin
+                memory_read(`SECURE_COMMUNICATION_KEY_ADDR);
+                if (memory_read_done_r) begin
+                    encryption(chip_id_r, rdData_r); 
+                    if (encryption_done_r) begin
+                        chip_id_challenge_counter_next = chip_id_challenge_counter_r + 1; 
+                        memory_read_done_next = 0; 
+                        encryption_done_next = 0; 
+                        rdData_next = 0; 
+                    end 
+                end 
+            end 
+            2'b10 : begin
                 memory_read(`CHIP_ID_ADDR);
                 if (memory_read_done_r) begin
-                    if (chip_id_r == rdData_r) begin
+                    if (encryption_output_r == rdData_r) begin
                         authentic_chip_id_next = 1;
                         rdData_next = 0; 
                     end
@@ -523,6 +535,7 @@ function void chip_id_challenge();
                     chip_id_challenge_done_next = 1; 
                     chip_id_challenge_counter_next = 0; 
                     memory_read_done_next = 0;
+                    encryption_output_next = 0; 
                 end  
             end 
         endcase 
@@ -914,6 +927,8 @@ always_comb begin
                             chip_id_generation_done_next = 0;
                             state_next  = LC_POLL;
                             first_boot_flag_next = 0;  
+                            memory_read_done_next = 0; 
+                            encryption_done_next = 0; 
                         end 
                     end 
                 end 
@@ -990,7 +1005,6 @@ always_comb begin
             if (chip_id_challenge_done_r) begin
                 chip_id_challenge_done_next = 0;
                 first_boot_flag_next = 0;
-                state_next = LC_POLL; 
                 if (authentic_chip_id_r) begin 
                     state_next = NORM_OP_RELEASE; 
                 end 
@@ -1002,8 +1016,8 @@ always_comb begin
         RESET_SOC2 : begin
             reset_request();
             if (reset_routine_done_r) begin
-                // reset_routine_done_next = 0; 
-                // state_next = MCSE_INIT; 
+                 reset_routine_done_next = 0; 
+                 state_next = MCSE_INIT; 
             end 
         end     
         ABORT : begin

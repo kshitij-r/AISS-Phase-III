@@ -9,7 +9,7 @@ module mcse_top # (
 (
     input                 clk,
     input                 rst,
-    input                 fuse, // temporary for simulation 
+    input                 init_config, // temporary for simulation 
 	input  [gpio_N-1:0]   gpio_in,
 
     input  [255:0]        lc_transition_id,

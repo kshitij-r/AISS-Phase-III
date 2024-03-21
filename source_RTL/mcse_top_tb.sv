@@ -11,7 +11,7 @@ module mcse_top_tb;
 
     logic                 clk=0;
     logic                 rst;
-    logic                 fuse; 
+    logic                 init_config; 
 	logic  [gpio_N-1:0]   gpio_in;
     logic  [255:0]        lc_transition_id;
     logic                 lc_transition_request_in;
@@ -34,6 +34,7 @@ module mcse_top_tb;
     
     task ipid_send();
         k =0;
+        gpio_in = 0; 
         for (logic [4:0] i = 0; i < 16; i++) begin
             gpio_in[13] = 1;
             $displayh("[TB_TOP] IP ID Trigger received...Sending IP ID from address ", gpio_out[11:8]); 
@@ -102,13 +103,10 @@ module mcse_top_tb;
             @(posedge clk); 
         end 
         $displayh("[MCSE] Internal generated Chip ID = " , mcse.control_unit.secure_boot.chip_id_r);
-        $displayh("[MCSE] Encrypting generated Chip ID and storing in memory...");
 
-        while ( ~mcse.control_unit.secure_boot.memory_write_done_r) begin
-            @(posedge clk); 
-        end 
+
         @(posedge clk); 
-        $displayh("[MCSE] Chip ID Stored in memory = ", mcse.control_unit.mem.ram[0]); 
+   
 
     endtask
 
@@ -188,12 +186,6 @@ module mcse_top_tb;
             @(posedge clk);
         end
         
-        while (mcse.control_unit.secure_boot.lifecycle_authentication_done_r) begin
-            @(posedge clk); 
-        end 
-
-        lc_authentication_valid = 0; 
-
         $display("[MCSE] Lifecycle Authentication Complete"); 
         $displayh("[MCSE] Internal Lifecycle Authentication Value = ", mcse.control_unit.secure_boot.lifecycle_authentication_value_r);
         if (mcse.control_unit.secure_boot.lifecycle_authentication_value_r) begin
@@ -202,6 +194,14 @@ module mcse_top_tb;
         else begin
             $display("[MCSE] Lifecycle authentication failed");
         end 
+
+        while (mcse.control_unit.secure_boot.lifecycle_authentication_done_r) begin
+            @(posedge clk); 
+        end 
+        
+        lc_authentication_valid = 0; 
+        lc_authentication_id = 0; 
+
     endtask 
 
     logic [255:0] lc_transition_id_testing = 256'h33a344a35afd82155e5a6ef2d092085d704dc70561dde45d27962d79ea56a24a;
@@ -217,11 +217,16 @@ module mcse_top_tb;
         $displayh("[MCSE] Current Lifecycle State = ", mcse.control_unit.secure_boot.lc_state); 
         $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
         if (mcse.control_unit.secure_boot.first_boot_flag_r) begin
-            $display("[MCSE] Proceeding with secure boot...");
+            $display("[MCSE] Proceeding with Chip ID generation...");
         end 
         
         chipid_generation(); 
 
+        while ( ~mcse.control_unit.secure_boot.memory_write_done_r) begin
+            @(posedge clk); 
+        end 
+        gpio_in = 0; 
+        $displayh("[MCSE] Chip ID Stored in memory = ", mcse.control_unit.mem.ram[0]); 
         $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
         $display("[MCSE] Chip ID generation complete...");
     endtask 
@@ -234,6 +239,7 @@ module mcse_top_tb;
         if (mcse.control_unit.secure_boot.lifecycle_authentication_value_r && mcse.control_unit.secure_boot.authentic_chip_id_r) begin
             $display("[MCSE] Succesfully completed Lifecycle and Chip ID authentication...");
         end
+        gpio_in = 0; 
         @(posedge clk); 
         $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
     endtask 
@@ -248,7 +254,6 @@ module mcse_top_tb;
         $display("[TB_TOP] Normal operation release trigger received...Sending host ACK");
 
         gpio_in[5] = 1; // host ack
-        @(posedge clk); 
 
         // Wait for the completion of the reset routine
         while (~mcse.control_unit.secure_boot.operation_release_done_r) begin
@@ -323,6 +328,7 @@ module mcse_top_tb;
         testing_lifecycle_first_boot();
         lifecycle_transition_request(lc_transition_id_testing); 
         reset_handshake(); 
+      
         // boot in OEM
         reset_handshake(); 
         oem_lifecycle_first_boot(); 
@@ -330,25 +336,46 @@ module mcse_top_tb;
         lifecycle_transition_request(lc_transition_id_oem);
         reset_handshake(); 
         // // boot in deployment
-        // reset_handshake();
-        // deployment_lifecycle_first_boot();
-        // lifecycle_transition_request(lc_transition_id_deployment);
-        // reset_handshake(); 
+        reset_handshake();
+        deployment_lifecycle_first_boot();
+        operation_release_handshake();
+        lifecycle_transition_request(lc_transition_id_deployment);
+        reset_handshake(); 
+        
         // // boot in recall
-        // reset_handshake(); 
-        // recall_lifecycle_first_boot();
-        // lifecycle_transition_request(lc_transition_id_recall);
-        // reset_handshake(); 
+        reset_handshake(); 
+        recall_lifecycle_first_boot();
+        operation_release_handshake();
+        lifecycle_transition_request(lc_transition_id_recall);
+        reset_handshake(); 
         // // boot in end of life 
-        // reset_handshake();
-        // endoflife_lifecycle_boot(); 
+        reset_handshake();
+        endoflife_lifecycle_boot(); 
+    endtask 
+
+    task testing_lifecycle_subsequent_boot(); 
+        reset_handshake();
+        testing_lifecycle_first_boot();
+
+        // global reset to test subsquent boots
+        $display("[TB_TOP] Power cycling chip...");
+        rst = 0; 
+        @(posedge clk);
+        rst = 1; 
+        @(posedge clk);
+        reset_handshake(); 
+        $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
+        lifecycle_transition_request(lc_transition_id_testing); 
+        reset_handshake(); 
+
     endtask 
 
     initial begin : drive_inputs
 
+        $display("[TB_TOP] Asserting global reset and initializing MCSE values");
         for (integer i = 0; i < 10; i=i+1) begin
             rst = 0;
-            fuse =0; 
+            init_config =0; 
             gpio_in = 0; 
             @(posedge clk);
         end 
@@ -356,12 +383,13 @@ module mcse_top_tb;
         initialize_array();
 
     	rst = 1;
-        fuse = 1; 
+        init_config = 1; 
 	    @(posedge clk);
         @(posedge clk); 
         @(posedge clk); 
 
-        full_bootflow(); 
+        //full_bootflow(); 
+        testing_lifecycle_subsequent_boot();
 
         for (int i = 0; i < 10; i++) begin
             @(posedge clk); 
