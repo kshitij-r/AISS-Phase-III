@@ -4,7 +4,9 @@ module mcse_top # (
     parameter puf_sig_length = 256,
     parameter gpio_N = 32,
     parameter gpio_AW = 32,
-    parameter gpio_PW = 2*gpio_AW+40
+    parameter gpio_PW = 2*gpio_AW+40,
+    parameter ipid_N = 16,
+    parameter ipid_width = 256
 )
 (
     input                 clk,
@@ -85,6 +87,6 @@ module mcse_top # (
     ); 
 
     mcse_control_unit #(.pcm_data_width(pcm_data_width), .pcm_addr_width(pcm_addr_width), .puf_sig_length(puf_sig_length), .gpio_N(gpio_N),
-    .gpio_AW(gpio_AW), .gpio_PW(gpio_PW)) control_unit (.*);
+    .gpio_AW(gpio_AW), .gpio_PW(gpio_PW), .ipid_N(ipid_N), .ipid_width(ipid_width)) control_unit (.*);
 
 endmodule

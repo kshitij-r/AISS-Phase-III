@@ -8,6 +8,8 @@ module mcse_top_tb;
     localparam gpio_N = 32;
     localparam gpio_AW = 32;
     localparam gpio_PW = 2*gpio_AW+40;
+    localparam ipid_N = 5;
+    localparam ipid_width = 256;
 
     logic                 clk=0;
     logic                 rst;
@@ -28,14 +30,14 @@ module mcse_top_tb;
 	end	
 
     mcse_top #(.pcm_data_width(pcm_data_width), .pcm_addr_width(pcm_addr_width), . puf_sig_length(puf_sig_length),
-    .gpio_N(gpio_N), .gpio_AW(gpio_AW), .gpio_PW(gpio_PW) )mcse ( .* );
+    .gpio_N(gpio_N), .gpio_AW(gpio_AW), .gpio_PW(gpio_PW), .ipid_N(ipid_N), .ipid_width(ipid_width) )mcse ( .* );
 
     int k = 0;
     
     task ipid_send();
         k =0;
         gpio_in = 0; 
-        for (logic [4:0] i = 0; i < 16; i++) begin
+        for (logic [4:0] i = 0; i < ipid_N; i++) begin
             gpio_in[13] = 1;
             $displayh("[TB_TOP] IP ID Trigger received...Sending IP ID from address ", gpio_out[11:8]); 
             for (int j = 0; j < 18; j++) begin
@@ -68,7 +70,7 @@ module mcse_top_tb;
       
             //$displayh("[MCSE] Internal IP ID = " , mcse.control_unit.secure_boot.ipid_r[i]);
             $displayh("[MCSE] Internal IP ID ", i[3:0], " = " , mcse.control_unit.secure_boot.ipid_r[i]);
-            if (i != 15) begin 
+            if (i != ipid_N-1) begin 
                 $display("[TB_TOP] Waiting for IP ID trigger...");
                 while (gpio_out[12] != 1) begin
                     @(posedge clk); 
@@ -299,13 +301,13 @@ module mcse_top_tb;
         end
 
         gpio_in[1] = 0;
-        $display("[MCSE] Reset routine completed");
+        $display("[MCSE] Host SoC reset routine completed");
         //$displayh("Reset ack proof, gpio_reg_rdata[1] = ", mcse.control_unit.secure_boot.gpio_reg_rdata[1]);
 
     endtask
 
     task recall_lifecycle_first_boot();
-        $displayh("[MCSE] Current Lifecycle State = ", mcse.control_unit.secure_boot.lc_state); 
+        $displayh("[MCSE] Current lifecycle state = ", mcse.control_unit.secure_boot.lc_state); 
         $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
         lifecycle_auth(lc_authentication_id_recall); 
         chipid_auth(); 
@@ -367,12 +369,28 @@ module mcse_top_tb;
         $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
         lifecycle_transition_request(lc_transition_id_testing); 
         reset_handshake(); 
-
     endtask 
+
+    task oem_lifecycle_subsequent_boot();
+        reset_handshake();
+
+        oem_lifecycle_first_boot();
+        operation_release_handshake();
+
+        // global reset to test subsquent boots
+        $display("[TB_TOP] Power cycling chip...");
+        rst = 0; 
+        @(posedge clk);
+        rst = 1; 
+        @(posedge clk);
+        reset_handshake(); 
+
+        operation_release_handshake();
+    endtask
 
     initial begin : drive_inputs
 
-        $display("[TB_TOP] Asserting global reset and initializing MCSE values");
+        $display("[TB_TOP] Asserting global reset and initializing MCSE configuration");
         for (integer i = 0; i < 10; i=i+1) begin
             rst = 0;
             init_config =0; 
@@ -381,7 +399,7 @@ module mcse_top_tb;
         end 
 
         initialize_array();
-
+        $display("[TB_TOP] Deasserting global reset and initial MCSE configuration");
     	rst = 1;
         init_config = 1; 
 	    @(posedge clk);
@@ -390,6 +408,7 @@ module mcse_top_tb;
 
         //full_bootflow(); 
         testing_lifecycle_subsequent_boot();
+        oem_lifecycle_subsequent_boot();
 
         for (int i = 0; i < 10; i++) begin
             @(posedge clk); 

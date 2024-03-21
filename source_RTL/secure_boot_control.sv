@@ -1,8 +1,7 @@
 //TODO Configurability  
-//TODO Where is lc transition coming from? 
 //TODO GPIO ILAT, GPIO EN, and PCM
-//TODO proper simulation of fuse blowing
-//TODO end of life truncated boot 
+//TODO JTAG interface 
+//TODO optimize hashing registers for odd numbers and different IPID configurations
 
 `define GPIO_IDATA 6'h5
 `define GPIO_ODATA 6'h0
@@ -297,13 +296,18 @@ logic hash_done_r, hash_done_next;
 logic sha_next_next; 
 logic sha_sel_next; 
 logic [1:0] strobe_r, strobe_next; 
+logic [3:0] ipid_N_r; 
 
-function void ipid_hash(); // only works for even right now  
-// strobe init for first block, strobe next for consecutive
-
+function void ipid_hash(); 
+    // strobe init for first block, strobe next for consecutive
     if (~hash_done_r) begin
         if (hash_counter_r == 0) begin
-            sha_block_next = {ipid_r[hash_counter_r+1], ipid_r[hash_counter_r]};
+            if (ipid_N == 1) begin // the ipid_N_r register stores the number of IP IDs, used for even/odd checking for this hashing algorithm
+                sha_block_next = {256'h0, ipid_r[hash_counter_r]};
+            end 
+            else begin
+                sha_block_next = {ipid_r[hash_counter_r+1], ipid_r[hash_counter_r]};
+            end 
             case (strobe_r) 
                 2'b00 : begin
                     sha_init_next = 1; 
@@ -325,7 +329,12 @@ function void ipid_hash(); // only works for even right now
             endcase 
         end 
         else if (hash_counter_r < ipid_N) begin
-            sha_block_next = {ipid_r[hash_counter_r+1], ipid_r[hash_counter_r]};
+            if (hash_counter_r + 1 == ipid_N) begin
+                sha_block_next = {256'h0, ipid_r[hash_counter_r]};
+            end 
+            else begin
+                sha_block_next = {ipid_r[hash_counter_r+1], ipid_r[hash_counter_r]};
+            end 
             case (strobe_r) 
                 2'b00 : begin
                     sha_next_next = 1;
@@ -663,8 +672,8 @@ task mcse_init();
     gpio_reg_access_next = 1;
 endtask 
 
-always @(posedge clk, negedge fuse) begin
-    if (~fuse) begin
+always @(posedge clk, negedge init_config) begin
+    if (~init_config) begin
         first_boot_flag_r <= 1; 
     end 
     else begin
@@ -742,6 +751,7 @@ always@(posedge clk, negedge rst) begin
         reset_handshake_counter_r <= 0; 
         operation_release_done_r <= 0;
         operation_release_counter_r <= 0; 
+        ipid_N_r <= ipid_N; 
     end 
     else begin
         state_r <= state_next; 

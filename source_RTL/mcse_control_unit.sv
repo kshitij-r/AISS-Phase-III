@@ -4,7 +4,9 @@ module mcse_control_unit #(
     parameter puf_sig_length = 256,
     parameter gpio_N = 32,
     parameter gpio_AW = 32,
-    parameter gpio_PW = 2*gpio_AW+40
+    parameter gpio_PW = 2*gpio_AW+40,
+    parameter ipid_N = 16,
+    parameter ipid_width = 256
 )
 (
     input                      clk,
@@ -93,8 +95,8 @@ module mcse_control_unit #(
     secure_memory #(.WIDTH(memory_width), .LENGTH(memory_length) ) mem (.rst(init_config), .*);
 
     secure_boot_control #(.pcm_data_width(pcm_data_width), .pcm_addr_width(pcm_addr_width), .puf_sig_length(puf_sig_length), 
-    .gpio_N(gpio_N), .gpio_AW(gpio_AW), .gpio_PW(gpio_PW),
-    .memory_width(memory_width), .memory_length(memory_length)) secure_boot ( .* );
+    .gpio_N(gpio_N), .gpio_AW(gpio_AW), .gpio_PW(gpio_PW), .memory_width(memory_width), .memory_length(memory_length), .ipid_N(ipid_N),
+    .ipid_width(ipid_width)) secure_boot ( .* );
 
 
 endmodule 
