@@ -998,6 +998,7 @@ always_comb begin
                 if (lifecycle_authentication_value_r) begin
                     if (lc_state == 3'b101) begin
                         state_next = ABORT;
+                        first_boot_flag_next = 0; 
                     end 
                     else begin
                         state_next = CHALLENGE_CHIPID; 

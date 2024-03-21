@@ -134,7 +134,7 @@ module mcse_top_tb;
 
     task lifecycle_transition_request(input bit [255:0] id); 
         $display("[TB_TOP] Requesting a lifecycle transition..."); 
-        $display("[TB_TOP] Lifecycle transition ID = ", id);
+        $displayh("[TB_TOP] Lifecycle transition ID = ", id);
         $display("[MCSE] Servicing lifecycle transition request..."); 
 
 
@@ -247,6 +247,7 @@ module mcse_top_tb;
         gpio_in = 0; 
         @(posedge clk); 
         $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
+        operation_release_handshake();
     endtask 
 
     task operation_release_handshake();
@@ -265,7 +266,7 @@ module mcse_top_tb;
             @(posedge clk);
         end
 
-        $display("[MCSE] Normal operation release completed");
+        $display("[MCSE] Normal operation release ACK recieved...Normal operation release completed");
         //$displayh("Host ack proof, gpio_reg_rdata[5] = ", mcse.control_unit.secure_boot.gpio_reg_rdata[5]);
 
     endtask
@@ -319,9 +320,10 @@ module mcse_top_tb;
         end
         @(posedge clk); 
         $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
+        operation_release_handshake();
     endtask 
 
-    task endoflife_lifecycle_boot();
+    task endoflife_lifecycle_first_boot();
         $displayh("[MCSE] Current Lifecycle State = ", mcse.control_unit.secure_boot.lc_state); 
         $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
         lifecycle_auth(lc_authentication_id_endoflife);
@@ -355,7 +357,7 @@ module mcse_top_tb;
         reset_handshake(); 
         // // boot in end of life 
         reset_handshake();
-        endoflife_lifecycle_boot(); 
+        endoflife_lifecycle_first_boot(); 
     endtask 
 
     task testing_lifecycle_subsequent_boot(); 
@@ -389,12 +391,14 @@ module mcse_top_tb;
         reset_handshake(); 
         $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
         operation_release_handshake();
+
+        lifecycle_transition_request(lc_transition_id_oem);
+        reset_handshake(); 
     endtask
 
     task deployment_lifecycle_subsequent_boot();
         reset_handshake();
         deployment_lifecycle_first_boot();
-        operation_release_handshake();
 
         // global reset to test subsquent boots
         $display("[TB_TOP] Power cycling chip...");
@@ -407,6 +411,44 @@ module mcse_top_tb;
         $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
         operation_release_handshake();
 
+        lifecycle_transition_request(lc_transition_id_deployment);
+        reset_handshake(); 
+
+    endtask 
+
+    task recall_lifecycle_subsequent_boot();
+        reset_handshake();
+        recall_lifecycle_first_boot();
+
+        // global reset to test subsquent boots
+        $display("[TB_TOP] Power cycling chip...");
+        rst = 0; 
+        @(posedge clk);
+        rst = 1; 
+        @(posedge clk);
+
+        reset_handshake();
+        $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
+        operation_release_handshake();
+
+        lifecycle_transition_request(lc_transition_id_recall);
+        reset_handshake();
+    endtask 
+
+    task endoflife_lifecycle_subsequent_boot();
+        reset_handshake();
+        endoflife_lifecycle_first_boot();
+
+
+        // global reset to test subsquent boots
+        $display("[TB_TOP] Power cycling chip...");
+        rst = 0; 
+        @(posedge clk);
+        rst = 1; 
+        @(posedge clk);
+        reset_handshake();
+        $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
+ 
     endtask 
 
     initial begin : drive_inputs
@@ -430,6 +472,9 @@ module mcse_top_tb;
         //full_bootflow(); 
         testing_lifecycle_subsequent_boot();
         oem_lifecycle_subsequent_boot();
+        deployment_lifecycle_subsequent_boot();
+        recall_lifecycle_subsequent_boot();
+        endoflife_lifecycle_subsequent_boot();
 
         for (int i = 0; i < 10; i++) begin
             @(posedge clk); 
