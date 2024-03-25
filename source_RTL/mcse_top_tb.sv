@@ -8,7 +8,7 @@ module mcse_top_tb;
     localparam gpio_N = 32;
     localparam gpio_AW = 32;
     localparam gpio_PW = 2*gpio_AW+40;
-    localparam ipid_N = 5;
+    localparam ipid_N = 3;
     localparam ipid_width = 256;
 
     logic                 clk=0;
@@ -35,11 +35,16 @@ module mcse_top_tb;
     int k = 0;
     
     task ipid_send();
+        $display("[MCSE] Sending IP ID trigger..."); 
+        while (gpio_out[12] != 1) begin // wait for first ip id trigger    
+            @(posedge clk); 
+        end
+
         k =0;
         gpio_in = 0; 
         for (logic [4:0] i = 0; i < ipid_N; i++) begin
             gpio_in[13] = 1;
-            $displayh("[TB_TOP] IP ID Trigger received...Sending IP ID from address ", gpio_out[11:8]); 
+            $displayh("[TB_TOP] IP ID trigger received...Sending IP ID from address ", gpio_out[11:8]); 
             for (int j = 0; j < 18; j++) begin
 				if (j == 0) begin 
 					gpio_in[31:16] = 16'h7A7A;
@@ -68,20 +73,20 @@ module mcse_top_tb;
             end 
             //$display("[TB_TOP] IP ID trigger deasserted");
       
-            //$displayh("[MCSE] Internal IP ID = " , mcse.control_unit.secure_boot.ipid_r[i]);
-            $displayh("[MCSE] Internal IP ID ", i[3:0], " = " , mcse.control_unit.secure_boot.ipid_r[i]);
+            $displayh("[MCSE] IP ID ", i[3:0], " = " , mcse.control_unit.secure_boot.ipid_r[i]);
             if (i != ipid_N-1) begin 
-                $display("[TB_TOP] Waiting for IP ID trigger...");
+                //$display("[TB_TOP] Waiting for IP ID trigger...");
+                $display("[MCSE] Sending IP ID trigger...");
                 while (gpio_out[12] != 1) begin
                     @(posedge clk); 
                 end 
             end 
-
+           
         end
     endtask
 
     task bus_wakeup_handshake();
-        $display("[TB_TOP] Waiting for bus wakeup");
+        $display("[MCSE] Sending bus wakeup signal...");
         while (gpio_out[6] != 1) begin // bus wakeup
             @(posedge clk); 
         end 
@@ -92,21 +97,31 @@ module mcse_top_tb;
     endtask
 
     task chipid_generation(); 
-        bus_wakeup_handshake(); 
-        $display("[TB_TOP] Waiting for IP ID Trigger");
-        while (gpio_out[12] != 1) begin // wait for first ip id trigger    
+        $display("[MCSE] Calculating MCSE ID..."); 
+        while (~mcse.control_unit.secure_boot.mcse_id_done_r) begin
             @(posedge clk); 
-        end
+        end 
+        $displayh("[MCSE] MCSE ID generation complete, MCSE ID = ", mcse.control_unit.secure_boot.mcse_id_r); 
+        $display("[MCSE] Proceeding with IP ID generation and bus wakeup handshake");
+        bus_wakeup_handshake(); 
        
         ipid_send();   
-        $display("[MCSE] IP ID extraction complete...Continuing with Chip ID generation");   
+        $display("[MCSE] IP ID extraction complete...Generating Composite IP ID...");
 
+        while (~mcse.control_unit.secure_boot.hash_done_r) begin
+            @(posedge clk); 
+        end 
+        $displayh("[MCSE] Composite IP ID generation complete, Composite IP ID = ", mcse.control_unit.secure_boot.ipid_hash_r);
+        //$display("[MCSE] IP ID extraction complete...Continuing with Chip ID generation");   
+        $display("[MCSE] Generating Chip ID...");
         while (~mcse.control_unit.secure_boot.chip_id_generation_done_r) begin
             @(posedge clk); 
         end 
-        $displayh("[MCSE] Internal generated Chip ID = " , mcse.control_unit.secure_boot.chip_id_r);
-        $display("[MCSE] Encrypting Chip ID and storing into memory..."); 
-
+        $display("[MCSE] Chip ID generation complete");
+        //$displayh("[MCSE] Generated MCSE ID = ", mcse.control_unit.secure_boot.mcse_id_r);
+        //$displayh("[MCSE] Generated Composite IP ID = ", mcse.control_unit.secure_boot.ipid_hash_r);
+        //$displayh("[MCSE] Generated Chip ID = " , mcse.control_unit.secure_boot.chip_id_r);
+        
         @(posedge clk); 
    
 
@@ -125,11 +140,9 @@ module mcse_top_tb;
             @(posedge clk); 
         end
         
-       // $displayh("[MCSE] Internal MCSE ID = ", mcse.control_unit.secure_boot.mcse_id_r);
-       // $displayh("[MCSE] Internal Composite IP ID = ", mcse.control_unit.secure_boot.ipid_hash_r);
-        $displayh("[MCSE] Internal Golden Chip ID = ", mcse.control_unit.mem.ram[0]);
-        $displayh("[MCSE] Internal Generated Chip ID = " , mcse.control_unit.secure_boot.encryption_output_r);
-        $displayh("[MCSE] Internal Authentic Chip ID Value = ", mcse.control_unit.secure_boot.authentic_chip_id_r); 
+        $displayh("[MCSE] Golden Chip ID = ", mcse.control_unit.mem.ram[0]);
+        $displayh("[MCSE] Generated Chip ID = " , mcse.control_unit.secure_boot.encryption_output_r);
+        $displayh("[MCSE] Authentic Chip ID Value = ", mcse.control_unit.secure_boot.authentic_chip_id_r); 
     endtask
 
     task lifecycle_transition_request(input bit [255:0] id); 
@@ -151,7 +164,7 @@ module mcse_top_tb;
         end
         lc_transition_request_in = 0;
         lc_transition_id = 0;
-        $displayh("[MCSE] Internal LC Transition Success Value = ", mcse.control_unit.secure_boot.lc_transition_success_r);
+        $displayh("[MCSE] LC Transition Success Value = ", mcse.control_unit.secure_boot.lc_transition_success_r);
         if (mcse.control_unit.secure_boot.lc_transition_success_r) begin
             $display("[MCSE] Lifecycle transition successful");
         end 
@@ -191,7 +204,7 @@ module mcse_top_tb;
         end
         
         $display("[MCSE] Lifecycle Authentication Complete"); 
-        $displayh("[MCSE] Internal Lifecycle Authentication Value = ", mcse.control_unit.secure_boot.lifecycle_authentication_value_r);
+        $displayh("[MCSE] Lifecycle Authentication Value = ", mcse.control_unit.secure_boot.lifecycle_authentication_value_r);
         if (mcse.control_unit.secure_boot.lifecycle_authentication_value_r) begin
             $display("[MCSE] Lifecycle authentication successful");
         end
@@ -231,9 +244,10 @@ module mcse_top_tb;
         end 
         gpio_in = 0; 
         @(posedge clk); 
+        $display("[MCSE] Encrypting Chip ID and storing into memory..."); 
         $displayh("[MCSE] Chip ID Stored in memory = ", mcse.control_unit.mem.ram[0]); 
-        $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
         $display("[MCSE] Chip ID generation complete...");
+        $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
     endtask 
 
     task oem_lifecycle_first_boot();
@@ -257,7 +271,7 @@ module mcse_top_tb;
         end 
 
         //$displayh("Normal operation release pin, gpio_out[4] = ", gpio_out[4]);
-        $display("[TB_TOP] Normal operation release trigger received...Sending host ACK");
+        $display("[TB_TOP] Normal operation release trigger received...Sending host normal operation release ACK...");
 
         gpio_in[5] = 1; // host ack
 
@@ -305,9 +319,12 @@ module mcse_top_tb;
         end
 
         gpio_in[1] = 0;
-        $display("[MCSE] Host SoC reset routine completed");
-        //$displayh("Reset ack proof, gpio_reg_rdata[1] = ", mcse.control_unit.secure_boot.gpio_reg_rdata[1]);
-
+        if (mcse.control_unit.secure_boot.gpio_reg_rdata[1]) begin
+            $display("[MCSE] Host SoC reset ACK received...Host SoC reset routine completed");
+        end 
+        else begin
+            $display("[MCSE] Host SoC reset ACK not received");
+        end 
     endtask
 
     task recall_lifecycle_first_boot();
@@ -377,10 +394,10 @@ module mcse_top_tb;
     endtask 
 
     task oem_lifecycle_subsequent_boot();
+        $display("[MCSE] Initializing MCSE and sending Host SoC reset signal...");
         reset_handshake();
 
         oem_lifecycle_first_boot();
-        operation_release_handshake();
 
         // global reset to test subsquent boots
         $display("[TB_TOP] Power cycling chip...");
@@ -388,6 +405,7 @@ module mcse_top_tb;
         @(posedge clk);
         rst = 1; 
         @(posedge clk);
+        $display("[MCSE] Initializing MCSE and sending Host SoC reset signal...");
         reset_handshake(); 
         $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
         operation_release_handshake();
@@ -397,6 +415,7 @@ module mcse_top_tb;
     endtask
 
     task deployment_lifecycle_subsequent_boot();
+        $display("[MCSE] Initializing MCSE and sending Host SoC reset signal...");
         reset_handshake();
         deployment_lifecycle_first_boot();
 
@@ -406,7 +425,7 @@ module mcse_top_tb;
         @(posedge clk);
         rst = 1; 
         @(posedge clk);
-
+        $display("[MCSE] Initializing MCSE and sending Host SoC reset signal...");
         reset_handshake();
         $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
         operation_release_handshake();
@@ -417,6 +436,7 @@ module mcse_top_tb;
     endtask 
 
     task recall_lifecycle_subsequent_boot();
+        $display("[MCSE] Initializing MCSE and sending Host SoC reset signal...");
         reset_handshake();
         recall_lifecycle_first_boot();
 
@@ -426,7 +446,7 @@ module mcse_top_tb;
         @(posedge clk);
         rst = 1; 
         @(posedge clk);
-
+        $display("[MCSE] Initializing MCSE and sending Host SoC reset signal...");
         reset_handshake();
         $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
         operation_release_handshake();
@@ -436,6 +456,7 @@ module mcse_top_tb;
     endtask 
 
     task endoflife_lifecycle_subsequent_boot();
+        $display("[MCSE] Initializing MCSE and sending Host SoC reset signal...");
         reset_handshake();
         endoflife_lifecycle_first_boot();
 
@@ -446,6 +467,7 @@ module mcse_top_tb;
         @(posedge clk);
         rst = 1; 
         @(posedge clk);
+        $display("[MCSE] Initializing MCSE and sending Host SoC reset signal...");
         reset_handshake();
         $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
  
@@ -468,7 +490,7 @@ module mcse_top_tb;
 	    @(posedge clk);
         @(posedge clk); 
         @(posedge clk); 
-
+        $display("[MCSE] Initializing MCSE and sending Host SoC reset signal...");
         //full_bootflow(); 
         testing_lifecycle_subsequent_boot();
         oem_lifecycle_subsequent_boot();
