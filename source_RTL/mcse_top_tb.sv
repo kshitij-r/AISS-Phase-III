@@ -12,8 +12,8 @@ module mcse_top_tb;
     localparam ipid_width = 256;
 
     logic                 clk=0;
-    logic                 rst;
-    logic                 init_config; 
+    logic                 rst_n;
+    logic                 init_config_n; 
 	logic  [gpio_N-1:0]   gpio_in;
     logic  [255:0]        lc_transition_id;
     logic                 lc_transition_request_in;
@@ -383,9 +383,9 @@ module mcse_top_tb;
 
         // global reset to test subsquent boots
         $display("[TB_TOP] Power cycling chip...");
-        rst = 0; 
+        rst_n = 0; 
         @(posedge clk);
-        rst = 1; 
+        rst_n = 1; 
         @(posedge clk);
         reset_handshake(); 
         $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
@@ -401,9 +401,9 @@ module mcse_top_tb;
 
         // global reset to test subsquent boots
         $display("[TB_TOP] Power cycling chip...");
-        rst = 0; 
+        rst_n = 0; 
         @(posedge clk);
-        rst = 1; 
+        rst_n = 1; 
         @(posedge clk);
         $display("[MCSE] Initializing MCSE and sending Host SoC reset signal...");
         reset_handshake(); 
@@ -421,9 +421,9 @@ module mcse_top_tb;
 
         // global reset to test subsquent boots
         $display("[TB_TOP] Power cycling chip...");
-        rst = 0; 
+        rst_n = 0; 
         @(posedge clk);
-        rst = 1; 
+        rst_n = 1; 
         @(posedge clk);
         $display("[MCSE] Initializing MCSE and sending Host SoC reset signal...");
         reset_handshake();
@@ -442,9 +442,9 @@ module mcse_top_tb;
 
         // global reset to test subsquent boots
         $display("[TB_TOP] Power cycling chip...");
-        rst = 0; 
+        rst_n = 0; 
         @(posedge clk);
-        rst = 1; 
+        rst_n = 1; 
         @(posedge clk);
         $display("[MCSE] Initializing MCSE and sending Host SoC reset signal...");
         reset_handshake();
@@ -463,9 +463,9 @@ module mcse_top_tb;
 
         // global reset to test subsquent boots
         $display("[TB_TOP] Power cycling chip...");
-        rst = 0; 
+        rst_n = 0; 
         @(posedge clk);
-        rst = 1; 
+        rst_n = 1; 
         @(posedge clk);
         $display("[MCSE] Initializing MCSE and sending Host SoC reset signal...");
         reset_handshake();
@@ -477,16 +477,16 @@ module mcse_top_tb;
 
         $display("[TB_TOP] Asserting global reset and initializing MCSE configuration");
         for (integer i = 0; i < 10; i=i+1) begin
-            rst = 0;
-            init_config =0; 
+            rst_n = 0;
+            init_config_n =0; 
             gpio_in = 0; 
             @(posedge clk);
         end 
 
         initialize_array();
         $display("[TB_TOP] Deasserting global reset and initial MCSE configuration");
-    	rst = 1;
-        init_config = 1; 
+    	rst_n = 1;
+        init_config_n = 1; 
 	    @(posedge clk);
         @(posedge clk); 
         @(posedge clk); 

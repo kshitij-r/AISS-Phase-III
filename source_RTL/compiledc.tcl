@@ -31,4 +31,6 @@ report_area
 report_hierarchy
 report_reference
 
+write -format verilog -hierarchy -output mcse_netlist.v mcse_top
+
 quit

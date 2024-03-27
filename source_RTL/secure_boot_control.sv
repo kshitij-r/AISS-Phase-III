@@ -34,8 +34,8 @@ module secure_boot_control # (
 )
 (
     input                                       clk,
-    input                                       rst,
-    input                                       init_config, 
+    input                                       rst_n,
+    input                                       init_config_n, 
 
     // Camellia to Boot Control
     input [127:0]                               cam_data_out,
@@ -670,8 +670,8 @@ function void mcse_init();
     gpio_reg_access_next = 1;
 endfunction
 
-always @(posedge clk, negedge init_config) begin
-    if (~init_config) begin
+always @(posedge clk, negedge init_config_n) begin
+    if (~init_config_n) begin
         first_boot_flag_r <= 1; 
     end 
     else begin
@@ -686,8 +686,8 @@ function void power_off();
     gpio_reg_access_next = 0;
 endfunction 
 
-always@(posedge clk, negedge rst) begin 
-    if (~rst) begin
+always@(posedge clk, negedge rst_n) begin 
+    if (~rst_n) begin
         state_r <= MCSE_INIT;
         cam_data_in <= 0;
         cam_key <= 0; 

@@ -3,9 +3,23 @@ SRC_FILES := mcse_top.sv mcse_control_unit.sv secure_memory.sv secure_boot_contr
              gpio.v gpio_regmap.v oh_dsync.v io.v packet2emesh.v c1908.v primitives.v \
              puf.v mcse_top_tb.sv lec25dscc25.v
 
+SRC_FILES_AHB := data_worker.v data_worker_tb.sv
+
+SRC_FILES_NETLIST := mcse_netlist.v mcse_top_netlist_tb.sv lec25dscc25.v
+
 FLAGS := -sverilog -R +vcs+vcdpluson
+
 
 MCSEtest:
 	vcs $(SRC_FILES) $(FLAGS)
 
-.PHONY: MCSEtest
+AHBtest:
+	vcs $(SRC_FILES_AHB) $(FLAGS)
+
+NETLISTtest:
+	vcs $(SRC_FILES_NETLIST) $(FLAGS)
+
+.PHONY: MCSEtest AHBtest NETLISTtest
+
+
+

@@ -4,7 +4,7 @@ module lc_memory #(
 )
 (
     input  logic                      clk,
-	input  logic 					  rst,
+	input  logic 					  rst_n,
 	input  logic					  rd_en, 
     input  logic [$clog2(LENGTH)-1:0] addr,
 
@@ -14,8 +14,8 @@ module lc_memory #(
 
 reg [WIDTH-1:0] rom [LENGTH-1:0];
 
-always @(posedge clk, negedge rst) begin
-	if (~rst) begin
+always @(posedge clk, negedge rst_n) begin
+	if (~rst_n) begin
 		rdData <= 0;
 		valid <= 0; 
 		rom[0] <= 256'h0;

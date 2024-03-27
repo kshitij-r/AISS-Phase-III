@@ -2,7 +2,7 @@
 module lifecycle_protection (
 
     input  logic         clk,
-    input  logic         rst,
+    input  logic         rst_n,
     input  logic         lc_transition_request,
     input  logic [255:0] lc_identifier,
 
@@ -26,15 +26,15 @@ logic [255:0] currOwnerSignature;
 
 logic rd_en, valid; 
 
-lc_memory  #(.WIDTH(256), .LENGTH(6)) memory (.clk(clk), .rst(rst), .rd_en(rd_en), .addr(lc_state), .rdData(currOwnerSignature), .valid(valid));
+lc_memory  #(.WIDTH(256), .LENGTH(6)) memory (.clk(clk), .rst_n(rst_n), .rd_en(rd_en), .addr(lc_state), .rdData(currOwnerSignature), .valid(valid));
 
 typedef enum logic [1:0] {START, TRANSITION_AUTH, FINISH} state_t;
 state_t state_r;
 
 assign lc_state = lc_r; 
 
-always@(posedge clk, negedge rst) begin
-    if (~rst) begin
+always@(posedge clk, negedge rst_n) begin
+    if (~rst_n) begin
         state_r <= START; 
         lc_r <= 3'b001;   
         lc_success <= 1'b0; 

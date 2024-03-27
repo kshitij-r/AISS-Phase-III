@@ -91,7 +91,7 @@ module data_worker_tb;
         @(posedge clk); // initiate transfer
         I_go = 0;
         
-        @(posedge clk); // address phase starting here 
+        //@(posedge clk); // address phase starting here 
         if (O_hwrite) begin
             $display("[Slave] HWRITE = %0h...This is a write request", O_hwrite);
         end 

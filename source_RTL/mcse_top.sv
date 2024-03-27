@@ -10,8 +10,8 @@ module mcse_top # (
 )
 (
     input                 clk,
-    input                 rst,
-    input                 init_config, // temporary for simulation 
+    input                 rst_n,
+    input                 init_config_n, 
 	input  [gpio_N-1:0]   gpio_in,
 
     input  [255:0]        lc_transition_id,
@@ -72,7 +72,7 @@ module mcse_top # (
     .data_width(pcm_data_width), .addr_width(pcm_addr_width), .puf_sig_length(puf_sig_length), .N(gpio_N),
     .AW(gpio_AW), .PW(gpio_PW)) 
     min_sec (
-    .clk(clk), .rst(~rst),
+    .clk(clk), .rst(~rst_n),
     .data_in(cam_data_in), .key(cam_key), .key_rdy(cam_key_rdy), .k_len(cam_k_len), .enc_dec(cam_enc_dec),.data_rdy(cam_data_rdy), .data_out(cam_data_out),
     .data_acq(cam_data_acq), .key_acq(cam_data_acq), .output_rdy(cam_output_rdy), .cam_pufout(cam_puf_out),
 

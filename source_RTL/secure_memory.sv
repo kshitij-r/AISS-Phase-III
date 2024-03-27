@@ -5,7 +5,7 @@ module secure_memory #(
 )
 (
     input  logic                      clk,
-	input  logic 					  rst,
+	input  logic 					  rst_n,
 	input  logic					  rd_en, 
 	input  logic				      wr_en,
     input  logic [$clog2(LENGTH)-1:0] addr,
@@ -20,8 +20,8 @@ reg [WIDTH-1:0] ram [LENGTH-1:0];
 
 
 
-always @(posedge clk, negedge rst) begin
-	if (~rst) begin
+always @(posedge clk, negedge rst_n) begin
+	if (~rst_n) begin
 		rdData <= 0;
 
 		//ram[0] <= 0;
