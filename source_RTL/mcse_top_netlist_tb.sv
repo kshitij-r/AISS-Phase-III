@@ -6,12 +6,12 @@ module mcse_top_netlist_tb;
     localparam gpio_N = 32;
     localparam gpio_AW = 32;
     localparam gpio_PW = 2*gpio_AW+40;
-    localparam ipid_N = 16;
+    localparam ipid_N = 3;
     localparam ipid_width = 256;
 
     logic                 clk=0;
-    logic                 rst;
-    logic                 init_config; 
+    logic                 rst_n;
+    logic                 init_config_n; 
 	logic  [gpio_N-1:0]   gpio_in;
     logic  [255:0]        lc_transition_id;
     logic                 lc_transition_request_in;
@@ -49,8 +49,6 @@ module mcse_top_netlist_tb;
         while(gpio_out[12] != 1) begin
             @(posedge clk); 
         end 
-        $display("[TB_TOP] IP ID trigger received...gpio_out[12] = ", gpio_out[12]); 
-        $display("[TB_TOP] IP ID trigger received..."); 
 
         k =0;
         gpio_in = 0; 
@@ -97,16 +95,19 @@ module mcse_top_netlist_tb;
             end 
            
         end
+        $display("[TB_TOP] IPID extraction complete");
     endtask
 
     task lifecycle_transition_request(input bit [255:0] id); 
         $display("[TB_TOP] Requesting a lifecycle transition..."); 
         $displayh("[TB_TOP] Lifecycle transition ID = ", id);
-        $display("[MCSE] Servicing lifecycle transition request..."); 
 
         lc_transition_request_in = 1;
         lc_transition_id = id; 
         @(posedge clk); 
+        reset_handshake(); 
+        lc_transition_request_in = 0;
+        lc_transition_id = 0; 
 
     endtask   
 
@@ -119,22 +120,20 @@ module mcse_top_netlist_tb;
         lc_authentication_id = id;
 
         @(posedge clk); 
-
-        //lc_authentication_valid = 0; 
-        //lc_authentication_id = 0; 
+   
+        // lc_authentication_valid = 0; 
+        // lc_authentication_id = 0; 
 
     endtask 
 
     task operation_release_handshake();
-        //$display("Waiting for operation release trigger");
+        $display("[TB_TOP] Waiting for operation release trigger on gpio_out[4]");
         while (gpio_out[4] != 1) begin // sending reset
             @(posedge clk); 
         end 
-
-        //$displayh("Normal operation release pin, gpio_out[4] = ", gpio_out[4]);
-        $display("[TB_TOP] Normal operation release trigger received...Sending host normal operation release ACK...");
-
+        $display("[TB_TOP] Normal operation release received...gpio_out[4] = ", gpio_out[4]);
         gpio_in[5] = 1; // host ack
+        $display("[TB_TOP] Sending host normal operation release ACK...");
         @(posedge clk);
 
 
@@ -166,83 +165,65 @@ module mcse_top_netlist_tb;
     
     endtask 
 
+    task testing_lifecycle_first_boot();
+        reset_handshake(); 
+        bus_wakeup_handshake(); 
+        ipid_send(); 
+        $display("[TB_TOP] Transitioning lifecycle to OEM/Packaging...");
+        lifecycle_transition_request(lc_transition_id_testing);     
+    endtask 
+
+    task oem_lifecycle_first_boot();
+        reset_handshake();
+        lifecycle_auth(lc_authentication_id_oem);
+        bus_wakeup_handshake();
+        ipid_send();
+        operation_release_handshake();
+        $display("[TB_TOP] Transitioning lifecycle to Deployment...");
+        lifecycle_transition_request(lc_transition_id_oem); 
+
+    endtask 
+
+    task deployment_lifecycle_first_boot();
+        reset_handshake();
+        lifecycle_auth(lc_authentication_id_deployment);
+        bus_wakeup_handshake();
+        ipid_send();
+        operation_release_handshake();
+        $display("[TB_TOP] Tranistioning lifecycle to Recall...");
+        lifecycle_transition_request(lc_transition_id_deployment);
+    endtask 
+
+    task recall_lifecycle_first_boot();
+        reset_handshake();
+        lifecycle_auth(lc_authentication_id_recall);
+        bus_wakeup_handshake();
+        ipid_send();
+        operation_release_handshake();
+        $display("[TB_TOP] Transitioning lifecycle to End of Life...");
+        lifecycle_transition_request(lc_transition_id_recall);
+    endtask 
+
     initial begin : drive_inputs
+        initialize_array(); // initializes ip id array such that its constant for every lifecycle 
 
         $display("[TB_TOP] Asserting global reset and initializing MCSE configuration");
         for (integer i = 0; i < 10; i=i+1) begin
-            rst = 0;
-            init_config =0; 
+            rst_n = 0;
+            init_config_n =0; 
             gpio_in = 0; 
             @(posedge clk);
         end 
 
-        rst = 1;
-        init_config = 1;
-        @(posedge clk);
-        @(posedge clk); 
-        @(posedge clk); 
+        rst_n = 1;
+        init_config_n = 1;
+        @(posedge clk); @(posedge clk); @(posedge clk); 
         $display("[TB_TOP] Deasserting global reset and initial MCSE configuration");
 
-        while (gpio_out[0] != 1) begin
-            @(posedge clk);
-        end 
-
-        reset_handshake(); 
-        bus_wakeup_handshake(); 
-
-        initialize_array();
-        ipid_send(); 
-        $display("[TB_TOP] IPID extraction complete");
-
-        // lifecycle_transition_request(lc_transition_id_testing); 
-        // $displayh("gpio_out[0] = ", gpio_out[0]);
-        // while (gpio_out[0] != 1) begin
-        //     @(posedge clk);
-        // end 
-
-        // $display("[TB_TOP] Host Soc reset request received...Sending host ACK");
-        // $displayh("gpio_out[0] = ", gpio_out[0]);
-        // gpio_in[1] = 1;
-        // @(posedge clk);
-        // gpio_in[0] = 0; 
-
-        // while (gpio_out[0] != 1) begin
-        //     @(posedge clk);
-        // end 
-
-        // $display("[TB_TOP] Host Soc reset request received...Sending host ACK");
-        // $displayh("gpio_out[0] = ", gpio_out[0]);
-        // gpio_in[1] = 1;
-        // @(posedge clk);
-        // //gpio_in[0] = 0; 
-    
-        // $display("[TB_TOP] Proceeding with lc authentication in OEM"); 
-        
-        // lifecycle_auth(lc_authentication_id_oem);
-        // $display("gpio_out[6] = ", gpio_out[6]);
-        // while(gpio_out[6] != 1) begin
-        //     //$display("gpio_out[6] = ", gpio_out[6]);
-        //     @(posedge clk); 
-        // end 
-        // $display("gpio_out[6] = ", gpio_out[6]);
-        // $display("[TB_TOP] Bus wakeup received...Sending bus wakeup ACK");
-        // gpio_in[7] = 1; 
-
-        // ipid_send(); 
-        // operation_release_handshake();
-
-        // lifecycle_transition_request(lc_transition_id_oem); 
-
-        //         $displayh("gpio_out[0] = ", gpio_out[0]);
-        // while (gpio_out[0] != 1) begin
-        //     @(posedge clk);
-        // end 
-
-        // $display("[TB_TOP] Host Soc reset request received...Sending host ACK");
-        // $displayh("gpio_out[0] = ", gpio_out[0]);
-        // gpio_in[1] = 1;
-        // @(posedge clk);
-        // gpio_in[0] = 0; 
+        testing_lifecycle_first_boot(); 
+        oem_lifecycle_first_boot(); 
+        deployment_lifecycle_first_boot();
+        recall_lifecycle_first_boot(); 
 
         $finish; 
     end 
