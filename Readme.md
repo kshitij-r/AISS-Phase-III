@@ -94,16 +94,16 @@ Bullet points with an * are only completed at the first boot of each life-cycle.
 Through the Makefile we are executing testbenches in VCS. 
 
 The pre-synthesis testbench is "mcse_top_tb.sv". To run it use the command (currently has to be run in the source_RTL directory but will be fixed) 
-
- - make MCSEtest
-
+```
+  make MCSEtest
+```
 For synthesis using Synopsys DC, the compiledc.tcl file is used and will also produce the gate-level netlist file "mcse_netlist.v". Run the command
-
- - dc_shell -f compiledc.tcl
-
+```
+dc_shell -f compiledc.tcl
+```
 For a gate-level netlist simulation, the testbench is "mcse_top_netlist_tb.sv". Run the command
-
- - make NETLISTtest
-
+```
+make NETLISTtest
+```
 
 
