@@ -6,10 +6,15 @@
     - CAM256  
     - GPIO  
     - PCM
+    - AHB-lite Interface
+    - AHB-Lite Interface Translation Module
   - MCSE Control Unit
     - Life-cycle Protection Module
     - Secure Memory
     - Secure Boot Control 
+    - Firmware Signature Authentication Module 
+
+<img alt="alt_text" width="360px" src="images/mcse_architecture.PNG" />
 
 **MCSE/TA2 GPIO Pin Out**
 
