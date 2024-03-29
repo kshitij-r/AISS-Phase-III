@@ -101,11 +101,11 @@ Through the Makefile we are executing testbenches in VCS.
 
 The pre-synthesis testbench is "mcse_top_tb.sv". To run it use the command below (currently has to be run in the source_RTL directory but will be fixed) 
 ```
-  make MCSEtest
+make MCSEtest
 ```
 For synthesis using Synopsys DC, the compiledc.tcl file is used and will also produce the gate-level netlist file "mcse_netlist.v". Run the command below
 ```
-dc_shell -f compiledc.tcl
+make synthesis 
 ```
 For a gate-level netlist simulation, the testbench is "mcse_top_netlist_tb.sv". Run the command below
 ```

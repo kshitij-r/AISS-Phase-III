@@ -9,6 +9,8 @@ SRC_FILES_NETLIST := mcse_netlist.v mcse_top_netlist_tb.sv lec25dscc25.v
 
 FLAGS := -sverilog -R +vcs+vcdpluson
 
+TCL_SCRIPT = compiledc.tcl
+
 MCSEtest: clean
 	vcs $(SRC_FILES) $(FLAGS)
 
@@ -18,9 +20,12 @@ AHBtest: clean
 NETLISTtest: clean 
 	vcs $(SRC_FILES_NETLIST) $(FLAGS)
 
-.PHONY: MCSEtest AHBtest NETLISTtest
+synthesis: clean 
+	dc_shell -f compiledc.tcl
+
+.PHONY: MCSEtest AHBtest NETLISTtest synthesis 
 
 .PHONY: clean
 clean: 
-	rm -rf simv.daidir/ $(WORK_DIR)
+	rm -rf simv.daidir/ $(WORK_DIR) WORK/
 
