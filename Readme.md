@@ -6,15 +6,16 @@
     - CAM256  
     - GPIO  
     - PCM
-    - AHB-lite Interface
+    - AHB-Lite Interface
     - AHB-Lite Interface Translation Module
+    - JTAG Protection Module
   - MCSE Control Unit
     - Life-cycle Protection Module
     - Secure Memory
     - Secure Boot Control 
     - Firmware Signature Authentication Module 
 
-<img alt="alt_text" width="360px" src="images/mcse_architecture.PNG" />
+<img alt="alt_text" width="720px" src="images/mcse_architecture.PNG" />
 
 **MCSE/TA2 GPIO Pin Out**
 
@@ -30,7 +31,7 @@
 |11   | Output    | IPID Address[3] |    |      |                     |
 |12   | Output    | IPID Trigger    |    |      |                     |
 |     |           |                 |13  |Input | IPID Valid          | 
-| 15  | Output    | FW AUth ACK     |14  |Input | FW Image Authentication Request | 
+| 15  | Output    | FW Auth ACK     |14  |Input | FW Image Authentication Request | 
 |     |           |                 |16  |Input | IPID In[0]          | 
 |     |           |                 | ↓  | ↓    |      ↓              | 
 |     |           |                 |31  |Input | IPID In[15]         |
@@ -98,17 +99,15 @@ Bullet points with an * are only completed at the first boot of each life-cycle.
 
 Through the Makefile we are executing testbenches in VCS. 
 
-The pre-synthesis testbench is "mcse_top_tb.sv". To run it use the command (currently has to be run in the source_RTL directory but will be fixed) 
+The pre-synthesis testbench is "mcse_top_tb.sv". To run it use the command below (currently has to be run in the source_RTL directory but will be fixed) 
 ```
   make MCSEtest
 ```
-For synthesis using Synopsys DC, the compiledc.tcl file is used and will also produce the gate-level netlist file "mcse_netlist.v". Run the command
+For synthesis using Synopsys DC, the compiledc.tcl file is used and will also produce the gate-level netlist file "mcse_netlist.v". Run the command below
 ```
 dc_shell -f compiledc.tcl
 ```
-For a gate-level netlist simulation, the testbench is "mcse_top_netlist_tb.sv". Run the command
+For a gate-level netlist simulation, the testbench is "mcse_top_netlist_tb.sv". Run the command below
 ```
 make NETLISTtest
 ```
-
-
