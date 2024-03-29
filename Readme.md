@@ -1,4 +1,4 @@
-**MCSE Architecture**
+### MCSE Architecture
 
 - MCSE Top  
   - Minimum Security Module  
@@ -36,7 +36,7 @@
 |     |           |                 | ↓  | ↓    |      ↓              | 
 |     |           |                 |31  |Input | IPID In[15]         |
 
-**High-Level MCSE Life-cycle Functionality**
+### High-Level MCSE Life-cycle Functionality
 
 Bullet points with an * are only completed at the first boot of each life-cycle. 
 
@@ -95,7 +95,7 @@ Bullet points with an * are only completed at the first boot of each life-cycle.
    - Lifecycle Authentication *
    - Truncated boot sequence loop
 
-**Simulation & Synthesis**
+### Simulation & Synthesis
 
 Through the Makefile we are executing testbenches in VCS. 
 
@@ -111,3 +111,46 @@ For a gate-level netlist simulation, the testbench is "mcse_top_netlist_tb.sv". 
 ```
 make NETLISTtest
 ```
+
+### HDL File Structure/Module Instantiations
+
+- mcse_top.sv
+  - min_security_module.sv  
+    - sha_top.sv  
+      - sha256_puf_256.v  
+    - camellia_top.sv  
+      - camellia.v
+    - gpio.v
+      - oh_dsync.v
+      - packet2emesh.v
+      - io.v
+    - pcm.v
+  - mcse_control_unit.sv
+    - lifecycle_protection.sv
+      - lc_memory.sv   
+    - secure_memory.sv
+    - secure_boot_control.sv
+      
+### HDL File Walkthrough
+
+[mcse_top.sv](https://github.com/kshitij-r/AISS-Phase-III/blob/emmanuel/source_RTL/mcse_top.sv) is the top module for MCSE. The I/O contains the gpio_out, gpio_in, system-side AHB requester ports, and abstracted ports for lifecycle authentication/transitions which will later be done through the JTAG TAP ports. This module instantiates the minimum security module and the MCSE control unit. 
+
+[min_security_module.sv](https://github.com/kshitij-r/AISS-Phase-III/blob/emmanuel/source_RTL/min_security_module.sv) contains the cryptographic accelerators (SHA256 and CAM256) for hashing and encryption/decryption. The GPIO module and PCM are instantiated here as well. Later, this will house the AHB-lite bus interface and JTAG protection module.
+
+[lifecycle_protection.sv](https://github.com/kshitij-r/AISS-Phase-III/blob/emmanuel/source_RTL/lifecycle_protection.sv) file has the life-cycle protection module that holds the life-cycle state and handles requests for life-cycle transitions. This module also instantiates the memory in [lc_memory.sv](https://github.com/kshitij-r/AISS-Phase-III/blob/emmanuel/source_RTL/lc_memory.sv) (modeled as a read-only register file) which contains the keys to transition the life-cycle state for each life-cycle. 
+
+[secure_memory](https://github.com/kshitij-r/AISS-Phase-III/blob/emmanuel/source_RTL/secure_memory.sv) file instantiates the secure memory modeled as a read and write register file. This memory will house the 2048 asset bits, life-cycle authentication keys, and anything miscellaneous MCSE needs to store. 
+
+[secure_boot_control.sv](https://github.com/kshitij-r/AISS-Phase-III/blob/emmanuel/source_RTL/secure_boot_control.sv) file instantiates the secure boot control module which is the core of MCSE. This module is responsible for controlling all other modules in MCSE. Will handle the control flow for handshaking with TA2 (host SoC reset, system bus wakeup, IP ID Extraction, HOST normal operations release, FW authentication), life-cycle authentication and transition, and AHB-lite bus interface control. 
+
+### Simulation & Synthesis File Walkthrough
+
+[Makefile](https://github.com/kshitij-r/AISS-Phase-III/blob/emmanuel/source_RTL/Makefile) will clean the work and build environments for simulation and synthesis. All previously generated temporary files are removed such that any new run of simulation or synthesis is clean. Please refer above for the proper commands to execute each simulation and synthesis of MCSE. 
+
+[mcse_top_tb.sv](https://github.com/kshitij-r/AISS-Phase-III/blob/emmanuel/source_RTL/mcse_top_tb.sv) is the pre-synthesis testbench. This simulation covers the first boot and subsequent boot functionality for each lifecycle state with descriptive output messages. Each task serves to test MCSE life-cycle specific functionality in a modular fashion. It is a behavioral simulation and walks through each life-cycle sequentially as if to cover all functionality throughout the chip's life. 
+
+[compiledc.tcl](https://github.com/kshitij-r/AISS-Phase-III/blob/emmanuel/source_RTL/compiledc.tcl) is the Synopsys Design Compiler script to synthesize MCSE. The script allows DC to perform heavy optimizations to help reduce gate count. Once synthesis is finished, the script will display the netlist area, hierarchy, and references, and then output the gate-level netlist to a Verilog file which can then be used in post-synthesis simulation. 
+
+[mcse_top_netlist_tb.sv](https://github.com/kshitij-r/AISS-Phase-III/blob/emmanuel/source_RTL/mcse_top_netlist_tb.sv) is the post-synthesis (gate level netlist) testbench. This simulation highlights the same functionalities as in the pre-synthesis simulation but doesn't have any output messages to show internal registers. This simulation shows first boot functionality for all life-cycles except in End of Life. The focus here is to show TA1/TA2 interactions are still functional post-synthesis. 
+
+
