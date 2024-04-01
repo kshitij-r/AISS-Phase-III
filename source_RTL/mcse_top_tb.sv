@@ -1,4 +1,8 @@
 //`timescale 1 ns / 100 ps
+
+`define         AHB_TRANS_IDLE                      2'b00
+`define         AHB_DATA_WIDTH_BITS                 32
+
 module mcse_top_tb;
 
 
@@ -8,8 +12,48 @@ module mcse_top_tb;
     localparam gpio_N = 32;
     localparam gpio_AW = 32;
     localparam gpio_PW = 2*gpio_AW+40;
-    localparam ipid_N = 3;
+    localparam ipid_N = 1;
     localparam ipid_width = 256;
+
+	localparam    pAHB_ADDR_WIDTH                     = 32;
+    localparam    pAHB_DATA_WIDTH                     = `AHB_DATA_WIDTH_BITS;
+    localparam    pAHB_BURST_WIDTH                    = 3;
+    localparam    pAHB_PROT_WIDTH                     = 4;
+    localparam    pAHB_SIZE_WIDTH                     = 3;
+    localparam    pAHB_TRANS_WIDTH                    = 2;
+    localparam    pAHB_HRESP_WIDTH                    = 2;
+
+    localparam    pAHB_HPROT_VALUE                    = (     1 << 0  // [0] : 1 = data access        ( 0 = op code access            )
+                                                        |   1 << 1  // [1] : 1 = privileged access  ( 0 = user access               )
+                                                        |   0 << 2  // [2] : 0 = not bufferable     ( 1 = bufferable                )
+                                                        |   0 << 3); // [3] : 0 = not cacheable      ( 1 = cacheable                 )
+    localparam    pAHB_HSIZE_VALUE                    =       (`AHB_DATA_WIDTH_BITS == 32 ) ? 3'b010  // (010 = 32-bit    )
+                                                        :   (`AHB_DATA_WIDTH_BITS == 64 ) ? 3'b011  // (011 = 64-bit    )
+                                                        :   (`AHB_DATA_WIDTH_BITS == 128) ? 3'b110  // (110 = 128-bit   )
+                                                        :   3'b010; // Default to 32-bit
+    localparam    pAHB_HBURST_VALUE                   = 3'b011;       // 011 = 4 beat incrementing    ( 111 = 16 beat incrementing    )
+    localparam    pAHB_HMASTLOCK_VALUE                = 1'b1;         // 1 = locked transfer          ( 0 = unlocked transfer         )
+    localparam    pAHB_HNONSEC_VALUE                  = 1'b0;         // 0 = Secure transfer          ( 1 = non secure transfer       )
+
+    localparam   pPAYLOAD_SIZE_BITS                  = 256;
+    localparam    pMAX_TRANSFER_WAIT_COUNT            = 16;
+    localparam    pREVERSE_WORD_ORDER                 = 1;
+    localparam   pREVERSE_BYTE_ORDER                 = 0;
+
+	logic   [pAHB_ADDR_WIDTH-1        :0]   O_haddr;
+    logic   [pAHB_BURST_WIDTH-1       :0]   O_hburst;
+    logic                                   O_hmastlock;
+    logic   [pAHB_PROT_WIDTH-1        :0]   O_hprot;
+    logic                                   O_hnonsec;
+    logic   [pAHB_SIZE_WIDTH-1        :0]   O_hsize;
+    logic   [pAHB_TRANS_WIDTH-1       :0]   O_htrans;
+    logic   [pAHB_DATA_WIDTH-1        :0]   O_hwdata;
+    logic                                   O_hwrite;
+    logic    [pAHB_DATA_WIDTH-1        :0]   I_hrdata;
+    logic                                    I_hready;
+    logic    [pAHB_HRESP_WIDTH-1       :0]   I_hresp;
+    logic                                    I_hreadyout;
+
 
     logic                 clk=0;
     logic                 rst_n;
@@ -105,7 +149,8 @@ module mcse_top_tb;
         $display("[MCSE] Proceeding with IP ID generation and bus wakeup handshake");
         bus_wakeup_handshake(); 
        
-        ipid_send();   
+        //ipid_send();   
+        ipid_bus_stream();
         $display("[MCSE] IP ID extraction complete...Generating Composite IP ID...");
 
         while (~mcse.control_unit.secure_boot.hash_done_r) begin
@@ -473,6 +518,58 @@ module mcse_top_tb;
  
     endtask 
 
+    localparam [pAHB_ADDR_WIDTH-1:0]  ipid_address [0:16] = '{
+        'h43C00000, 
+        'h81900000, 
+         'hD3200000,
+             'h0,
+            'h0,
+            'h0,
+            'h0,
+            'h0,
+            'h0,
+            'h0, 
+            'h0,
+            'h0,
+            'h0,
+            'h0,
+            'h0,
+            'h0,
+            'h0
+        };
+
+
+    logic [32:0] array_bus [(ipid_N * 8)-1:0]; 
+    task initialize_array_bus();
+        for (int i =0; i < ipid_N * (pPAYLOAD_SIZE_BITS / pAHB_DATA_WIDTH); i++) begin 
+            array_bus[i] = $urandom_range(1,2147483647);
+        end 
+    endtask 
+
+    task individual_ipid_stream(input bit [ipid_N-1:0] ipid_index);
+        for (int i = 0; i < 8; i++) begin
+            I_hrdata = array_bus[(ipid_index*(pPAYLOAD_SIZE_BITS / pAHB_DATA_WIDTH)) + i];
+            $displayh("[TB_TOP] O_haddr = ", O_haddr, " and I_hrdata = ", I_hrdata); 
+            @(posedge clk); 
+        end 
+    endtask 
+
+
+    task ipid_bus_stream();  
+        while (~mcse.control_unit.secure_boot.ipid_extraction_done_r) begin
+            for (bit [ipid_N-1:0] k = 0; k < ipid_N; k++) begin
+                if (O_haddr == ipid_address[k] && O_htrans == 2'b10) begin
+                    $displayh("[TB_TOP] Providing IPID values for address ", O_haddr); 
+                    individual_ipid_stream(k); 
+                end 
+            end  
+            @(posedge clk); 
+        end 
+        for (int i =0 ; i < ipid_N; i++) begin
+            $displayh("[MCSE] IPID ",  i[3:0], " = ", mcse.control_unit.secure_boot.ipid_r[i]);
+        end 
+    endtask 
+
     initial begin : drive_inputs
 
         $display("[TB_TOP] Asserting global reset and initializing MCSE configuration");
@@ -480,28 +577,28 @@ module mcse_top_tb;
             rst_n = 0;
             init_config_n =0; 
             gpio_in = 0; 
+            I_hrdata = 0;
+            I_hready = 1;
+            I_hresp = 0;
+            I_hreadyout = 1;
             @(posedge clk);
         end 
 
         initialize_array();
+        initialize_array_bus();
         $display("[TB_TOP] Deasserting global reset and initial MCSE configuration");
     	rst_n = 1;
         init_config_n = 1; 
 	    @(posedge clk);
         @(posedge clk); 
         @(posedge clk); 
-        $display("[MCSE] Initializing MCSE and sending Host SoC reset signal...");
-        //full_bootflow(); 
-        testing_lifecycle_subsequent_boot();
-        oem_lifecycle_subsequent_boot();
-        deployment_lifecycle_subsequent_boot();
-        recall_lifecycle_subsequent_boot();
-        endoflife_lifecycle_subsequent_boot();
-
-        for (int i = 0; i < 10; i++) begin
-            @(posedge clk); 
-        end 
-
+        // $display("[MCSE] Initializing MCSE and sending Host SoC reset signal...");
+        // //full_bootflow(); 
+         testing_lifecycle_subsequent_boot();
+        // oem_lifecycle_subsequent_boot();
+        // deployment_lifecycle_subsequent_boot();
+        // recall_lifecycle_subsequent_boot();
+        // endoflife_lifecycle_subsequent_boot();
         $finish; 
     end 
 

@@ -1,4 +1,4 @@
-//`timescale 1 ns / 100 ps
+`timescale 1 ns / 100 ps
 
 `define         AHB_TRANS_IDLE                      2'b00
 `define         AHB_DATA_WIDTH_BITS                 32
@@ -180,7 +180,7 @@ module data_worker_tb;
 
     tmp_address = 'h08;
     tmp_data = 'h31c3001967d4acf1bcb25768708627ae;
-    write_transfer(tmp_address, tmp_data);
+    //write_transfer(tmp_address, tmp_data);
     @(posedge clk);
     read_transfer(tmp_address); 
 

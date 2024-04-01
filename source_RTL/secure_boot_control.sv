@@ -19,18 +19,18 @@
 
 
 module secure_boot_control # (
-    parameter pcm_data_width = 32,
-    parameter pcm_addr_width = 32,
-    parameter puf_sig_length = 256,
-    parameter gpio_N = 32,
-    parameter gpio_AW = 32,
-    parameter gpio_PW = 2*gpio_AW+40,
-
-    parameter memory_width = 256,
-    parameter memory_length = 16,
-
-    parameter ipid_N = 16,
-    parameter ipid_width = 256
+    parameter pcm_data_width        = 32,
+    parameter pcm_addr_width        = 32,
+    parameter puf_sig_length        = 256,
+    parameter gpio_N                = 32,
+    parameter gpio_AW               = 32,
+    parameter gpio_PW               = 2*gpio_AW+40,
+    parameter memory_width          = 256,
+    parameter memory_length         = 16,
+    parameter ipid_N                = 16,
+    parameter ipid_width            = 256,
+    parameter pAHB_ADDR_WIDTH       = 32,
+    parameter pPAYLOAD_SIZE_BITS    = 128
 )
 (
     input                                       clk,
@@ -78,6 +78,10 @@ module secure_boot_control # (
     input  [255:0]                              lc_authentication_id,
     input                                       lc_authentication_valid, 
 
+    // Bus Translation unit to Boot control 
+    input                                       bootControl_bus_done,
+    input [pPAYLOAD_SIZE_BITS-1:0]              bootControl_bus_rdData, 
+
     // Boot control to Camellia 
     output logic [127:0]                        cam_data_in,
     output logic [255:0]                        cam_key,
@@ -110,7 +114,13 @@ module secure_boot_control # (
     output logic                                rd_en,
     output logic                                wr_en,
     output logic [$clog2(memory_length)-1:0]    addr,
-    output logic [memory_width-1:0]             wrData
+    output logic [memory_width-1:0]             wrData,
+
+    // Boot control to Bus Translation unit 
+    output logic                                bootControl_bus_go,
+    output logic [pAHB_ADDR_WIDTH-1:0]          bootControl_bus_addr,
+    output logic [pPAYLOAD_SIZE_BITS-1:0]       bootControl_bus_write,
+    output logic                                bootControl_bus_RW 
 );
 
 reg [255:0] encryption_output_r, encryption_output_next; 
@@ -118,7 +128,7 @@ reg half_r, half_next;
 reg encryption_done_r, encryption_done_next;
 
 typedef enum logic [3:0] {MCSE_INIT, RESET_SOC, LC_AUTH_POLL, LC_AUTH, CHIPID_GEN, CHALLENGE_CHIPID, LC_POLL, LC_TRANSITION, RESET_SOC2, 
-LC_FW_POLL, NORM_OP_RELEASE, ABORT } state_t;
+LC_FW_POLL, NORM_OP_RELEASE, ABORT, BUS_TEMP, BUS_TEMP1  } state_t;
 
 state_t state_r, state_next;
 
@@ -287,6 +297,95 @@ function void ipid_extraction();
     end 
 endfunction 
 
+logic [1:0] bus_wakeup_counter_r, bus_wakeup_counter_next; 
+logic bus_wakeup_handshake_done_r, bus_wakeup_handshake_done_next; 
+
+function void bus_wakeup_handshake(); 
+    if (~bus_wakeup_handshake_done_r) begin
+        case (bus_wakeup_counter_r)
+            2'b00 : begin // bus wake up
+                gpio_wrData_next = `SYS_BUS_WAKEUP;
+                gpio_RW_next = 1'b1;
+                gpio_data_type_next = `GPIO_ODATA;
+                gpio_reg_access_next = 1; 
+                bus_wakeup_counter_next = bus_wakeup_counter_r + 1; 
+            end 
+            2'b01 : begin // wait for bus wake up ack
+                gpio_data_type_next = `GPIO_IDATA; 
+                gpio_RW_next = 0;
+                if (gpio_reg_rdata[7]) begin
+                    bus_wakeup_counter_next = bus_wakeup_counter_r + 1; 
+                end 
+            end  
+            2'b10 : begin
+                gpio_wrData_next = 0;
+                gpio_RW_next = 1'b1;
+                gpio_data_type_next = `GPIO_ODATA;
+                gpio_reg_access_next = 1; 
+                bus_wakeup_counter_next = 0;
+                bus_wakeup_handshake_done_next = 1;                  
+            end 
+        endcase       
+    end 
+endfunction 
+
+parameter [pAHB_ADDR_WIDTH-1:0]  ipid_address [0:16] = '{
+    'h43C00000,
+    'h81900000, 
+    'hD3200000,
+    'h0,
+    'h0,
+    'h0,
+    'h0,
+    'h0,
+    'h0,
+    'h0, 
+    'h0,
+    'h0,
+    'h0,
+    'h0,
+    'h0,
+    'h0,
+    'h0
+     };
+
+
+logic                          bootControl_bus_go_next;
+logic [pAHB_ADDR_WIDTH-1:0]    bootControl_bus_addr_next;
+logic [pPAYLOAD_SIZE_BITS-1:0] bootControl_bus_write_next;
+logic                          bootControl_bus_RW_next;  
+logic ipid_RW_counter_r, ipid_RW_counter_next;
+
+function void ipid_bus_extraction(); 
+    if (~ipid_extraction_done_r) begin
+        if (ipid_counter_r >= ipid_N) begin // checks if we extracted every ip id
+            ipid_extraction_done_next = 1; 
+            ipid_counter_next = 0; 
+            ipid_handshake_counter_next = 0;
+        end 
+        else begin
+            case (ipid_RW_counter_r)
+                1'b0 : begin
+                    bootControl_bus_addr_next = ipid_address[ipid_counter_r];
+                    bootControl_bus_RW_next = 0; 
+                    bootControl_bus_go_next = 1; 
+                    ipid_RW_counter_next = 1; 
+                end 
+                1'b1 : begin
+                    bootControl_bus_addr_next = 0;
+                    bootControl_bus_RW_next = 0; 
+                    bootControl_bus_go_next = 0;
+                    if (bootControl_bus_done) begin
+                        ipid_next[ipid_counter_r] = bootControl_bus_rdData;
+                        ipid_counter_next = ipid_counter_next + 1; 
+                        ipid_RW_counter_next = 0; 
+                    end 
+                end 
+            endcase 
+        end 
+    end 
+endfunction 
+
 logic [511:0] sha_block_next; 
 logic [4:0] hash_counter_r, hash_counter_next; 
 logic sha_init_next; 
@@ -425,13 +524,20 @@ function void ip_id_generation();
     if (~ip_id_generation_done_r) begin
         case (ip_id_generation_counter_r) 
             2'b00 : begin
-                ipid_extraction(); 
-                if (ipid_extraction_done_r) begin
-                    ip_id_generation_counter_next = ip_id_generation_counter_r + 1;
-                    ipid_extraction_done_next = 0; 
+                bus_wakeup_handshake(); 
+                if (bus_wakeup_handshake_done_r) begin
+                    bus_wakeup_handshake_done_next = 0;
+                    ip_id_generation_counter_next = ip_id_generation_counter_r + 1; 
                 end 
             end 
             2'b01 : begin
+                ipid_bus_extraction(); 
+                if (ipid_extraction_done_r) begin
+                    ipid_extraction_done_next = 0;
+                    ip_id_generation_counter_next = ip_id_generation_counter_r + 1;
+                end 
+            end 
+            2'b10 : begin
                 ipid_hash(); 
                 if (hash_done_r) begin
                     ip_id_generation_counter_next = 0;
@@ -439,11 +545,12 @@ function void ip_id_generation();
                     ip_id_generation_done_next = 1; 
                 end 
             end 
-            2'b10 : begin
+            2'b11 : begin
                 //memory_write(`IP_ID_ADDR, ipid_hash_r); 
                 if (memory_write_done_r) begin
                     ip_id_generation_done_next = 1; 
                     memory_write_done_next = 0;
+                    ip_id_generation_counter_next = 0;
                 end 
             end 
             default : begin
@@ -688,6 +795,7 @@ endfunction
 
 always@(posedge clk, negedge rst_n) begin 
     if (~rst_n) begin
+        //state_r <= BUS_TEMP;
         state_r <= MCSE_INIT;
         cam_data_in <= 0;
         cam_key <= 0; 
@@ -750,6 +858,13 @@ always@(posedge clk, negedge rst_n) begin
         operation_release_done_r <= 0;
         operation_release_counter_r <= 0; 
         ipid_N_r <= ipid_N; 
+        bootControl_bus_go <= 0;
+        bootControl_bus_addr <= 0;
+        bootControl_bus_write <= 0; 
+        bootControl_bus_RW <= 0; 
+        bus_wakeup_counter_r <= 0;
+        bus_wakeup_handshake_done_r <= 0; 
+        ipid_RW_counter_r <= 0; 
     end 
     else begin
         state_r <= state_next; 
@@ -819,6 +934,14 @@ always@(posedge clk, negedge rst_n) begin
         reset_handshake_counter_r <= reset_handshake_counter_next; 
         operation_release_done_r <= operation_release_done_next; 
         operation_release_counter_r <= operation_release_counter_next; 
+
+        bootControl_bus_go <= bootControl_bus_go_next;
+        bootControl_bus_addr <= bootControl_bus_addr_next; 
+        bootControl_bus_write <= bootControl_bus_write_next; 
+        bootControl_bus_RW <= bootControl_bus_RW_next; 
+        bus_wakeup_counter_r <= bus_wakeup_counter_next; 
+        bus_wakeup_handshake_done_r <= bus_wakeup_handshake_done_next; 
+        ipid_RW_counter_r <= ipid_RW_counter_next; 
     end 
 end
 
@@ -889,7 +1012,20 @@ always_comb begin
     operation_release_counter_next =operation_release_counter_r; 
     first_boot_flag_next = first_boot_flag_r; 
 
+    bootControl_bus_go_next = bootControl_bus_go;
+    bootControl_bus_addr_next = bootControl_bus_addr; 
+    bootControl_bus_write_next = bootControl_bus_write; 
+    bootControl_bus_RW_next = bootControl_bus_RW; 
+
+    bus_wakeup_counter_next = bus_wakeup_counter_r; 
+    bus_wakeup_handshake_done_next = bus_wakeup_handshake_done_r;
+    ipid_RW_counter_next = ipid_RW_counter_r; 
+
     case (state_r) 
+        BUS_TEMP : begin
+            ipid_bus_extraction();
+        
+        end
         MCSE_INIT : begin
             mcse_init(); 
             state_next = RESET_SOC;

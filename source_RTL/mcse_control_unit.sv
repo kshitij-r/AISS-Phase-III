@@ -1,13 +1,16 @@
 //TODO JTAG interface 
 module mcse_control_unit #(
-    parameter pcm_data_width = 32,
-    parameter pcm_addr_width = 32,
-    parameter puf_sig_length = 256,
-    parameter gpio_N = 32,
-    parameter gpio_AW = 32,
-    parameter gpio_PW = 2*gpio_AW+40,
-    parameter ipid_N = 16,
-    parameter ipid_width = 256
+    parameter pcm_data_width        = 32,
+    parameter pcm_addr_width        = 32,
+    parameter puf_sig_length        = 256,
+    parameter gpio_N                = 32,
+    parameter gpio_AW               = 32,
+    parameter gpio_PW               = 2*gpio_AW+40,
+    parameter ipid_N                = 16,
+    parameter ipid_width            = 256,
+    parameter pAHB_ADDR_WIDTH       = 32,
+    parameter pPAYLOAD_SIZE_BITS    = 128
+
 )
 (
     input                      clk,
@@ -46,31 +49,39 @@ module mcse_control_unit #(
     input  [255:0]        lc_authentication_id,
     input                 lc_authentication_valid,     
 
+    // Bus Translation unit to Boot control 
+    input                           bootControl_bus_done,
+    input [pPAYLOAD_SIZE_BITS-1:0]  bootControl_bus_rdData, 
+
     // Boot control to Camellia 
-    output [127:0]              cam_data_in,
-    output [255:0]              cam_key,
-    output [0:1]                cam_k_len,
-    output                      cam_enc_dec,
-    output                      cam_data_rdy,
-    output                      cam_key_rdy,
+    output [127:0]                  cam_data_in,
+    output [255:0]                  cam_key,
+    output [0:1]                    cam_k_len,
+    output                          cam_enc_dec,
+    output                          cam_data_rdy,
+    output                          cam_key_rdy,
 
     // Boot control to SHA
-    output [511:0]              sha_block,
-    output                      sha_init,
-    output                      sha_next,
-    output                      sha_sel,
+    output [511:0]                  sha_block,
+    output                          sha_init,
+    output                          sha_next,
+    output                          sha_sel,
 
     // Boot Control to GPIO 
-    output                      gpio_reg_access,
-    output [gpio_PW-1:0]        gpio_reg_packet,    
+    output                          gpio_reg_access,
+    output [gpio_PW-1:0]            gpio_reg_packet,    
 
     // Boot Control to PCM 
-    output [puf_sig_length-1:0] pcm_sig_in,
-    output [pcm_data_width-1:0] pcm_IP_ID_in,
-    output [2:0]                pcm_instruction_in,
-    output                      pcm_sig_valid
+    output [puf_sig_length-1:0]     pcm_sig_in,
+    output [pcm_data_width-1:0]     pcm_IP_ID_in,
+    output [2:0]                    pcm_instruction_in,
+    output                          pcm_sig_valid,
 
-
+    // Boot control to Bus Translation unit 
+    output                          bootControl_bus_go,
+    output [pAHB_ADDR_WIDTH-1:0]    bootControl_bus_addr,
+    output [pPAYLOAD_SIZE_BITS-1:0] bootControl_bus_write,
+    output                          bootControl_bus_RW 
 );
 
     localparam memory_width = 256;
@@ -97,7 +108,8 @@ module mcse_control_unit #(
 
     secure_boot_control #(.pcm_data_width(pcm_data_width), .pcm_addr_width(pcm_addr_width), .puf_sig_length(puf_sig_length), 
     .gpio_N(gpio_N), .gpio_AW(gpio_AW), .gpio_PW(gpio_PW), .memory_width(memory_width), .memory_length(memory_length), .ipid_N(ipid_N),
-    .ipid_width(ipid_width)) secure_boot ( .* );
+    .ipid_width(ipid_width), .pAHB_ADDR_WIDTH(pAHB_ADDR_WIDTH), .pPAYLOAD_SIZE_BITS(pPAYLOAD_SIZE_BITS)) 
+    secure_boot ( .* );
 
 
 endmodule 

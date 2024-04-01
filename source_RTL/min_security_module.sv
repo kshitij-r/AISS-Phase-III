@@ -13,13 +13,23 @@
 `include "primitives.v"
 `include "io.v"
 */
-module min_security_module 
-    #( data_width        = 32,
-       addr_width        = 32,
-       puf_sig_length    = 256,
-       N      = 24,     
-       AW     = 32,      
-       PW     = 2*AW+40
+`define         AHB_DATA_WIDTH_BITS                 32
+
+module min_security_module  #( 
+        parameter data_width            = 32,
+        parameter addr_width            = 32,
+        parameter puf_sig_length        = 256,
+        parameter N                     = 24,     
+        parameter AW                    = 32,      
+        parameter PW                    = 2*AW+40,
+        parameter pAHB_DATA_WIDTH       = `AHB_DATA_WIDTH_BITS,
+        parameter pAHB_HRESP_WIDTH      = 2,
+        parameter pAHB_ADDR_WIDTH       = 32,
+        parameter pAHB_BURST_WIDTH      = 3,
+        parameter pAHB_PROT_WIDTH       = 4,
+        parameter pAHB_SIZE_WIDTH       = 3,
+        parameter pAHB_TRANS_WIDTH      = 2,
+        parameter pPAYLOAD_SIZE_BITS    = 128
     )
 
     (
@@ -77,7 +87,37 @@ module min_security_module
     output [N-1:0]  gpio_out,    
     output [N-1:0]  gpio_en,    
     output 	        gpio_irq,    
-    output [N-1:0]   gpio_ilat  
+    output [N-1:0]   gpio_ilat,  
+
+    /*
+    IO Interface for AHB-Lite // System side AHB requester port
+    */
+    input   wire    [pAHB_DATA_WIDTH-1        :0]   I_hrdata,
+    input   wire                                    I_hready,
+    input   wire    [pAHB_HRESP_WIDTH-1       :0]   I_hresp,
+    input   wire                                    I_hreadyout,
+
+     // System side AHB requester port
+    output  logic   [pAHB_ADDR_WIDTH-1        :0]   O_haddr,
+    output  logic   [pAHB_BURST_WIDTH-1       :0]   O_hburst,
+    output  logic                                   O_hmastlock,
+    output  logic   [pAHB_PROT_WIDTH-1        :0]   O_hprot,
+    output  logic                                   O_hnonsec,
+    output  logic   [pAHB_SIZE_WIDTH-1        :0]   O_hsize,
+    output  logic   [pAHB_TRANS_WIDTH-1       :0]   O_htrans,
+    output  logic   [pAHB_DATA_WIDTH-1        :0]   O_hwdata,
+    output  logic                                   O_hwrite,
+
+    /*
+    IO Interface for bus translation unit 
+    */
+    input   wire                                    bootControl_bus_go,
+    input   wire [pAHB_ADDR_WIDTH-1:0]              bootControl_bus_addr,
+    input   wire [pPAYLOAD_SIZE_BITS-1:0]           bootControl_bus_write,
+    input   wire                                    bootControl_bus_RW,   
+    output logic                                    bootControl_bus_done,
+    output logic [pPAYLOAD_SIZE_BITS-1:0]           bootControl_bus_rdData 
+
 );
 
 /*
@@ -135,5 +175,24 @@ gpio boot_control(
 PUF CONTROL MODULE FOR MINIMUM SECURITY MODULE
 */
 //pcm pcm_mod(.*);
+
+
+wire [pPAYLOAD_SIZE_BITS-1:0]  O_int_rdata;
+wire                           O_int_rdata_valid;
+wire                           O_done;
+
+wire [pAHB_ADDR_WIDTH-1:0]    I_int_addr;
+wire [pPAYLOAD_SIZE_BITS-1:0] I_int_wdata;
+wire                          I_int_write;
+wire                          I_go;
+
+/*
+AHB-LITE INTERFACE MODULE FOR MINIMUM SECURITY MODULE 
+*/
+data_worker #(.pAHB_ADDR_WIDTH(pAHB_ADDR_WIDTH), .pPAYLOAD_SIZE_BITS(pPAYLOAD_SIZE_BITS))
+ahb_interface (.rst_n(~rst), .*);
+
+bus_translation #(.pAHB_ADDR_WIDTH(pAHB_ADDR_WIDTH), .pPAYLOAD_SIZE_BITS(pPAYLOAD_SIZE_BITS))
+translation (.rst_n(~rst), .*) ; 
 
 endmodule
