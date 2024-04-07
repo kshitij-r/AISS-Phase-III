@@ -7,18 +7,19 @@ SRC_FILES_AHB := data_worker.sv data_worker_tb.sv
 
 SRC_FILES_NETLIST := mcse_netlist.v mcse_top_netlist_tb.sv lec25dscc25.v
 
-FLAGS := -sverilog -R +vcs+vcdpluson
+FLAGS := -sverilog -suppress -R +vcs+vcdpluson 
 
 TCL_SCRIPT = compiledc.tcl
 
-MCSEtest: clean
-	vcs $(SRC_FILES) $(FLAGS)
+MCSEtest: clean 
+	vcs $(SRC_FILES) $(FLAGS) 
 
 AHBtest: clean 
 	vcs $(SRC_FILES_AHB) $(FLAGS)
 
-NETLISTtest: clean 
-	vcs $(SRC_FILES_NETLIST) $(FLAGS)
+NETLISTtest: clean
+	vcs  $(FLAGS) $(SRC_FILES_NETLIST) 
+	
 
 synthesis: clean 
 	dc_shell -f compiledc.tcl
