@@ -31,6 +31,8 @@ module bus_translation # (
 typedef enum logic [1:0] {START, WRITE, READ} state_t;
 state_t state_r;
 
+logic [3:0] counter; 
+
 always @(posedge clk, negedge rst_n) begin
     if (~rst_n) begin
         I_int_addr <= 0;
@@ -40,6 +42,7 @@ always @(posedge clk, negedge rst_n) begin
         bootControl_bus_done <= 0; 
         bootControl_bus_rdData <= 0; 
         state_r <= START; 
+        counter <= 0; 
     end 
     else begin
         case (state_r)
@@ -74,13 +77,19 @@ always @(posedge clk, negedge rst_n) begin
             end 
             READ : begin
                 I_go <= 0;
-                if (O_int_rdata_valid) begin
-                    I_int_addr <= 0;
-                    I_int_wdata <= 0;
-                    I_int_write <= 0;
-                    bootControl_bus_rdData <= O_int_rdata;
-                    bootControl_bus_done <= 1; 
-                    state_r <= START; 
+                if (counter < 10 ) begin
+                    counter <= counter + 1; 
+                end 
+                else begin 
+                    if (O_int_rdata_valid) begin
+                        I_int_addr <= 0;
+                        I_int_wdata <= 0;
+                        I_int_write <= 0;
+                        bootControl_bus_rdData <= O_int_rdata;
+                        bootControl_bus_done <= 1; 
+                        state_r <= START; 
+                        counter <= 0; 
+                    end 
                 end 
             end
         endcase 

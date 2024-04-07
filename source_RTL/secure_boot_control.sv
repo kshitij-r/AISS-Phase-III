@@ -333,13 +333,13 @@ parameter [pAHB_ADDR_WIDTH-1:0]  ipid_address [0:16] = '{
     'h43C00000,
     'h81900000, 
     'hD3200000,
-    'h0,
-    'h0,
-    'h0,
-    'h0,
-    'h0,
-    'h0,
-    'h0, 
+    'h14500000,
+    'h5A100000,
+    'h11F00000,
+    'h6BC00000,
+    'h15400000,
+    'hEA800000,
+    'hB9100000, 
     'h0,
     'h0,
     'h0,
@@ -377,7 +377,7 @@ function void ipid_bus_extraction();
                     bootControl_bus_go_next = 0;
                     if (bootControl_bus_done) begin
                         ipid_next[ipid_counter_r] = bootControl_bus_rdData;
-                        ipid_counter_next = ipid_counter_next + 1; 
+                        ipid_counter_next = ipid_counter_r + 1; 
                         ipid_RW_counter_next = 0; 
                     end 
                 end 
@@ -815,7 +815,7 @@ always@(posedge clk, negedge rst_n) begin
         ipid_trigger_r <= 0;
         ipid_valid_r <= 0; 
         ipid_index_r <= 0; 
-        ipid_r <= 0; 
+        ipid_r <= 0; //synopys dont touch rtl pragma 
         ipid_extraction_done_r <= 0;
         hash_counter_r <= 0; 
         sha_block <= 0; 

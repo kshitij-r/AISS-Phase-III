@@ -185,6 +185,16 @@ module data_worker_tb;
     read_transfer(tmp_address); 
 
 	@(posedge clk);
+    
+    for(int i =0; i < 40; i++) begin
+        @(posedge clk); 
+    end 
+
+    I_go = 1; 
+
+    for(int i =0; i < 30; i++) begin
+        @(posedge clk);
+    end 
 	
 	
 	$finish;

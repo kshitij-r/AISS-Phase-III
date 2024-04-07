@@ -12,7 +12,7 @@ module mcse_top_tb;
     localparam gpio_N = 32;
     localparam gpio_AW = 32;
     localparam gpio_PW = 2*gpio_AW+40;
-    localparam ipid_N = 1;
+    localparam ipid_N = 10;
     localparam ipid_width = 256;
 
 	localparam    pAHB_ADDR_WIDTH                     = 32;
@@ -519,23 +519,23 @@ module mcse_top_tb;
     endtask 
 
     localparam [pAHB_ADDR_WIDTH-1:0]  ipid_address [0:16] = '{
-        'h43C00000, 
+        'h43C00000,
         'h81900000, 
-         'hD3200000,
-             'h0,
-            'h0,
-            'h0,
-            'h0,
-            'h0,
-            'h0,
-            'h0, 
-            'h0,
-            'h0,
-            'h0,
-            'h0,
-            'h0,
-            'h0,
-            'h0
+        'hD3200000,
+        'h14500000,
+        'h5A100000,
+        'h11F00000,
+        'h6BC00000,
+        'h15400000,
+        'hEA800000,
+        'hB9100000, 
+        'h0,
+        'h0,
+        'h0,
+        'h0,
+        'h0,
+        'h0,
+        'h0
         };
 
 
@@ -595,10 +595,14 @@ module mcse_top_tb;
         // $display("[MCSE] Initializing MCSE and sending Host SoC reset signal...");
         // //full_bootflow(); 
          testing_lifecycle_subsequent_boot();
-        // oem_lifecycle_subsequent_boot();
-        // deployment_lifecycle_subsequent_boot();
+         oem_lifecycle_subsequent_boot();
+       // deployment_lifecycle_subsequent_boot();
         // recall_lifecycle_subsequent_boot();
         // endoflife_lifecycle_subsequent_boot();
+        // ipid_bus_stream();  
+        // for (int i =0 ; i < ipid_N; i++) begin
+        //     $displayh("[MCSE] IPID ",  i[3:0], " = ", mcse.control_unit.secure_boot.ipid_r[i]);
+        // end 
         $finish; 
     end 
 
