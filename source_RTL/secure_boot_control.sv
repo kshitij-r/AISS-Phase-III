@@ -2,20 +2,7 @@
 //TODO GPIO ILAT, GPIO EN, and PCM
 //TODO optimize hashing registers for odd numbers and different IPID configurations
 
-`define GPIO_IDATA 6'h5
-`define GPIO_ODATA 6'h0
-
-`define SYS_BUS_WAKEUP 24'b1000000
-`define RST_Request 24'b1
-`define Operation_Release_to_Host 24'b10000
-
-`define IPID_START_BITS 16'h7A7A
-`define IPID_STOP_BITS 16'hB9B9
-
-`define CHIP_ID_ADDR 'h0
-`define SECURE_COMMUNICATION_KEY_ADDR 'h2
-
-`define LC_AUTHENTICATION_ID_ADDR_START 'h8 // end at 'hc
+`include "mcse_def.svh"
 
 
 module secure_boot_control # (
@@ -57,11 +44,17 @@ module secure_boot_control # (
     input [gpio_N-1:0]                          gpio_ilat,  
 
     // PCM to Boot Control
+    /*
     input [pcm_data_width-1:0]                  pcm_control_out,
     input [pcm_data_width-1:0]                  pcm_status,
     input                                       pcm_comp_out,
     input                                       pcm_S_c,
     input                                       pcm_A_c,
+    */
+    input [puf_sig_length-1:0]                  pcm_puf_out,
+    input                                       pcm_puf_out_valid,
+    input                                       pcm_S_c,
+
 
     // LC Protection to Boot Control
     input                                       lc_success,
@@ -101,10 +94,16 @@ module secure_boot_control # (
     output logic [gpio_PW-1:0]                  gpio_reg_packet,    
 
     // Boot Control to PCM 
+    /*
     output [puf_sig_length-1:0]                 pcm_sig_in,
     output [pcm_data_width-1:0]                 pcm_IP_ID_in,
     output [2:0]                                pcm_instruction_in,
     output                                      pcm_sig_valid,
+    */
+    output logic [1:0]                          pcm_instruction,
+    output logic [puf_sig_length-1:0]           pcm_puf_in,
+    output logic                                pcm_puf_in_valid,
+    output logic [$clog2(ipid_N)-1:0]           pcm_ipid_number,
 
     // Boot control to LC Protection
     output logic                                lc_transition_request,
@@ -123,12 +122,14 @@ module secure_boot_control # (
     output logic                                bootControl_bus_RW 
 );
 
+localparam [pAHB_ADDR_WIDTH-1:0]  ipid_address [0:ipid_N-1] = `IPID_ADDR_MAP;
+
 reg [255:0] encryption_output_r, encryption_output_next; 
 reg half_r, half_next; 
 reg encryption_done_r, encryption_done_next;
 
 typedef enum logic [3:0] {MCSE_INIT, RESET_SOC, LC_AUTH_POLL, LC_AUTH, CHIPID_GEN, CHALLENGE_CHIPID, LC_POLL, LC_TRANSITION, RESET_SOC2, 
-LC_FW_POLL, NORM_OP_RELEASE, ABORT, BUS_TEMP, BUS_TEMP1  } state_t;
+LC_FW_POLL, NORM_OP_RELEASE, ABORT } state_t;
 
 state_t state_r, state_next;
 
@@ -143,6 +144,15 @@ logic rd_en_next;
 logic wr_en_next;
 logic [$clog2(memory_length)-1:0] addr_next;
 logic [memory_width-1:0] wrData_next; 
+
+logic [1:0]                          pcm_instruction_next;
+logic [puf_sig_length-1:0]           pcm_puf_in_next;
+logic                                pcm_puf_in_valid_next;
+logic [$clog2(ipid_N)-1:0]           pcm_ipid_number_next;
+
+`define IDLE 2'b00
+`define PROVISION 2'b01 
+`define CORRECT_SIGNATURE 2'b10
 
 function void encryption(input bit [255:0] data_input, input bit [255:0] key_input);
     
@@ -329,32 +339,11 @@ function void bus_wakeup_handshake();
     end 
 endfunction 
 
-parameter [pAHB_ADDR_WIDTH-1:0]  ipid_address [0:16] = '{
-    'h43C00000,
-    'h81900000, 
-    'hD3200000,
-    'h14500000,
-    'h5A100000,
-    'h11F00000,
-    'h6BC00000,
-    'h15400000,
-    'hEA800000,
-    'hB9100000, 
-    'h0,
-    'h0,
-    'h0,
-    'h0,
-    'h0,
-    'h0,
-    'h0
-     };
-
-
 logic                          bootControl_bus_go_next;
 logic [pAHB_ADDR_WIDTH-1:0]    bootControl_bus_addr_next;
 logic [pPAYLOAD_SIZE_BITS-1:0] bootControl_bus_write_next;
 logic                          bootControl_bus_RW_next;  
-logic ipid_RW_counter_r, ipid_RW_counter_next;
+logic [1:0] ipid_RW_counter_r, ipid_RW_counter_next;
 
 function void ipid_bus_extraction(); 
     if (~ipid_extraction_done_r) begin
@@ -365,20 +354,61 @@ function void ipid_bus_extraction();
         end 
         else begin
             case (ipid_RW_counter_r)
-                1'b0 : begin
+                2'b00 : begin
                     bootControl_bus_addr_next = ipid_address[ipid_counter_r];
                     bootControl_bus_RW_next = 0; 
                     bootControl_bus_go_next = 1; 
                     ipid_RW_counter_next = 1; 
                 end 
-                1'b1 : begin
+                2'b01 : begin
                     bootControl_bus_addr_next = 0;
                     bootControl_bus_RW_next = 0; 
                     bootControl_bus_go_next = 0;
                     if (bootControl_bus_done) begin
                         ipid_next[ipid_counter_r] = bootControl_bus_rdData;
-                        ipid_counter_next = ipid_counter_r + 1; 
-                        ipid_RW_counter_next = 0; 
+                        //******ipid_counter_next = ipid_counter_r + 1; 
+                        ipid_RW_counter_next = ipid_RW_counter_r + 1; 
+                    end 
+                end 
+                2'b10 : begin 
+                    if (lc_state == 3'b001) begin // provision ip id in PCM 
+                        pcm_instruction_next = `PROVISION; 
+                        pcm_puf_in_next = ipid_r[ipid_counter_r];
+                        pcm_puf_in_valid_next = 1; 
+                        pcm_ipid_number_next = ipid_counter_r; 
+                        ipid_RW_counter_next = ipid_RW_counter_r + 1;
+                    end 
+                    else begin 
+                        //do error correction on ip id
+                        pcm_instruction_next = `CORRECT_SIGNATURE;
+                        pcm_puf_in_next = ipid_r[ipid_counter_r];
+                        pcm_puf_in_valid_next = 1;
+                        pcm_ipid_number_next = ipid_counter_r;
+                        ipid_RW_counter_next = ipid_RW_counter_r + 1; 
+                    end 
+                end 
+                2'b11 : begin 
+                    if (lc_state == 3'b001) begin 
+                        if (pcm_S_c) begin
+                            pcm_instruction_next = `IDLE;
+                            pcm_puf_in_next = 0;
+                            pcm_puf_in_valid_next = 0;
+                            pcm_ipid_number_next = 0;
+                            ipid_RW_counter_next = 0; 
+                            ipid_counter_next = ipid_counter_r + 1; 
+                        end 
+                    end 
+                    else begin
+                        // save corrected ip id 
+                        if (pcm_puf_out_valid) begin 
+                            pcm_instruction_next = `IDLE;
+                            pcm_puf_in_next = 0;
+                            pcm_puf_in_valid_next = 0;
+                            pcm_ipid_number_next = 0;
+                            ipid_RW_counter_next = 0;
+                            ipid_next[ipid_counter_r] = pcm_puf_out;
+                            ipid_counter_next = ipid_counter_r + 1; 
+                        end 
                     end 
                 end 
             endcase 
@@ -795,7 +825,6 @@ endfunction
 
 always@(posedge clk, negedge rst_n) begin 
     if (~rst_n) begin
-        //state_r <= BUS_TEMP;
         state_r <= MCSE_INIT;
         cam_data_in <= 0;
         cam_key <= 0; 
@@ -865,6 +894,10 @@ always@(posedge clk, negedge rst_n) begin
         bus_wakeup_counter_r <= 0;
         bus_wakeup_handshake_done_r <= 0; 
         ipid_RW_counter_r <= 0; 
+        pcm_instruction <= 0;
+        pcm_puf_in <= 0; 
+        pcm_puf_in_valid <= 0;
+        pcm_ipid_number <= 0;
     end 
     else begin
         state_r <= state_next; 
@@ -942,6 +975,11 @@ always@(posedge clk, negedge rst_n) begin
         bus_wakeup_counter_r <= bus_wakeup_counter_next; 
         bus_wakeup_handshake_done_r <= bus_wakeup_handshake_done_next; 
         ipid_RW_counter_r <= ipid_RW_counter_next; 
+
+        pcm_instruction <= pcm_instruction_next;
+        pcm_puf_in <= pcm_puf_in_next; 
+        pcm_puf_in_valid <= pcm_puf_in_valid_next;
+        pcm_ipid_number <= pcm_ipid_number_next;
     end 
 end
 
@@ -1021,11 +1059,12 @@ always_comb begin
     bus_wakeup_handshake_done_next = bus_wakeup_handshake_done_r;
     ipid_RW_counter_next = ipid_RW_counter_r; 
 
+    pcm_instruction_next = pcm_instruction;
+    pcm_puf_in_next = pcm_puf_in; 
+    pcm_puf_in_valid_next = pcm_puf_in_valid;
+    pcm_ipid_number_next = pcm_ipid_number;
+
     case (state_r) 
-        BUS_TEMP : begin
-            ipid_bus_extraction();
-        
-        end
         MCSE_INIT : begin
             mcse_init(); 
             state_next = RESET_SOC;

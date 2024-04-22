@@ -1,6 +1,6 @@
 `define         AHB_TRANS_IDLE                      2'b00
 `define         AHB_DATA_WIDTH_BITS                 32
-
+`include "mcse_def.svh"
 module mcse_top_netlist_tb;
 
     localparam pcm_data_width = 32;
@@ -9,7 +9,7 @@ module mcse_top_netlist_tb;
     localparam gpio_N = 32;
     localparam gpio_AW = 32;
     localparam gpio_PW = 2*gpio_AW+40;
-    localparam ipid_N = 10;
+    localparam ipid_N = `IPID_N;
     localparam ipid_width = 256;
 
 	localparam    pAHB_ADDR_WIDTH                     = 32;
@@ -307,25 +307,7 @@ module mcse_top_netlist_tb;
         lifecycle_transition_request(lc_transition_id_recall);
     endtask 
 
-    localparam [pAHB_ADDR_WIDTH-1:0]  ipid_address [0:16] = '{
-        'h43C00000,
-        'h81900000, 
-        'hD3200000,
-        'h14500000,
-        'h5A100000,
-        'h11F00000,
-        'h6BC00000,
-        'h15400000,
-        'hEA800000,
-        'hB9100000, 
-        'h0,
-        'h0,
-        'h0,
-        'h0,
-        'h0,
-        'h0,
-        'h0
-        };
+    localparam [pAHB_ADDR_WIDTH-1:0]  ipid_address [0:ipid_N-1] = `IPID_ADDR_MAP;
 
 
     logic [32:0] array_bus [(ipid_N * 8)-1:0]; 

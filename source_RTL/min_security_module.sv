@@ -16,6 +16,7 @@
 `define         AHB_DATA_WIDTH_BITS                 32
 
 module min_security_module  #( 
+        parameter ipid_N                = 16,    
         parameter data_width            = 32,
         parameter addr_width            = 32,
         parameter puf_sig_length        = 256,
@@ -66,6 +67,7 @@ module min_security_module  #(
     /*
     IO interface for PUF Control Module (PCM) inside the minimum security module
     */
+    /*
     input [puf_sig_length-1 : 0]   sig_in,
     input [data_width-1 : 0]       IP_ID_in,
 	input [2:0]                    Instruction_in,
@@ -75,6 +77,15 @@ module min_security_module  #(
     output reg                     comp_out,
     output reg                     S_c,
 	output reg                     A_c, 
+    */
+    input        [1:0]                   pcm_instruction,
+    input        [puf_sig_length-1:0]    pcm_puf_in,
+    input                                pcm_puf_in_valid,
+    input        [$clog2(ipid_N)-1:0]    pcm_ipid_number,
+    output logic [puf_sig_length-1:0]    pcm_puf_out,
+    output logic                         pcm_puf_out_valid,
+    output logic                         pcm_S_c,
+
 
     /*
     IO interface for Boot Control (GPIO) inside the minimum security module
@@ -117,6 +128,8 @@ module min_security_module  #(
     input   wire                                    bootControl_bus_RW,   
     output logic                                    bootControl_bus_done,
     output logic [pPAYLOAD_SIZE_BITS-1:0]           bootControl_bus_rdData 
+
+
 
 );
 
@@ -175,6 +188,8 @@ gpio boot_control(
 PUF CONTROL MODULE FOR MINIMUM SECURITY MODULE
 */
 //pcm pcm_mod(.*);
+error_correction # ( .puf_sig_length(puf_sig_length), .ipid_N(ipid_N) )
+pcm (.rst_n(~rst), .*); 
 
 
 wire [pPAYLOAD_SIZE_BITS-1:0]  O_int_rdata;
@@ -193,6 +208,6 @@ data_worker #(.pAHB_ADDR_WIDTH(pAHB_ADDR_WIDTH), .pPAYLOAD_SIZE_BITS(pPAYLOAD_SI
 ahb_interface (.rst_n(~rst), .*);
 
 bus_translation #(.pAHB_ADDR_WIDTH(pAHB_ADDR_WIDTH), .pPAYLOAD_SIZE_BITS(pPAYLOAD_SIZE_BITS))
-translation (.rst_n(~rst), .*) ; 
+translation (.rst_n(~rst), .*); 
 
 endmodule

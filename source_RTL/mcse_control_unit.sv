@@ -10,44 +10,49 @@ module mcse_control_unit #(
     parameter ipid_width            = 256,
     parameter pAHB_ADDR_WIDTH       = 32,
     parameter pPAYLOAD_SIZE_BITS    = 128
-
 )
 (
-    input                      clk,
-    input                      rst_n,
-    input                      init_config_n, 
+    input                           clk,
+    input                           rst_n,
+    input                           init_config_n, 
 
     // Camellia to Boot Control
-    input [127:0]              cam_data_out,
-    input                      cam_data_acq,
-    input                      cam_key_acq,
-    input                      cam_output_rdy,
-    input [255:0]              cam_puf_out,
+    input [127:0]                   cam_data_out,
+    input                           cam_data_acq,
+    input                           cam_key_acq,
+    input                           cam_output_rdy,
+    input [255:0]                   cam_puf_out,
 
     // SHA to Boot Control
-    input [255:0]              sha_digest,
-    input                      sha_ready,
-    input                      sha_digest_valid,
-    input [255:0]              sha_puf_out,
+    input [255:0]                   sha_digest,
+    input                           sha_ready,
+    input                           sha_digest_valid,
+    input [255:0]                   sha_puf_out,
 
     // GPIO to Boot Control
-    input [gpio_N-1:0]         gpio_reg_rdata,
-    input [gpio_N-1:0]         gpio_en,
-    input                      gpio_irq,
-    input [gpio_N-1:0]         gpio_ilat,  
+    input [gpio_N-1:0]              gpio_reg_rdata,
+    input [gpio_N-1:0]              gpio_en,
+    input                           gpio_irq,
+    input [gpio_N-1:0]              gpio_ilat,  
 
     // PCM to Boot Control
+    /*
     input [pcm_data_width-1:0] pcm_control_out,
     input [pcm_data_width-1:0] pcm_status,
     input                      pcm_comp_out,
     input                      pcm_S_c,
     input                      pcm_A_c,
+    */
+    input [puf_sig_length-1:0]      pcm_puf_out,
+    input                           pcm_puf_out_valid,
+    input                           pcm_S_c,
+
 
     // *** To Boot Control 
-    input  [255:0]        lc_transition_id,
-    input                 lc_transition_request_in,
-    input  [255:0]        lc_authentication_id,
-    input                 lc_authentication_valid,     
+    input  [255:0]                  lc_transition_id,
+    input                           lc_transition_request_in,
+    input  [255:0]                  lc_authentication_id,
+    input                           lc_authentication_valid,     
 
     // Bus Translation unit to Boot control 
     input                           bootControl_bus_done,
@@ -72,10 +77,18 @@ module mcse_control_unit #(
     output [gpio_PW-1:0]            gpio_reg_packet,    
 
     // Boot Control to PCM 
+    /*
     output [puf_sig_length-1:0]     pcm_sig_in,
     output [pcm_data_width-1:0]     pcm_IP_ID_in,
     output [2:0]                    pcm_instruction_in,
     output                          pcm_sig_valid,
+    */
+    output [1:0]                   pcm_instruction,
+    output [puf_sig_length-1:0]    pcm_puf_in,
+    output                         pcm_puf_in_valid,
+    output [$clog2(ipid_N)-1:0]    pcm_ipid_number,
+
+
 
     // Boot control to Bus Translation unit 
     output                          bootControl_bus_go,
@@ -108,7 +121,7 @@ module mcse_control_unit #(
 
     secure_boot_control #(.pcm_data_width(pcm_data_width), .pcm_addr_width(pcm_addr_width), .puf_sig_length(puf_sig_length), 
     .gpio_N(gpio_N), .gpio_AW(gpio_AW), .gpio_PW(gpio_PW), .memory_width(memory_width), .memory_length(memory_length), .ipid_N(ipid_N),
-    .ipid_width(ipid_width), .pAHB_ADDR_WIDTH(pAHB_ADDR_WIDTH), .pPAYLOAD_SIZE_BITS(pPAYLOAD_SIZE_BITS)) 
+    .ipid_width(ipid_width), .pAHB_ADDR_WIDTH(pAHB_ADDR_WIDTH), .pPAYLOAD_SIZE_BITS(pPAYLOAD_SIZE_BITS) )
     secure_boot ( .* );
 
 

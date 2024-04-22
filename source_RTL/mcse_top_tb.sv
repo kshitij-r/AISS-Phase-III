@@ -1,5 +1,5 @@
 //`timescale 1 ns / 100 ps
-
+`include "mcse_def.svh"
 `define         AHB_TRANS_IDLE                      2'b00
 `define         AHB_DATA_WIDTH_BITS                 32
 
@@ -12,7 +12,7 @@ module mcse_top_tb;
     localparam gpio_N = 32;
     localparam gpio_AW = 32;
     localparam gpio_PW = 2*gpio_AW+40;
-    localparam ipid_N = 10;
+    localparam ipid_N = `IPID_N;
     localparam ipid_width = 256;
 
 	localparam    pAHB_ADDR_WIDTH                     = 32;
@@ -39,6 +39,9 @@ module mcse_top_tb;
     localparam    pMAX_TRANSFER_WAIT_COUNT            = 16;
     localparam    pREVERSE_WORD_ORDER                 = 1;
     localparam   pREVERSE_BYTE_ORDER                 = 0;
+
+    localparam [pAHB_ADDR_WIDTH-1:0]  ipid_address [0:ipid_N-1] = `IPID_ADDR_MAP;
+
 
 	logic   [pAHB_ADDR_WIDTH-1        :0]   O_haddr;
     logic   [pAHB_BURST_WIDTH-1       :0]   O_hburst;
@@ -74,7 +77,8 @@ module mcse_top_tb;
 	end	
 
     mcse_top #(.pcm_data_width(pcm_data_width), .pcm_addr_width(pcm_addr_width), . puf_sig_length(puf_sig_length),
-    .gpio_N(gpio_N), .gpio_AW(gpio_AW), .gpio_PW(gpio_PW), .ipid_N(ipid_N), .ipid_width(ipid_width) )mcse ( .* );
+    .gpio_N(gpio_N), .gpio_AW(gpio_AW), .gpio_PW(gpio_PW), .ipid_N(ipid_N), .ipid_width(ipid_width) )
+    mcse ( .* );
 
     int k = 0;
     
@@ -517,27 +521,6 @@ module mcse_top_tb;
         $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
  
     endtask 
-
-    localparam [pAHB_ADDR_WIDTH-1:0]  ipid_address [0:16] = '{
-        'h43C00000,
-        'h81900000, 
-        'hD3200000,
-        'h14500000,
-        'h5A100000,
-        'h11F00000,
-        'h6BC00000,
-        'h15400000,
-        'hEA800000,
-        'hB9100000, 
-        'h0,
-        'h0,
-        'h0,
-        'h0,
-        'h0,
-        'h0,
-        'h0
-        };
-
 
     logic [32:0] array_bus [(ipid_N * 8)-1:0]; 
     task initialize_array_bus();
