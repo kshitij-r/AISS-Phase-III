@@ -33,7 +33,7 @@ generate
 endgenerate 
 
 
-always @(posedge clk, rst_n) begin
+always @(posedge clk, negedge rst_n) begin
     if (~rst_n) begin
         state_r <= IDLE; 
         //parity_bits = '{default:'0}; 
