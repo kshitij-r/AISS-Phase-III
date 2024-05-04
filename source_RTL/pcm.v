@@ -277,4 +277,3 @@ module error_module(data, parity, corrected_out);
 endmodule
 
 
-

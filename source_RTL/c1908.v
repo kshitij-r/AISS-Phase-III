@@ -629,4 +629,3 @@ module UEGen(ProductSyn, ContIntUE, NotM, NotP, NotNewSynBit3, NotNewSynBit5,
 		.F(line7), .G(line8), .H(line9), .Y(UESignal) );
    
 endmodule // UEGen
-

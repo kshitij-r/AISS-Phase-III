@@ -3,7 +3,7 @@ module fsm_top
 	input logic clk, rst,
 	input logic [2:0] ami_ack ,
 	input logic [255:0] jtag_in,
-	output logic [255:0] mem_data_out,
+//	output logic [255:0] mem_data_out,
 	output logic [255:0] fsm_ami,
 	input logic [255:0] ami_out,
 	

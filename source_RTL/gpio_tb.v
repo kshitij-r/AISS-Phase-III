@@ -62,38 +62,45 @@ module tb_gpio;
       reg_packet = {6'h0,  32'h1, 1'b0,  3'b000, 16'b1, 24'b0, `GPIO_ODATA, 2'b0, 7'b0, 1'b1}; 
       #20
       $display("gpio_out: %b", gpio_out);
+      #20
 
-      #20
-      reg_packet = {6'h0,  28'h1, 4'b1001, 1'b0,  3'b001, 16'b1, 24'b0, `GPIO_ODATA, 2'b0, 7'b0, 1'b1}; 
-      #20
-      $display("gpio_out: %b", gpio_out);
+      // #20
+      // reg_packet = {6'h0,  28'h1, 4'b1001, 1'b0,  3'b001, 16'b1, 24'b0, `GPIO_ODATA, 2'b0, 7'b0, 1'b1}; 
+      // #20
+      // $display("gpio_out: %b", gpio_out);
 
-      #20
-      reg_packet = {6'h0,  28'h1, 4'b1011, 1'b0,  3'b001, 16'b1, 24'b0, `GPIO_ODATA, 2'b0, 7'b0, 1'b1}; 
-      #20
-      $display("gpio_out: %b", gpio_out);
+      // #20
+      // reg_packet = {6'h0,  28'h1, 4'b1011, 1'b0,  3'b001, 16'b1, 24'b0, `GPIO_ODATA, 2'b0, 7'b0, 1'b1}; 
+      // #20
+      // $display("gpio_out: %b", gpio_out);
 
-      #20
-      reg_packet = {6'h0,  28'h1, 4'b1111, 1'b0,  3'b001, 16'b1, 24'b0, `GPIO_ODATA, 2'b0, 7'b0, 1'b1}; 
-      #20
-      $display("gpio_out: %b", gpio_out);
+      // #20
+      // reg_packet = {6'h0,  28'h1, 4'b1111, 1'b0,  3'b001, 16'b1, 24'b0, `GPIO_ODATA, 2'b0, 7'b0, 1'b1}; 
+      // #20
+      // $display("gpio_out: %b", gpio_out);
 
-      #20
-      reg_packet = {6'h0,  26'h0, 4'b1111, 6'b0, 4'b0011, 8'b0, 2'b11, 26'b0, `GPIO_ODATA, 7'b0, 1'b1}; 
-      #20
-      $display("gpio_out: %b", gpio_out);
-      #20;
+      // #20
+      // reg_packet = {6'h0,  26'h0, 4'b1111, 6'b0, 4'b0011, 8'b0, 2'b11, 26'b0, `GPIO_ODATA, 7'b0, 1'b1}; 
+      // #20
+      // $display("gpio_out: %b", gpio_out);
+      // #20;
 
       // write to gpio_in and read from reg_rdata
-      #20
-      reg_access = 1;
       //write to gpio_in (`GPIO_IDATA)
-      reg_packet = {6'h5,  26'h0, 24'b0, 8'b1, 26'b0, `GPIO_IDATA, 7'b0, 1'b1};
+      reg_access = 0;
+      gpio_in = 24'b10;
       #20
       //reading from reg_rdata
-      reg_packet = {6'h5,  26'h0, 24'b0, 8'b1, 26'b0, `GPIO_IDATA, 7'b0, 1'b0};
+      reg_packet = {14'h0,  24'h0, 1'b0, 3'b000, 20'b0, `GPIO_IDATA, 2'b0, 7'b0, 1'b0};
       #20
+      // reg_packet = {14'h0,  24'h0, 1'b0, 3'b000, 20'b0, `GPIO_ILAT, 2'b0, 7'b0, 1'b0};
+      // #20
+      // reg_packet = {14'h0,  24'h0, 1'b0, 3'b000, 20'b0, `GPIO_ILATAND, 2'b0, 7'b0, 1'b0};
+      // 14'h0, gpio_wrData_r, 1'b0, 3'b000, 20'b0,  gpio_data_type_r, 2'b0, 7'b0, gpio_RW_r
+
       $display("reg_rdata: %b", reg_rdata);
+      // $display("gpio_ilat: %b", gpio_ilat);
+      // $display("gpio_irq: %b", gpio_irq);
      
 
 

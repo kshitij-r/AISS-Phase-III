@@ -11003,4 +11003,3 @@ module sha256 ( block, clk, rst, init, next, sel, digest, ready, digest_valid,
   hi1s1 U11638 ( .DIN(n110), .Q(n8557) );
   nor2s1 U11639 ( .DIN1(n6523), .DIN2(n6618), .Q(n110) );
 endmodule
-
