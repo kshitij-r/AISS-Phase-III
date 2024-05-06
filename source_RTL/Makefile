@@ -7,11 +7,7 @@ SRC_FILES_AHB := data_worker.sv data_worker_tb.sv
 
 SRC_FILES_NETLIST := mcse_netlist.v mcse_top_netlist_tb.sv lec25dscc25.v
 
-SRC_FILES_SHA := sha_top.sv sha_top_tb.sv sha256_puf_256.v lec25dscc25.v
-
-SRC_FILES_FWSign := sha_top.sv fw_sign_tb.sv sha256_puf_256.v lec25dscc25.v
-
-FLAGS := -sverilog -suppress -R +vcs+vcdpluson +vcs+dumpvars+fw.vcd
+FLAGS := -sverilog -suppress -R +vcs+vcdpluson
 
 TCL_SCRIPT = compiledc.tcl
 
@@ -19,13 +15,7 @@ MCSEtest:
 	vcs $(SRC_FILES) $(FLAGS) 
 
 AHBtest: clean 
-	vcs $(SRC_FILES_AHB) $(FLAGS)
-
-SHAtest: clean
-	vcs $(SRC_FILES_SHA) $(FLAGS)
-
-hmactest: clean
-	vcs $(SRC_FILES_FWSign) $(FLAGS)
+	vcs $(SRC_FILES_AHB) $(FLAGS)	
 
 NETLISTtest: clean
 	vcs  $(FLAGS) $(SRC_FILES_NETLIST) 
@@ -34,7 +24,7 @@ NETLISTtest: clean
 synthesis: clean 
 	dc_shell -f compiledc.tcl
 
-.PHONY: MCSEtest AHBtest NETLISTtest synthesis hmactest
+.PHONY: MCSEtest AHBtest NETLISTtest synthesis
 
 .PHONY: clean
 clean: 

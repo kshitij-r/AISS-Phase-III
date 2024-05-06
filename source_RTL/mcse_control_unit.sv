@@ -7,7 +7,7 @@ module mcse_control_unit #(
     parameter gpio_N                = 32,
     parameter gpio_AW               = 32,
     parameter gpio_PW               = 2*gpio_AW+40,
-    parameter ipid_N                = 16,
+    parameter ipid_N                = 1,
     parameter ipid_width            = 256,
     parameter fw_image_N            = 9,
     parameter fw_block_width        = 256,

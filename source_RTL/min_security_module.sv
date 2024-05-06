@@ -16,7 +16,7 @@
 `define         AHB_DATA_WIDTH_BITS                 32
 
 module min_security_module  #( 
-        parameter ipid_N                = 16,    
+        parameter ipid_N                = 1,    
         parameter data_width            = 32,
         parameter addr_width            = 32,
         parameter puf_sig_length        = 256,
@@ -70,13 +70,13 @@ module min_security_module  #(
     /*
     input [puf_sig_length-1 : 0]   sig_in,
     input [data_width-1 : 0]       IP_ID_in,
-	input [2:0]                    Instruction_in,
-	input                          sig_valid,
+    input [2:0]                    Instruction_in,
+    input                          sig_valid,
     output reg [data_width-1 : 0]  control_out,
-	output reg [data_width-1 : 0]  status,
+    output reg [data_width-1 : 0]  status,
     output reg                     comp_out,
     output reg                     S_c,
-	output reg                     A_c, 
+    output reg                     A_c, 
     */
     input        [1:0]                   pcm_instruction,
     input        [puf_sig_length-1:0]    pcm_puf_in,
@@ -91,13 +91,13 @@ module min_security_module  #(
     IO interface for Boot Control (GPIO) inside the minimum security module
     */
    // input           nreset,      
-    input 	        reg_access, 
+    input           reg_access, 
     input  [N-1:0]  gpio_in, 
     input [PW-1:0]  reg_packet,  
     output [N-1:0]   reg_rdata,   
     output [N-1:0]  gpio_out,    
     output [N-1:0]  gpio_en,    
-    output 	        gpio_irq,    
+    output          gpio_irq,    
     output [N-1:0]   gpio_ilat,  
 
     /*

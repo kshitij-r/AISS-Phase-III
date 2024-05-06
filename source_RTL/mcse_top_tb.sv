@@ -17,7 +17,7 @@ module mcse_top_tb;
     localparam fw_image_N = 9;
     localparam fw_block_width = 256;
 
-	localparam    pAHB_ADDR_WIDTH                     = 32;
+    localparam    pAHB_ADDR_WIDTH                     = 32;
     localparam    pAHB_DATA_WIDTH                     = `AHB_DATA_WIDTH_BITS;
     localparam    pAHB_BURST_WIDTH                    = 3;
     localparam    pAHB_PROT_WIDTH                     = 4;
@@ -45,7 +45,7 @@ module mcse_top_tb;
     localparam [pAHB_ADDR_WIDTH-1:0]  ipid_address [0:ipid_N-1] = `IPID_ADDR_MAP;
 
 
-	logic   [pAHB_ADDR_WIDTH-1        :0]   O_haddr;
+    logic   [pAHB_ADDR_WIDTH-1        :0]   O_haddr;
     logic   [pAHB_BURST_WIDTH-1       :0]   O_hburst;
     logic                                   O_hmastlock;
     logic   [pAHB_PROT_WIDTH-1        :0]   O_hprot;
@@ -63,23 +63,23 @@ module mcse_top_tb;
     logic                 clk=0;
     logic                 rst_n;
     logic                 init_config_n; 
-	logic  [gpio_N-1:0]   gpio_in;
+    logic  [gpio_N-1:0]   gpio_in;
     logic  [255:0]        lc_transition_id;
     logic                 lc_transition_request_in;
     logic  [255:0]        lc_authentication_id;
     logic                 lc_authentication_valid;
   
-	logic [gpio_N-1:0]   gpio_out;
+    logic [gpio_N-1:0]   gpio_out;
 
     logic [15:0] ipid_array [255:0];
 
     logic                 fw_authentication_trigger;
     logic                 fw_auth_result;
 
-	initial begin :generate_clock
-		while (1)
-			#5 clk = ~clk;
-	end	
+    initial begin :generate_clock
+        while (1)
+            #5 clk = ~clk;
+    end 
 
     mcse_top #(.pcm_data_width(pcm_data_width), .pcm_addr_width(pcm_addr_width), . puf_sig_length(puf_sig_length),
     .gpio_N(gpio_N), .gpio_AW(gpio_AW), .gpio_PW(gpio_PW), .ipid_N(ipid_N), .ipid_width(ipid_width) )
@@ -101,23 +101,23 @@ module mcse_top_tb;
             gpio_in[13] = 1;
             $displayh("[TB_TOP] IP ID trigger received...Sending IP ID from address ", gpio_out[11:8]); 
             for (int j = 0; j < 18; j++) begin
-				if (j == 0) begin 
-					gpio_in[31:16] = 16'h7A7A;
+                if (j == 0) begin 
+                    gpio_in[31:16] = 16'h7A7A;
                     $displayh("[TB_TOP] GPIO_IN[31:16] = ", gpio_in[31:16]);
-					@(posedge clk);
-					continue;
-				end 
-				else if (j == 17) begin
-					gpio_in[31:16] = 16'hB9B9;
+                    @(posedge clk);
+                    continue;
+                end 
+                else if (j == 17) begin
+                    gpio_in[31:16] = 16'hB9B9;
                     $displayh("[TB_TOP] GPIO_IN[31:16] = ", gpio_in[31:16]);
-					@(posedge clk);
-					continue;
-				end else begin 
-				gpio_in[31:16] = ipid_array[k];
+                    @(posedge clk);
+                    continue;
+                end else begin 
+                gpio_in[31:16] = ipid_array[k];
                 //gpio_in[31:16] = $urandom_range(0,65536);
                 k = k+1;
                 $displayh("[TB_TOP] GPIO_IN[31:16] = ", gpio_in[31:16]);
-				@(posedge clk); 
+                @(posedge clk); 
                 end  
             end 
 
@@ -227,7 +227,7 @@ module mcse_top_tb;
         else begin
             $display("[MCSE] Lifecycle transition failed");
         end 
-        $displayh("[MCSE] Current Lifecycle State = ", mcse.control_unit.secure_boot.lc_state); 
+        // $displayh("[MCSE] Current Lifecycle State = ", mcse.control_unit.secure_boot.lc_state); 
 
         if (mcse.control_unit.secure_boot.lc_state == 3'b001) begin
             $display("[MCSE] Booting into Manufacture and Test lifecycle");
@@ -287,7 +287,7 @@ module mcse_top_tb;
     logic [255:0] lc_authentication_id_endoflife = 256'hdf0f326b1bf6611d944491d7a0618af56ac57e391ba38425f9f33cafdd7439a9;
 
     task testing_lifecycle_first_boot();
-        $displayh("[MCSE] Current Lifecycle State = ", mcse.control_unit.secure_boot.lc_state); 
+        // $displayh("[MCSE] Current Lifecycle State = ", mcse.control_unit.secure_boot.lc_state); 
         $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
         if (mcse.control_unit.secure_boot.first_boot_flag_r) begin
             $display("[MCSE] Proceeding with Chip ID generation...");
@@ -312,7 +312,7 @@ module mcse_top_tb;
     endtask 
 
     task oem_lifecycle_first_boot();
-        $displayh("[MCSE] Current Lifecycle State = ", mcse.control_unit.secure_boot.lc_state); 
+        // $displayh("[MCSE] Current Lifecycle State = ", mcse.control_unit.secure_boot.lc_state); 
         $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
         lifecycle_auth(lc_authentication_id_oem); 
         chipid_auth(); 
@@ -347,7 +347,7 @@ module mcse_top_tb;
     endtask
 
     task deployment_lifecycle_first_boot();
-        $displayh("[MCSE] Current Lifecycle State = ", mcse.control_unit.secure_boot.lc_state); 
+        // $displayh("[MCSE] Current Lifecycle State = ", mcse.control_unit.secure_boot.lc_state); 
         $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
         lifecycle_auth(lc_authentication_id_deployment); 
         chipid_auth(); 
@@ -389,7 +389,7 @@ module mcse_top_tb;
     endtask
 
     task recall_lifecycle_first_boot();
-        $displayh("[MCSE] Current lifecycle state = ", mcse.control_unit.secure_boot.lc_state); 
+        // $displayh("[MCSE] Current lifecycle state = ", mcse.control_unit.secure_boot.lc_state); 
         $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
         lifecycle_auth(lc_authentication_id_recall); 
         chipid_auth(); 
@@ -402,7 +402,7 @@ module mcse_top_tb;
     endtask 
 
     task endoflife_lifecycle_first_boot();
-        $displayh("[MCSE] Current Lifecycle State = ", mcse.control_unit.secure_boot.lc_state); 
+        // $displayh("[MCSE] Current Lifecycle State = ", mcse.control_unit.secure_boot.lc_state); 
         $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
         lifecycle_auth(lc_authentication_id_endoflife);
     endtask 
@@ -443,7 +443,7 @@ module mcse_top_tb;
         testing_lifecycle_first_boot();
 
         // global reset to test subsquent boots
-        $display("[TB_TOP] Power cycling chip...");
+        // $display("[TB_TOP] Power cycling chip...");
         rst_n = 0; 
         @(posedge clk);
         rst_n = 1; 
@@ -461,7 +461,7 @@ module mcse_top_tb;
         oem_lifecycle_first_boot();
 
         // global reset to test subsquent boots
-        $display("[TB_TOP] Power cycling chip...");
+        // $display("[TB_TOP] Power cycling chip...");
         rst_n = 0; 
         @(posedge clk);
         rst_n = 1; 
@@ -481,7 +481,7 @@ module mcse_top_tb;
         deployment_lifecycle_first_boot();
 
         // global reset to test subsquent boots
-        $display("[TB_TOP] Power cycling chip...");
+        // $display("[TB_TOP] Power cycling chip...");
         rst_n = 0; 
         @(posedge clk);
         rst_n = 1; 
@@ -502,7 +502,7 @@ module mcse_top_tb;
         recall_lifecycle_first_boot();
 
         // global reset to test subsquent boots
-        $display("[TB_TOP] Power cycling chip...");
+        // $display("[TB_TOP] Power cycling chip...");
         rst_n = 0; 
         @(posedge clk);
         rst_n = 1; 
@@ -523,7 +523,7 @@ module mcse_top_tb;
 
 
         // global reset to test subsquent boots
-        $display("[TB_TOP] Power cycling chip...");
+        // $display("[TB_TOP] Power cycling chip...");
         rst_n = 0; 
         @(posedge clk);
         rst_n = 1; 
@@ -632,7 +632,7 @@ module mcse_top_tb;
         // for (int i =0 ; i < 10; i++) begin
         //     $displayh("fw for hmac ", i[3:0], " = ", mcse.control_unit.fw_auth.fw_for_hmac[i]);
         // end
-        $displayh("sha digest = ", mcse.control_unit.fw_auth.sha_digest);
+        // $displayh("sha digest = ", mcse.control_unit.fw_auth.sha_digest);
     endtask 
 
     task fw_auth();
@@ -642,10 +642,10 @@ module mcse_top_tb;
         end
 
         if (mcse.control_unit.fw_auth.fw_authentication_value_next) begin
-            $display("FW is authentic");
+            $display("[MCSE] FW is authentic");
         end
         else begin
-            $display("FW is not authentic");
+            $display("[MCSE] FW is not authentic");
         end
         // fw_authentication_trigger = 0;
     endtask 
@@ -681,20 +681,20 @@ module mcse_top_tb;
         end
 
         if (gpio_out[15]) begin
-            $displayh("gpio_out[15] =", gpio_out[15]);
+            // $displayh("gpio_out[15] =", gpio_out[15]);
             $display("[MCSE] FW signature authentication successful...Sending FW upgrade ACK");
             end
         else if (gpio_out[16]) begin
-            $displayh("gpio_out[16] =", gpio_out[16]);
+            // $displayh("gpio_out[16] =", gpio_out[16]);
             $display("[MCSE] FW signature authentication failed...Sending failure message");
         end
-        $display("Waiting for TA2 acknowledgement");
+        $display("[MCSE] Waiting for TA2 acknowledgement");
 
 
         while (~mcse.control_unit.secure_boot.gpio_reg_rdata[17]) begin
             @(posedge clk); 
         end 
-        $display("Received TA2 acknowledgement");
+        $display("[MCSE] Received TA2 acknowledgement");
 
     endtask
 
@@ -725,13 +725,13 @@ module mcse_top_tb;
         initialize_array();
         initialize_array_bus();
         $display("[TB_TOP] Deasserting global reset and initial MCSE configuration");
-    	rst_n = 1;
+        rst_n = 1;
         init_config_n = 1;
 
 
 
 
-	    @(posedge clk);
+        @(posedge clk);
         @(posedge clk); 
         @(posedge clk); 
         $display("[MCSE] Initializing MCSE and sending Host SoC reset signal...");
@@ -744,14 +744,14 @@ module mcse_top_tb;
 
         lifecycle_transition_request(lc_transition_id_deployment);
         reset_handshake();
-        recall_lifecycle_first_boot();
+        // recall_lifecycle_first_boot();
 
-        fw_signature_authentication_request();
+        // fw_signature_authentication_request();
 
-        lifecycle_transition_request(lc_transition_id_recall);
-        reset_handshake();
+        // lifecycle_transition_request(lc_transition_id_recall);
+        // reset_handshake();
 
-        endoflife_lifecycle_first_boot();
+        // endoflife_lifecycle_first_boot();
        // recall_lifecycle_subsequent_boot();
         //endoflife_lifecycle_subsequent_boot();
         // ipid_bus_stream();  

@@ -1,7 +1,7 @@
 #set search_path "/WORK"
 
 # Suppress warnings about undeclared wires
-set suppress_errors {VER-936}
+#set suppress_errors {VER-936}
 
 ## Setting up target libraries
 set_app_var target_library {

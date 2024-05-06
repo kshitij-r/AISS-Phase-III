@@ -14,7 +14,7 @@ module secure_boot_control # (
     parameter gpio_PW               = 2*gpio_AW+40,
     parameter memory_width          = 256,
     parameter memory_length         = 16,
-    parameter ipid_N                = 10,
+    parameter ipid_N                = `IPID_N,
     parameter ipid_width            = 256,
     parameter pAHB_ADDR_WIDTH       = 32,
     parameter pPAYLOAD_SIZE_BITS    = 128
@@ -382,7 +382,7 @@ function void ipid_bus_extraction();
                     if (lc_state == 3'b001) begin // provision ip id in PCM 
                         pcm_instruction_next = `PROVISION; 
                         pcm_puf_in_next = ipid_r[ipid_counter_r];
-                        $display("ipid_r[ipid_counter_r] = ", ipid_r[ipid_counter_r]);
+                        // $display("ipid_r[ipid_counter_r] = ", ipid_r[ipid_counter_r]);
                         pcm_puf_in_valid_next = 1; 
                         pcm_ipid_number_next = ipid_counter_r; 
                         ipid_RW_counter_next = ipid_RW_counter_r + 1;
@@ -398,7 +398,7 @@ function void ipid_bus_extraction();
                 end 
                 2'b11 : begin 
                     if (lc_state == 3'b001) begin 
-                        $displayh("pcm_puf_in = ", pcm_puf_in);
+                        // $displayh("pcm_puf_in = ", pcm_puf_in);
                         if (pcm_S_c) begin
                             pcm_instruction_next = `IDLE;
                             pcm_puf_in_next = 0;

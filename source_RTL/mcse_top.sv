@@ -8,7 +8,7 @@ module mcse_top # (
     parameter gpio_N             = 32,
     parameter gpio_AW            = 32,
     parameter gpio_PW            = 2*gpio_AW+40,
-    parameter ipid_N             = 10,
+    parameter ipid_N             = 1,
     parameter ipid_width         = 256,
     parameter fw_image_N         = 9,
     parameter fw_block_width     = 256,
@@ -26,7 +26,7 @@ module mcse_top # (
     input   wire                                    clk,
     input   wire                                    rst_n,
     input   wire                                    init_config_n, 
-	input   wire    [gpio_N-1:0]                    gpio_in,
+    input   wire    [gpio_N-1:0]                    gpio_in,
 
     input   wire    [255:0]                         lc_transition_id,
     input   wire                                    lc_transition_request_in,
@@ -39,7 +39,7 @@ module mcse_top # (
     input   wire    [pAHB_HRESP_WIDTH-1       :0]   I_hresp,
     input   wire                                    I_hreadyout,
 
-	output  logic    [gpio_N-1:0]                   gpio_out,
+    output  logic    [gpio_N-1:0]                   gpio_out,
 
     // System side AHB requester port
     output  logic   [pAHB_ADDR_WIDTH-1        :0]   O_haddr,
