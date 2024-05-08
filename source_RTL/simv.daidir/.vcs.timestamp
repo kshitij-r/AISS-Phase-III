@@ -1,0 +1,247 @@
+0
+57
++itf+/apps/syn/vcs/linux/lib/vcsdp_lite.tab
++vcs+dumpvars+fw.vcd
++vcs+vcdpluson
++vcsd1
++vpi
+-Mamsrun=
+-Masflags=--32
+-Mcc=gcc
+-Mcfl= -pipe -m32 -O -I/apps/syn/vcs/include
+-Mcplusplus=g++
+-Mcrt0=
+-Mcrtn=
+-Mcsrc=
+-Mexternalobj=
+-Mldflags= -m32 -m32 -rdynamic
+-Mobjects= /apps/syn/vcs/linux/lib/libvirsim.so /apps/syn/vcs/linux/lib/liberrorinf.so /apps/syn/vcs/linux/lib/libsnpsmalloc.so /apps/syn/vcs/linux/lib/libvfs.so
+-Mout=simv
+-Msaverestoreobj=/apps/syn/vcs/linux/lib/vcs_save_restore_new.o
+-Msyslibs=/apps/syn/verdi/share/PLI/VCS/LINUX/pli.a /apps/syn/vcs/linux/lib/ctype-stubs_32.a -ldl
+-Mvcsaceobjs=
+-Mxcflags= -pipe -m32 -I/apps/syn/vcs/include
+-Mxllcflags=
+-P
+-Xvcs_run_simv=1
+-debug_acc
+-fsdb
+-gen_obj
+-picarchive
+-suppress
+-sverilog
+/apps/syn/vcs/linux/bin/vcs1
+/apps/syn/verdi/share/PLI/VCS/LINUX/verdi.tab
+mcse_top.sv
+mcse_control_unit.sv
+secure_memory.sv
+secure_boot_control.sv
+lifecycle_protection.sv
+lc_memory.sv
+fw_auth.sv
+min_security_module.sv
+sha_top.sv
+sha256_puf_256.v
+camellia_top.sv
+camellia.v
+gpio.v
+gpio_regmap.v
+oh_dsync.v
+io.v
+packet2emesh.v
+c1908.v
+primitives.v
+puf.v
+bus_translation.sv
+data_worker.sv
+error_correction.v
+mcse_top_tb.sv
+lec25dscc25.v
+149
+ZOIXHOME=/apps/syn/zoix
+XLIB_SKIP_ARGB_VISUALS=1
+XDG_SESSION_ID=9046
+XDG_RUNTIME_DIR=/run/user/531926731
+XDG_DATA_DIRS=/home/UFAD/tambiaratabassum/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share:/usr/share
+XCELIUM_INCISIVE_MERGEOPTS=1
+XCELIUM_HOME=/apps/cds/xcelium2309
+WAVEVIEW_HOME=/apps/syn/wv
+VSCODE_IPC_HOOK_CLI=/run/user/531926731/vscode-ipc-db912772-3d30-4dcf-8fdd-a0d7fda03e28.sock
+VSCODE_GIT_IPC_HANDLE=/run/user/531926731/vscode-git-92df3d3100.sock
+VSCODE_GIT_ASKPASS_NODE=/ecel/UFAD/tambiaratabassum/.vscode-server/cli/servers/Stable-e170252f762678dec6ca2cc69aba1570769a5d39/server/node
+VSCODE_GIT_ASKPASS_MAIN=/ecel/UFAD/tambiaratabassum/.vscode-server/cli/servers/Stable-e170252f762678dec6ca2cc69aba1570769a5d39/server/extensions/git/dist/askpass-main.js
+VSCODE_GIT_ASKPASS_EXTRA_ARGS=
+VRST_HOME=/apps/cds/incisive152
+VOLTUS_HOME=/apps/cds/ssv201
+VMR_MODE_FLAG=32
+VERDI_HOME=/apps/syn/verdi
+VC_STATIC_HOME=/apps/syn/vc-static
+VCS_PATHMAP_PRELOAD_DONE=1
+VCS_MX_HOME_INTERNAL=1
+VCS_HOME=/apps/syn/vcs
+VCS_EXEC_DONE=1
+VCS_DEPTH=0
+VCS_ARG_ADDED_FOR_TMP=1
+VCS_ARCH=linux
+VCS_AMD_PURE32=1
+UNAME=/bin/uname
+TSUPREM4_HOME=/apps/syn/taurus-tsuprem4
+TOOL_HOME=/apps/syn/vcs/linux
+TMAX_HOME=/apps/syn/tmax
+TMALD_LICENSE_FILE=27000@licsvr.ece.ufl.edu
+TESSENT_HOME=/apps/mgc/tessent
+TERM_PROGRAM_VERSION=1.88.1
+TERM_PROGRAM=vscode
+TCLLIBPATH=/apps/oascript/Si2oaScript-v3.4/tcl
+TCAD_HOME=/apps/syn/sentaurus/V-2023.09
+TANNER_PATH=/apps/mgc/tanner
+SYSTEM_CDS_LIB_DIR=/apps/cds/ic618/share/cdssetup
+SYN_3DIC_HOME=/apps/syn/3dic/V-2023.12
+SYNPLIFY_HOME=/apps/syn/synplify
+SYNOPSYS_SYN=/apps/syn/synthesis
+SYNOPSYS_SIM=/apps/syn/vcs
+SYNOPSYS_LC_ROOT=/apps/syn/lc/bin
+SYNOPSYS_HOME=/apps/syn
+STRATUS_HOME=/apps/cds/stratus182
+STARRC_HOME=/apps/syn/starrc
+SSL_CERT_FILE=/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
+SSL_CERT_DIR=/etc/pki/tls/certs
+SSH_CONNECTION=10.228.6.62 52492 10.227.232.190 22
+SSH_CLIENT=10.228.6.62 52492 22
+SPYGLASS_HOME=/apps/syn/spyglass/SPYGLASS_HOME
+SPECTRE_HOME=/apps/cds/spectre211
+SNPS_VCS_CLANG_PATH=/apps/syn/vcs/linux/clang
+SNPS_INTERNAL_VCS_LINUX_OS=linux
+SKIP_CDS_DIALOG=
+SIGRITY_EDA_DIR=/apps/cds/sigrity20221
+SCRNAME=vcs
+SCRIPT_NAME=vcs
+RUBYLIB=/apps/oascript/Si2oaScript-v3.4/ruby
+RTLA_HOME=/apps/syn/rtla/current
+RSOFT_PROGRAMPATH=/apps/syn/photonicsolutions/2023.03-SP1-1/rsoft/bin
+RC_HOME=/apps/cds/rc142
+QUANTUS_HOME=/apps/cds/quantus221
+QT_X11_NO_MITSHM=1
+QT_GRAPHICSSYSTEM_CHECKED=1
+QTLIB=/usr/lib64/qt-3.3/lib
+QTINC=/usr/lib64/qt-3.3/include
+QTDIR=/usr/lib64/qt-3.3
+QRC_HOME=/apps/cds/ext171
+QF_LD_LIBRARY_PATH=/apps/cds/modus211/oa_v22.60.s006/lib/linux_rhel60_64/opt
+PYTHONPATH=/apps/oascript/Si2oaScript-v3.4/python
+PRIMETIME_HOME=/apps/syn/primepower
+POWERPRO_HOME=/apps/mgc/powerpro
+PHOTONIC_SOLUTIONS_VERSION=2023.03-SP1-1
+PHOTONICS_SOLUTIONS_VERSION=2023.03-SP1-1
+PHOTONICS_SOLUTIONS_ROOT=/apps/syn/photonicsolutions
+PERL5LIB=/apps/oascript/Si2oaScript-v3.4/perl5
+PDK_DIR=/apps/cds/ic618/local/FreePDK45
+OVA_UUM=0
+OS_LDFLAGS= -m32  -m32 
+OPTO_LINK_BASE=/apps/syn/photonicsolutions/2023.03-SP1-1/optodesigner
+NOVAS_LD_LIBRARY_PATH=/apps/mgc/powerpro/powerpro/platform/linux64/lib
+NANOTIME_HOME=/apps/syn/nt
+NANOSIM_HOME=/apps/syn/ns
+MW_HOME=/apps/syn/mw
+MODUS_HOME=/apps/cds/modus211
+MODELSIM_HOME=/apps/mgc/modelsim/modeltech
+MMSIMHOME=/apps/cds/mmsim131
+MGLS_LICENSE_FILE=1717@licsvr.ece.ufl.edu
+MGC_HOME=/apps/mgc/calibre/aoi_cal_2022.3_17.8
+MFLAGS=
+MEDICI_HOME=/apps/syn/medici
+MAKELEVEL=1
+MAKEFLAGS=
+LESSOPEN=||/usr/bin/lesspipe.sh %s
+LEDA_RESOURCES=/apps/syn/leda/resources
+LEDA_PATH=/apps/syn/leda
+LEDA_CONFIG=/apps/syn/leda/rules
+LC_HOME=/apps/syn/lc
+LC_ALL=C
+KRB5CCNAME=KEYRING:persistent:531926731
+JG_HOME=/apps/cds/jasper
+INNOVUSHOME=/apps/cds/innovus211
+ICV_HOME=/apps/syn/icv
+ICVWB_HOME=/apps/syn/icv_workbench
+ICC_HOME=/apps/syn/icc
+ICC2_HOME=/apps/syn/icc2
+ICADVM_HOME=/apps/cds/icadvm201
+HSPICE_HOME=/apps/syn/hspice
+HPEESOF_DIR=/apps/ads
+HISTCONTROL=ignoredups
+HFSS_HOME=/apps/ansys/AnsysEM2023/v231
+HERCULES_HOME=/apps/syn/hercules
+GPDK_DIR=/apps/cds/ic618/local/GPDK180
+GIT_ASKPASS=/ecel/UFAD/tambiaratabassum/.vscode-server/cli/servers/Stable-e170252f762678dec6ca2cc69aba1570769a5d39/server/extensions/git/dist/askpass.sh
+GENUSHOME=/apps/cds/genus211
+FORMALITY_HOME=/apps/syn/formality
+FINESIM_HOME=/apps/syn/finesim
+FC_HOME=/apps/syn/fusioncompiler/V-2023.12
+EXT_HOME=/apps/cds/ext171
+EXTHOME=/apps/cds/ext171
+EDIHOME=/apps/cds/edi142
+DESIGNWARE_HOME=/apps/syn/synthesis
+DD_DONT_DO_OS_LOCKS=TRUE
+CVS_RSH=ssh
+CUSTOM_COMPILER_HOME=/apps/syn/customcompiler
+CORETOOLS_HOME=/apps/syn/coretools
+CONFRML_HOME=/apps/cds/confrml201
+COLORTERM=truecolor
+CDS_SITE=/apps/cds/ic618/local
+CDS_ROOT=/apps/cds
+CDS_Netlisting_Mode=Analog
+CDS_LIC_FILE=5280@licsvr.ece.ufl.edu
+CDS_INST_DIR=/apps/cds
+CDSINST=/apps/cds/ic618
+CDSHOME=/apps/cds/ic618
+CDSDIR=/apps/cds/ic618/tools/dfII
+CDS=/apps/cds/ic618
+CDK_DIR=/apps/cds/ic618/local
+CATAPULT_HOME=/apps/mgc/catapult
+CALIBRE_HOME=/apps/mgc/calibre/aoi_cal_2022.3_17.8
+ASTRO_HOME=/apps/syn/astro
+ASSURA_HOME=/apps/cds/assura41
+ASSURAHOME=/apps/cds/assura41
+APOLLO_HOME=/apps/syn/apollo
+AMSHOME=/apps/cds/xcelium2309
+ALLEGROHOME=/apps/cds/spb221
+AILM_LICENSE_FILE=27000@licsvr.ece.ufl.edu
+AGILEESOFD_LICENSE_FILE=27002@licsvr.ece.ufl.edu
+0
+0
+28
+1714768259 mcse_def.svh
+1712079107 lec25dscc25.v
+1714782000 mcse_top_tb.sv
+1714754609 error_correction.v
+1712079389 data_worker.sv
+1714407736 bus_translation.sv
+1714784960 puf.v
+1714785133 primitives.v
+1714785049 c1908.v
+1714785154 packet2emesh.v
+1709081191 io.v
+1714784998 oh_dsync.v
+1709081191 gpio_regmap.v
+1714785025 gpio.v
+1714785067 camellia.v
+1714785083 camellia_top.sv
+1712606150 sha256_puf_256.v
+1714785111 sha_top.sv
+1714614092 min_security_module.sv
+1714785669 fw_auth.sv
+1712079457 lc_memory.sv
+1712078548 lifecycle_protection.sv
+1714780420 secure_boot_control.sv
+1714482418 secure_memory.sv
+1714782299 mcse_control_unit.sv
+1714787244 mcse_top.sv
+1634035495 /apps/syn/verdi/share/PLI/VCS/LINUX/verdi.tab
+1669781194 /apps/syn/vcs/linux/lib/vcsdp_lite.tab
+4
+1669784093 /apps/syn/vcs/linux/lib/libvirsim.so
+1669782763 /apps/syn/vcs/linux/lib/liberrorinf.so
+1669782531 /apps/syn/vcs/linux/lib/libsnpsmalloc.so
+1669783949 /apps/syn/vcs/linux/lib/libvfs.so
+1714849718 simv.daidir
+-1 partitionlib

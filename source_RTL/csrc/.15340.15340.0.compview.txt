@@ -1,0 +1,9 @@
+{"vcs1":{"timestamp_begin":1714450181.521836948, "rt":4.31, "ut":3.42, "st":0.26}}
+{"vcselab":{"timestamp_begin":1714450185.892481793, "rt":1.12, "ut":0.72, "st":0.10}}
+{"link":{"timestamp_begin":1714450187.065367067, "rt":0.51, "ut":0.12, "st":0.10}}
+{"SNPS_VCS_INTERNAL_ROOT_START_TIME": 1714450180.973880563}
+{"VCS_COMP_START_TIME": 1714450180.973880563}
+{"VCS_COMP_END_TIME": 1714467849.327414800}
+{"VCS_USER_OPTIONS": "mcse_top.sv mcse_control_unit.sv secure_memory.sv secure_boot_control.sv lifecycle_protection.sv lc_memory.sv fw_auth.sv min_security_module.sv sha_top.sv sha256_puf_256.v camellia_top.sv camellia.v gpio.v gpio_regmap.v oh_dsync.v io.v packet2emesh.v c1908.v primitives.v puf.v bus_translation.sv data_worker.sv mcse_top_tb.sv lec25dscc25.v -sverilog -suppress -R +vcs+vcdpluson"}
+{"vcs1": {"peak_mem": 272996}}
+{"stitch_vcselab": {"peak_mem": 154076}}
