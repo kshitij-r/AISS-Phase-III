@@ -1,7 +1,6 @@
 source_RTL/camellia_tb.sv
 source_RTL/gpio_tb.sv
 source_RTL/fw_sign_tb.sv
-source_RTL//fw_sign_tb.sv
 source_RTL/ahb_tb.sv
 source_RTL/csrc
 source_RTL/WORK
