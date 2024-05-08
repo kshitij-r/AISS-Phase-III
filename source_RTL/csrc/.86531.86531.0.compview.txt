@@ -1,5 +1,0 @@
-{"vcs1":{"timestamp_begin":1705961059.766118709, "rt":0.10, "ut":0.05, "st":0.02}}
-{"SNPS_VCS_INTERNAL_ROOT_START_TIME": 1705961059.224742614}
-{"VCS_COMP_START_TIME": 1705961059.224742614}
-{"VCS_COMP_END_TIME": 1705961061.292138086}
-{"VCS_USER_OPTIONS": "fsm_top.sv fsm_driver.sv memory_controller.sv fifo_buffer.sv memory_module.v min_security_module.sv sha_top.sv sha256_puf_256.v camellia_top.sv camellia.v gpio.v gpio_regmap.v oh_dsync.v io.v packet2emesh.v pcm.sv c1908.v primitives.v puf.v fsm_top_testing_tb.sv lec25dscc25.v -sverilog -R +vcs+vcdpluson"}

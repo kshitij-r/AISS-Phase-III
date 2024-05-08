@@ -1,6 +1,0 @@
-{"vcs1":{"timestamp_begin":1714676155.994772582, "rt":2.92, "ut":2.02, "st":0.49}}
-{"SNPS_VCS_INTERNAL_ROOT_START_TIME": 1714676155.431017982}
-{"VCS_COMP_START_TIME": 1714676155.431017982}
-{"VCS_COMP_END_TIME": 1714676158.972206425}
-{"VCS_USER_OPTIONS": "mcse_top.sv mcse_control_unit.sv secure_memory.sv secure_boot_control.sv lifecycle_protection.sv lc_memory.sv fw_auth.sv min_security_module.sv sha_top.sv sha256_puf_256.v camellia_top.sv camellia.v gpio.v gpio_regmap.v oh_dsync.v io.v packet2emesh.v c1908.v primitives.v puf.v bus_translation.sv data_worker.sv error_correction.v mcse_top_tb.sv lec25dscc25.v -sverilog -suppress -R +vcs+vcdpluson +vcs+dumpvars+fw.vcd"}
-{"vcs1": {"peak_mem": 243920}}

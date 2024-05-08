@@ -1,6 +1,0 @@
-{"vcs1":{"timestamp_begin":1712885199.014215959, "rt":0.12, "ut":0.05, "st":0.02}}
-{"SNPS_VCS_INTERNAL_ROOT_START_TIME": 1712885198.674059247}
-{"VCS_COMP_START_TIME": 1712885198.674059247}
-{"VCS_COMP_END_TIME": 1712885199.191267672}
-{"VCS_USER_OPTIONS": "sha_top.sv hmac.sv sha256_puf_256.v lec25dscc25.v -sverilog -suppress -R +vcs+vcdpluson"}
-{"vcs1": {"peak_mem": 228996}}

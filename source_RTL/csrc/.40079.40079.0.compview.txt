@@ -1,9 +1,0 @@
-{"vcs1":{"timestamp_begin":1708983220.000614891, "rt":0.31, "ut":0.13, "st":0.05}}
-{"vcselab":{"timestamp_begin":1708983220.361774106, "rt":0.41, "ut":0.19, "st":0.05}}
-{"link":{"timestamp_begin":1708983220.821354916, "rt":0.17, "ut":0.06, "st":0.04}}
-{"SNPS_VCS_INTERNAL_ROOT_START_TIME": 1708983219.791590263}
-{"VCS_COMP_START_TIME": 1708983219.791590263}
-{"VCS_COMP_END_TIME": 1708983221.050755512}
-{"VCS_USER_OPTIONS": "-sverilog ResetHostSoC.sv"}
-{"vcs1": {"peak_mem": 244508}}
-{"stitch_vcselab": {"peak_mem": 145696}}

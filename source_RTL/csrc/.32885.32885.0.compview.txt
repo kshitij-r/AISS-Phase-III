@@ -1,9 +1,0 @@
-{"vcs1":{"timestamp_begin":1708093973.661554007, "rt":0.31, "ut":0.11, "st":0.06}}
-{"vcselab":{"timestamp_begin":1708093974.030944774, "rt":0.27, "ut":0.16, "st":0.03}}
-{"link":{"timestamp_begin":1708093974.351959117, "rt":0.26, "ut":0.08, "st":0.08}}
-{"SNPS_VCS_INTERNAL_ROOT_START_TIME": 1708093973.449018876}
-{"VCS_COMP_START_TIME": 1708093973.449018876}
-{"VCS_COMP_END_TIME": 1708093974.764128417}
-{"VCS_USER_OPTIONS": "gpio_tb.v"}
-{"vcs1": {"peak_mem": 243896}}
-{"stitch_vcselab": {"peak_mem": 129304}}
