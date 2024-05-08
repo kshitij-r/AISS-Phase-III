@@ -1,7 +1,8 @@
-AISS_Phase_III_tambiara/source_RTL/camellia_tb.sv
-AISS_Phase_III_tambiara/source_RTL/gpio_tb.sv
-AISS_Phase_III_tambiara/source_RTL/fw_sign_tb.sv
-AISS_Phase_III_tambiara/source_RTL/ahb_tb.sv
-AISS_Phase_III_tambiara/source_RTL/csrc
-AISS_Phase_III_tambiara/source_RTL/WORK
-AISS_Phase_III_tambiara/source_RTL/simv.daidir
+source_RTL/camellia_tb.sv
+source_RTL/gpio_tb.sv
+source_RTL/fw_sign_tb.sv
+source_RTL//fw_sign_tb.sv
+source_RTL/ahb_tb.sv
+source_RTL/csrc
+source_RTL/WORK
+source_RTL/simv.daidir
