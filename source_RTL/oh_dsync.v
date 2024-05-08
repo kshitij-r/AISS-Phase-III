@@ -46,5 +46,3 @@ module oh_dsync (/*AUTOARG*/
  
    
 endmodule // oh_dsync
-
-

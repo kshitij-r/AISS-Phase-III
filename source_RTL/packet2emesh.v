@@ -70,6 +70,3 @@ module packet2emesh(/*AUTOARG*/
    endgenerate
    
 endmodule // packet2emesh
-
-
-

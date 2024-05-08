@@ -17096,4 +17096,3 @@ module camellia ( clk, reset, data_in, enc_dec, data_rdy, data_acq, key, k_len,
   nor2s1 U8514 ( .DIN1(n284), .DIN2(n442), .Q(n8169) );
   nnd2s1 U8515 ( .DIN1(\CTRL/n1540 ), .DIN2(\CTRL/n1542 ), .Q(n8167) );
 endmodule
-
