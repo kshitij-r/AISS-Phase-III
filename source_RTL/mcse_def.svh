@@ -18,3 +18,15 @@
 `define IPID_ADDR_MAP {32'h43C00000}
 
 `define IPID_N 1
+
+`define FW_N 9
+
+`define FW_ADDR_MAP {32'h68D00000, 32'h72500001, 32'hD5200001, 32'h34D00001, 32'h35D00002, 32'h36D00003, 32'h38D00004, 32'h37D00005, 32'h49D00006}
+
+`define GPIO_IDATA 6'h5
+`define GPIO_ODATA 6'h0
+
+`define FW_SIGNING_KEY_ADDR 'h6
+
+`define IPAD {32{'h36}}
+`define OPAD {32{'h5C}}

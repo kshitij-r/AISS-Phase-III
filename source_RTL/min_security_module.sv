@@ -13,10 +13,12 @@
 `include "primitives.v"
 `include "io.v"
 */
+`include "mcse_def.svh"
 `define         AHB_DATA_WIDTH_BITS                 32
 
 module min_security_module  #( 
-        parameter ipid_N                = 1,    
+        parameter ipid_N                = `IPID_N,
+        parameter fw_image_N            =`FW_N,    
         parameter data_width            = 32,
         parameter addr_width            = 32,
         parameter puf_sig_length        = 256,

@@ -11,7 +11,7 @@ define_design_lib WORK -path ./WORK
 ## Setting up link libraries
 set_app_var link_library $target_library
 
-set my_files [list sha256_puf_256.v primitives.v packet2emesh.v min_security_module.sv gpio_regmap.v camellia_top.sv sha_top.sv puf.v pcm.v oh_dsync.v io.v gpio.v camellia.v c1908.v secure_memory.sv mcse_top.sv mcse_control_unit.sv lifecycle_protection.sv lc_memory.sv secure_boot_control.sv data_worker.sv bus_translation.sv error_correction.v fw_auth.sv]
+set my_files [list sha256_puf_256.v primitives.v packet2emesh.v min_security_module.sv gpio_regmap.v camellia_top.sv sha_top.sv puf.v pcm.v oh_dsync.v io.v gpio.v camellia.v c1908.v secure_memory.sv mcse_top.sv mcse_control_unit.sv lifecycle_protection.sv lc_memory.sv secure_boot_control.sv data_worker.sv bus_translation.sv error_correction.v fw_auth.sv scan_protection.sv]
 
 analyze -f sverilog $my_files 
 
@@ -21,6 +21,9 @@ elaborate $my_toplevel
 
 set_max_area 0
 compile -area_effort high -map_effort high
+
+ungroup -all -flatten -force
+compile_ultra
 
 report_area
 report_hierarchy

@@ -1,13 +1,5 @@
 
-`define GPIO_IDATA 6'h5
-`define GPIO_ODATA 6'h0
-
-`define FW_SIGNING_KEY_ADDR 'h6
-
-
-`define IPAD {32{'h36}}
-`define OPAD {32{'h5C}}
-
+`include "mcse_def.svh"
 
 module fw_authentication # (
     parameter gpio_N                = 32,
@@ -15,7 +7,7 @@ module fw_authentication # (
     parameter gpio_PW               = 2*gpio_AW+40,
     parameter pAHB_ADDR_WIDTH       = 32,
     parameter pPAYLOAD_SIZE_BITS    = 128,
-    parameter fw_image_N            = 9, // (2048+256)/256=9
+    parameter fw_image_N            = `FW_N, 
     parameter fw_block_width        = 256,
     parameter memory_width          = 256,
     parameter memory_length         = 16
@@ -66,24 +58,12 @@ module fw_authentication # (
     output logic                                 fw_auth_done
 );
 
+localparam [pAHB_ADDR_WIDTH-1:0]   fw_address [0:fw_image_N-1] = `FW_ADDR_MAP;
 
 typedef enum logic [2:0] {AUTHENTICATION, FINISH} state_t;
 state_t state_r, state_next;
 
 
-
-
-parameter [pAHB_ADDR_WIDTH-1:0]  fw_address [0:8] = '{
-    'h68D00000,
-    'h72500001, 
-    'hD5200001,
-    'h34D00001,
-    'h35D00002,
-    'h36D00003,
-    'h38D00004,
-    'h37D00005,
-    'h39D00006
-     };
 
 logic                          bootControl_bus_go_next;
 logic [pAHB_ADDR_WIDTH-1:0]    bootControl_bus_addr_next;
@@ -160,6 +140,8 @@ logic [1:0] strobe_r, strobe_next;
 
 logic [255:0] ipad_xor;
 logic [255:0] opad_xor;
+logic [255:0] ipad_xor_next;
+logic [255:0] opad_xor_next;
 logic [255:0] signing_key;
 logic [fw_image_N:0][fw_block_width-1:0] fw_for_hmac;
 logic [fw_block_width-1:0] signature_challenge;
@@ -167,7 +149,6 @@ logic [fw_image_N-2:0][fw_block_width-1:0] fw_temp;
 
 
 
-// assign signature_challenge = fw_r [255:0];
 assign signature_challenge = fw_r [0];
 
 
@@ -176,7 +157,7 @@ function void fw_hash();
         for (int i = 1; i < 9; i = i + 1) begin
             fw_temp[i-1] = fw_r[i];
         end
-        fw_for_hmac = {opad_xor, fw_temp, ipad_xor};
+        fw_for_hmac = {opad_xor_next, fw_temp, ipad_xor_next};
         if (hash_counter_r == 0) begin       
             sha_block_next = {fw_for_hmac[hash_counter_r+1], fw_for_hmac[hash_counter_r]};
             
@@ -243,6 +224,7 @@ logic fw_authentication_done_r, fw_authentication_done_next;
 logic fw_authentication_value_r, fw_authentication_value_next; 
 logic [1:0] fw_authentication_counter_r, fw_authentication_counter_next;
 logic fw_auth_done_next;
+logic fw_auth_result_next;
 
 function fw_authentication();
   if (fw_authentication_trigger) begin
@@ -259,8 +241,8 @@ function fw_authentication();
             memory_read(`FW_SIGNING_KEY_ADDR);
             if (memory_read_done_r) begin
                 signing_key = rdData_next;
-                ipad_xor = `IPAD ^ signing_key;
-                opad_xor = `OPAD ^ signing_key;
+                ipad_xor_next = `IPAD ^ signing_key;
+                opad_xor_next = `OPAD ^ signing_key;
                 memory_read_done_next = 0;
                 fw_authentication_counter_next = fw_authentication_counter_r + 1;
             end
@@ -275,12 +257,12 @@ function fw_authentication();
             2'b11 : begin
                 if (sha_digest == signature_challenge) begin
                   fw_authentication_value_next = 1;
-                  fw_auth_result = 1;
+                  fw_auth_result_next = 1;
                   fw_auth_done_next = 1;
                 end
                 else begin
                     fw_authentication_value_next = 0;
-                    fw_auth_result = 0;
+                    fw_auth_result_next = 0;
                     fw_auth_done_next = 1;
                 end
                 fw_authentication_done_next = 1;
@@ -295,11 +277,11 @@ endfunction
 
 always @(posedge clk, negedge rst_n) begin 
     if (~rst_n) begin
-        //state_r <= BUS_TEMP;
-        // state_r <= MCSE_INIT;
         state_r <= AUTHENTICATION;
 
-        
+        ipad_xor <= 0;
+        opad_xor <=0;
+
         fw_extraction_done_r <= 0;
         fw_counter_r <= 0;
         fw_r <= 0;
@@ -311,9 +293,7 @@ always @(posedge clk, negedge rst_n) begin
         fw_bootControl_bus_RW <= 0;
 
         fw_rd_en <= 0;
-        fw_wr_en <= 0;
         fw_addr <= 0;
-        fw_wrData <= 0; 
         memory_read_done_r <=0;
         rdData_r <= 0;
 
@@ -331,11 +311,15 @@ always @(posedge clk, negedge rst_n) begin
         fw_authentication_value_r <= 0;
         fw_authentication_counter_r <= 0;
         fw_auth_done <= 0;
+        fw_auth_result <= 0;
         
 
     end 
     else begin
         state_r <= state_next; 
+
+        ipad_xor <= ipad_xor_next;
+        opad_xor <= opad_xor_next;
         
         fw_rd_en <= rd_en_next; 
         fw_addr <= addr_next;
@@ -367,12 +351,16 @@ always @(posedge clk, negedge rst_n) begin
         fw_authentication_counter_r <= fw_authentication_counter_next;
 
         fw_auth_done <= fw_auth_done_next;
+        fw_auth_result <= fw_auth_result_next;
 
     end 
 end
 
 always_comb begin
     state_next = state_r;
+
+    ipad_xor_next = ipad_xor;
+    opad_xor_next = opad_xor;
     
     rd_en_next = fw_rd_en;
     addr_next = fw_addr;
@@ -404,12 +392,12 @@ always_comb begin
     fw_authentication_value_next = fw_authentication_value_r;
     fw_authentication_counter_next = fw_authentication_counter_r;
     fw_auth_done_next = fw_auth_done;
+    fw_auth_result_next = fw_auth_result;
 
 
 
     case (state_r)
         AUTHENTICATION: begin
-            // memory_read(`FW_SIGNING_KEY_ADDR);
             fw_authentication();
             if (fw_authentication_done_r) begin
                 state_next = FINISH; 
@@ -419,7 +407,7 @@ always_comb begin
         FINISH : begin
             if (~fw_authentication_trigger) begin
                 fw_auth_done_next = 0; 
-                fw_auth_result = 0; 
+                fw_auth_result_next = 0; 
                 state_next = AUTHENTICATION; 
             end 
 

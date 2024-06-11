@@ -1,5 +1,5 @@
 //TODO JTAG interface 
-
+`include "mcse_def.svh"
 module mcse_control_unit #(
     parameter pcm_data_width        = 32,
     parameter pcm_addr_width        = 32,
@@ -7,10 +7,12 @@ module mcse_control_unit #(
     parameter gpio_N                = 32,
     parameter gpio_AW               = 32,
     parameter gpio_PW               = 2*gpio_AW+40,
-    parameter ipid_N                = 1,
+    parameter ipid_N                = `IPID_N,
     parameter ipid_width            = 256,
-    parameter fw_image_N            = 9,
+    parameter fw_image_N            = `FW_N,
     parameter fw_block_width        = 256,
+    parameter scan_key_width        = 32,
+    parameter scan_key_number       = 8,
     parameter pAHB_ADDR_WIDTH       = 32,
     parameter pPAYLOAD_SIZE_BITS    = 128
 
@@ -62,6 +64,8 @@ module mcse_control_unit #(
     input                           bootControl_bus_done,
     input [pPAYLOAD_SIZE_BITS-1:0]  bootControl_bus_rdData,
 
+    // *** To Vimscan
+    input [scan_key_width-1:0]      scan_key,
 
     // Boot control to Camellia 
     output [127:0]                  cam_data_in,
@@ -79,7 +83,10 @@ module mcse_control_unit #(
 
     // Boot Control to GPIO 
     output                          gpio_reg_access,
-    output [gpio_PW-1:0]            gpio_reg_packet,    
+    output [gpio_PW-1:0]            gpio_reg_packet,   
+
+    // Vimscan to ***
+    output logic                    scan_unlock, 
 
     // Boot Control to PCM 
     /*
@@ -118,8 +125,7 @@ module mcse_control_unit #(
     wire                            secureboot_wr_en;
     wire [$clog2(memory_length)-1:0] secureboot_addr;
     wire [memory_width-1:0]         secureboot_wrData;
-    wire [memory_width-1:0]         secureboot_rdData;
-    wire                            secureboot_rdData_valid;
+    
 
     wire [511:0]                        secureboot_sha_block;
     wire                                secureboot_sha_init;
@@ -154,8 +160,6 @@ module mcse_control_unit #(
     wire                                fw_wr_en;
     wire [$clog2(memory_length)-1:0]    fw_addr;
     wire [memory_width-1:0]             fw_wrData;
-    wire                                fw_rdData;
-    wire                                fw_rdData_valid;
 
 
     logic                            rd_en;
@@ -170,6 +174,8 @@ module mcse_control_unit #(
 
     logic                                     fw_auth_result;
     logic                                      fw_auth_done;
+
+
 
     secure_memory #(.WIDTH(memory_width), .LENGTH(memory_length) ) mem (.rst_n(init_config_n), .*);
 
@@ -188,6 +194,8 @@ module mcse_control_unit #(
     .pAHB_ADDR_WIDTH(pAHB_ADDR_WIDTH), .pPAYLOAD_SIZE_BITS(pPAYLOAD_SIZE_BITS), .memory_width(memory_width), .memory_length(memory_length))
     fw_auth ( .* );
 
+    vim_scan_control #(.scan_key_width(scan_key_width), .scan_key_number(scan_key_number)) scan_control ( .* );
+
     
     always_comb begin
         if ( ~secureboot_fw_sel) begin
@@ -196,8 +204,7 @@ module mcse_control_unit #(
             wr_en = secureboot_wr_en;
             addr = secureboot_addr;
             wrData = secureboot_wrData;
-            rdData = secureboot_rdData;
-            rdData_valid = secureboot_rdData_valid;
+            
 
             bootControl_bus_go = secureboot_bootControl_bus_go;
             bootControl_bus_addr =  secureboot_bootControl_bus_addr;
@@ -216,8 +223,7 @@ module mcse_control_unit #(
             wr_en = fw_wr_en;
             addr = fw_addr;
             wrData = fw_wrData;
-            rdData = fw_rdData;
-            rdData_valid = fw_rdData_valid;
+            
 
             bootControl_bus_go = fw_bootControl_bus_go;
             bootControl_bus_addr =  fw_bootControl_bus_addr;

@@ -2,6 +2,15 @@ source_RTL/camellia_tb.sv
 source_RTL/gpio_tb.sv
 source_RTL/fw_sign_tb.sv
 source_RTL/ahb_tb.sv
+source_RTL/vim_scan.v
+source_RTL/vim_scan_tb.v
+source_RTL/scan_protection_tb.sv
 source_RTL/csrc
 source_RTL/WORK
 source_RTL/simv.daidir
+
+RTL_config_100K/csrc
+RTL_config_100K/WORK
+RTL_config_100K/simv.daidir
+RTL_config_100K/gpio_tb.sv
+RTL_config_100K/camellia_tb.sv
