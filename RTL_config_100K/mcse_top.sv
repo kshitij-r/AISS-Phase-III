@@ -117,6 +117,7 @@ module mcse_top # (
     wire                         pcm_S_c; 
 
 
+
     min_security_module #(
     .ipid_N(ipid_N), .data_width(pcm_data_width), .addr_width(pcm_addr_width), .puf_sig_length(puf_sig_length), .N(gpio_N),
     .AW(gpio_AW), .PW(gpio_PW), .pAHB_ADDR_WIDTH(pAHB_ADDR_WIDTH), .pPAYLOAD_SIZE_BITS(pPAYLOAD_SIZE_BITS)) 
@@ -142,12 +143,18 @@ module mcse_top # (
     .gpio_AW(gpio_AW), .gpio_PW(gpio_PW), .scan_key_width(scan_key_width), .scan_key_number(scan_key_number))
     control_unit (.*);
 
-    logic scan_in = 1; // scan_in will be driven from scan chain original data
+    logic scan_in; // scan_in will be driven from scan chain original data
+    
+
+    always_comb begin
+        scan_in = 1;
+    end
+
    
 //    Scan output control using Scan protection
     always_ff @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
-            scan_out <= 1'b0;  
+            scan_out <= 1'b0; 
         end
         else begin
             if (scan_enable) begin
@@ -157,6 +164,9 @@ module mcse_top # (
                 else begin
                     scan_out <= 1'b0;  // stream garbage value 
                 end
+            end
+            else begin
+                scan_out <= 1'b0;
             end
         end
     end

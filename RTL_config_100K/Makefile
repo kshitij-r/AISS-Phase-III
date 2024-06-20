@@ -3,6 +3,8 @@ SRC_FILES := mcse_top.sv mcse_control_unit.sv secure_memory.sv secure_boot_contr
              gpio.v gpio_regmap.v oh_dsync.v io.v packet2emesh.v c1908.v primitives.v \
              puf.v bus_translation.sv data_worker.sv error_correction.v mcse_top_tb.sv lec25dscc25.v
 
+SRC_FILES_NETLIST := mcse_netlist.v mcse_top_netlist_tb.sv lec25dscc25.v
+
 
 FLAGS := -sverilog -suppress -R +vcs+vcdpluson
 
@@ -11,11 +13,13 @@ TCL_SCRIPT = compiledc.tcl
 MCSEtest: 
 	vcs $(SRC_FILES) $(FLAGS) 
 
-
 synthesis: clean 
 	dc_shell -f compiledc.tcl
 
-.PHONY: MCSEtest synthesis
+NETLISTtest:
+	vcs $(SRC_FILES_NETLIST) $(FLAGS)
+
+.PHONY: MCSEtest synthesis NETLISTtest
 
 .PHONY: clean
 clean: 

@@ -74,7 +74,6 @@ Compiling source file ./c1908.v
 Compiling source file ./secure_memory.sv
 Compiling source file ./mcse_top.sv
 Opening include file mcse_def.svh
-Warning:  ./mcse_top.sv:145: The construct 'declaration initial assignment' is not supported in synthesis; it is ignored. (VER-708)
 Compiling source file ./mcse_control_unit.sv
 Opening include file mcse_def.svh
 Compiling source file ./lifecycle_protection.sv
@@ -88,7 +87,6 @@ Opening include file mcse_def.svh
 Warning:  ./error_correction.v:25: Redefining macro 'IDLE' with value '32'd0' to '2'b00'. (VER-540)
 Warning:  ./error_correction.v:93: Overwriting existing design element 'error_module' with newer version. (VER-64)
 Compiling source file ./scan_protection.sv
-Opening include file mcse_def.svh
 Presto compilation completed successfully.
 Loading db file '/ecel/UFAD/tambiaratabassum/AISS_Phase_III_tambiara/RTL_config_100K/lec25dscc25.db'
 1
@@ -102,7 +100,7 @@ Loading db file '/apps/syn/synthesis/libraries/syn/standard.sldb'
 Running PRESTO HDLC
 
 Inferred memory devices in process
-	in routine mcse_top line 148 in file
+	in routine mcse_top line 155 in file
 		'./mcse_top.sv'.
 ===============================================================================
 |    Register Name    |   Type    | Width | Bus | MB | AR | AS | SR | SS | ST |
@@ -430,23 +428,23 @@ Presto compilation completed successfully. (secure_boot_control_gpio_N32_gpio_AW
 Information: Building the design 'vim_scan_control' instantiated from design 'mcse_control_unit_gpio_N32_gpio_AW32_gpio_PW104_scan_key_width64_scan_key_number8' with
 	the parameters "scan_key_width=64,scan_key_number=8". (HDL-193)
 
-Statistics for case statements in always block at line 34 in file
+Statistics for case statements in always block at line 37 in file
 	'./scan_protection.sv'
 ===============================================
 |           Line           |  full/ parallel  |
 ===============================================
-|            36            |    auto/auto     |
+|            40            |    auto/auto     |
 ===============================================
 
 Inferred memory devices in process
-	in routine vim_scan_control_scan_key_width64_scan_key_number8 line 16 in file
+	in routine vim_scan_control_scan_key_width64_scan_key_number8 line 19 in file
 		'./scan_protection.sv'.
-===============================================================================
-|    Register Name    |   Type    | Width | Bus | MB | AR | AS | SR | SS | ST |
-===============================================================================
-|   key_address_reg   | Flip-flop |   4   |  Y  | N  | Y  | N  | N  | N  | N  |
-|   scan_unlock_reg   | Flip-flop |   1   |  N  | N  | Y  | N  | N  | N  | N  |
-===============================================================================
+====================================================================================
+|      Register Name       |   Type    | Width | Bus | MB | AR | AS | SR | SS | ST |
+====================================================================================
+|     key_address_reg      | Flip-flop |   4   |  Y  | N  | Y  | N  | N  | N  | N  |
+| scan_unlock_internal_reg | Flip-flop |   1   |  N  | N  | Y  | N  | N  | N  | N  |
+====================================================================================
 Presto compilation completed successfully. (vim_scan_control_scan_key_width64_scan_key_number8)
 Information: Building the design 'sha256'. (HDL-193)
 Presto compilation completed successfully. (sha256)
@@ -7823,7 +7821,6 @@ Information: The register 'control_unit/mem/ram_reg[3][263]' is a constant and w
 Information: The register 'control_unit/mem/ram_reg[3][258]' is a constant and will be removed. (OPT-1206)
 Information: The register 'control_unit/mem/ram_reg[3][257]' is a constant and will be removed. (OPT-1206)
 Information: The register 'control_unit/mem/ram_reg[3][256]' is a constant and will be removed. (OPT-1206)
-Information: The register 'scan_out_reg' is a constant and will be removed. (OPT-1206)
 Information: In design 'mcse_top', the register 'control_unit/mem/ram_reg[4][511]' is removed because it is merged to 'control_unit/mem/ram_reg[4][259]'. (OPT-1215)
 Information: In design 'mcse_top', the register 'control_unit/mem/ram_reg[4][510]' is removed because it is merged to 'control_unit/mem/ram_reg[4][259]'. (OPT-1215)
 Information: In design 'mcse_top', the register 'control_unit/mem/ram_reg[4][508]' is removed because it is merged to 'control_unit/mem/ram_reg[4][259]'. (OPT-1215)
@@ -8684,9 +8681,9 @@ Information: The register 'control_unit/lc_protection/memory/rdData_reg[506]' is
   Updating timing information
 Information: Updating design information... (UID-85)
 Information: Timing loop detected. (OPT-150)
-	U19382/DIN U19382/Q min_sec/sha_control/sha_instance/U4198/DIN1 min_sec/sha_control/sha_instance/U4198/Q 
+	U19386/DIN U19386/Q min_sec/sha_control/sha_instance/U4198/DIN1 min_sec/sha_control/sha_instance/U4198/Q 
 Information: Timing loop detected. (OPT-150)
-	min_sec/sha_control/sha_instance/U1917/DIN1 min_sec/sha_control/sha_instance/U1917/Q U19381/DIN U19381/Q 
+	min_sec/sha_control/sha_instance/U1917/DIN1 min_sec/sha_control/sha_instance/U1917/Q U19385/DIN U19385/Q 
 Warning: Disabling timing arc between pins 'DIN1' and 'Q' on cell 'min_sec/sha_control/sha_instance/U4198'
          to break a timing loop. (OPT-314)
 Warning: Disabling timing arc between pins 'DIN1' and 'Q' on cell 'min_sec/sha_control/sha_instance/U1917'
@@ -9433,21 +9430,21 @@ Warning: Disabling timing arc between pins 'DIN4' and 'Q' on cell 'min_sec/sha_c
          to break a timing loop. (OPT-314)
 Warning: Disabling timing arc between pins 'DIN4' and 'Q' on cell 'min_sec/sha_control/sha_instance/U108'
          to break a timing loop. (OPT-314)
-Warning: Disabling timing arc between pins 'DIN4' and 'Q' on cell 'U26736'
-         to break a timing loop. (OPT-314)
-Warning: Disabling timing arc between pins 'DIN' and 'Q' on cell 'U26733'
-         to break a timing loop. (OPT-314)
 Warning: Disabling timing arc between pins 'DIN4' and 'Q' on cell 'U26740'
          to break a timing loop. (OPT-314)
-Warning: Disabling timing arc between pins 'DIN' and 'Q' on cell 'U26739'
+Warning: Disabling timing arc between pins 'DIN' and 'Q' on cell 'U26737'
          to break a timing loop. (OPT-314)
-Warning: Disabling timing arc between pins 'DIN1' and 'Q' on cell 'U26738'
+Warning: Disabling timing arc between pins 'DIN4' and 'Q' on cell 'U26744'
          to break a timing loop. (OPT-314)
-Warning: Disabling timing arc between pins 'DIN1' and 'Q' on cell 'U26730'
+Warning: Disabling timing arc between pins 'DIN' and 'Q' on cell 'U26743'
          to break a timing loop. (OPT-314)
-Warning: Disabling timing arc between pins 'DIN1' and 'Q' on cell 'U26729'
+Warning: Disabling timing arc between pins 'DIN1' and 'Q' on cell 'U26742'
          to break a timing loop. (OPT-314)
-Warning: Disabling timing arc between pins 'DIN1' and 'Q' on cell 'U26728'
+Warning: Disabling timing arc between pins 'DIN1' and 'Q' on cell 'U26734'
+         to break a timing loop. (OPT-314)
+Warning: Disabling timing arc between pins 'DIN1' and 'Q' on cell 'U26733'
+         to break a timing loop. (OPT-314)
+Warning: Disabling timing arc between pins 'DIN1' and 'Q' on cell 'U26732'
          to break a timing loop. (OPT-314)
 Warning: Disabling timing arc between pins 'DIN2' and 'Q' on cell 'min_sec/sha_control/sha_instance/U10359'
          to break a timing loop. (OPT-314)
@@ -9541,13 +9538,13 @@ Information: There is no timing violation in design mcse_top. Delay-based auto_u
    ELAPSED            WORST NEG   SETUP    DESIGN                              LEAKAGE 
     TIME      AREA      SLACK     COST    RULE COST         ENDPOINT            POWER  
   --------- --------- --------- --------- --------- ------------------------- ---------
-    0:02:25 3031380.3      0.00       0.0    4589.1                           2128768128.0000
-    0:02:27 3031164.6      0.00       0.0    4589.1                           2128768000.0000
+    0:02:25 3032806.9      0.00       0.0    4622.7                           1900160896.0000
+    0:02:27 3032724.0      0.00       0.0    4622.7                           1900160896.0000
 
   Beginning Constant Register Removal
   -----------------------------------
-    0:02:28 3104536.8      0.00       0.0    4584.5                           2128849152.0000
-    0:02:29 3104536.8      0.00       0.0    4584.5                           2128849152.0000
+    0:02:28 3106129.3      0.00       0.0    4622.7                           1900242048.0000
+    0:02:30 3106129.3      0.00       0.0    4622.7                           1900242048.0000
 
   Beginning Global Optimizations
   ------------------------------
@@ -9592,49 +9589,48 @@ Information: There is no timing violation in design mcse_top. Delay-based auto_u
 
   Beginning Delay Optimization
   ----------------------------
-    0:02:45 2778582.9      0.00       0.0    4344.9                           2171472896.0000
-    0:02:45 2778582.9      0.00       0.0    4344.9                           2171472896.0000
-    0:02:45 2778582.9      0.00       0.0    4344.9                           2171472896.0000
-    0:02:45 2778582.9      0.00       0.0    4344.9                           2171472896.0000
-    0:02:50 2773257.9      0.00       0.0    4337.0                           2084195584.0000
-    0:02:52 2773257.9      0.00       0.0    4337.0                           2084195584.0000
+    0:02:46 2720613.4      0.00       0.0    4757.0                           1899845376.0000
+    0:02:46 2720613.4      0.00       0.0    4757.0                           1899845376.0000
+    0:02:46 2720613.4      0.00       0.0    4757.0                           1899845376.0000
+    0:02:46 2720613.4      0.00       0.0    4757.0                           1899845376.0000
+    0:02:50 2715371.3      0.00       0.0    4747.9                           1830057344.0000
+    0:02:52 2715371.3      0.00       0.0    4747.9                           1830057344.0000
 
   Beginning WLM Backend Optimization
   --------------------------------------
-    0:03:02 2730508.7      0.00       0.0    4361.7                           2084135296.0000
-    0:03:06 2708628.1      0.00       0.0    4283.8                           2084113664.0000
+    0:03:02 2675259.7      0.00       0.0    4765.9                           1812556672.0000
 
   Beginning Delay Optimization HSVT Pass
   --------------------------------------
-    0:03:07 2704580.4      0.00       0.0    4272.8                           2084109440.0000
-    0:03:07 2704580.4      0.00       0.0    4272.8                           2084109440.0000
-    0:03:07 2704580.4      0.00       0.0    4272.8                           2084109440.0000
-    0:03:07 2704580.4      0.00       0.0    4272.8                           2084109440.0000
-    0:03:08 2704580.4      0.00       0.0    4272.8                           2084109440.0000
-    0:03:08 2704580.4      0.00       0.0    4272.8                           2084109440.0000
-    0:03:08 2704580.4      0.00       0.0    4272.8                           2084109440.0000
-    0:03:10 2704215.5      0.00       0.0    4295.6                           2084110720.0000
-    0:03:10 2704215.5      0.00       0.0    4295.6                           2084110720.0000
-    0:03:10 2704215.5      0.00       0.0    4295.6                           2084110720.0000
-    0:03:10 2704215.5      0.00       0.0    4295.6                           2084110720.0000
-    0:03:10 2704215.5      0.00       0.0    4295.6                           2084110720.0000
-    0:03:10 2704215.5      0.00       0.0    4295.6                           2084110720.0000
-    0:03:10 2704215.5      0.00       0.0    4295.6                           2084110720.0000
-    0:03:10 2704215.5      0.00       0.0    4295.6                           2084110720.0000
-    0:03:10 2704215.5      0.00       0.0    4295.6                           2084110720.0000
-    0:03:10 2704215.5      0.00       0.0    4295.6                           2084110720.0000
-    0:03:10 2704215.5      0.00       0.0    4295.6                           2084110720.0000
+    0:03:07 2654756.0      0.00       0.0    4662.4                           1812534912.0000
+    0:03:07 2654756.0      0.00       0.0    4662.4                           1812534912.0000
+    0:03:07 2654756.0      0.00       0.0    4662.4                           1812534912.0000
+    0:03:07 2654756.0      0.00       0.0    4662.4                           1812534912.0000
+    0:03:07 2654756.0      0.00       0.0    4662.4                           1812534912.0000
+    0:03:07 2654756.0      0.00       0.0    4662.4                           1812534912.0000
+    0:03:07 2654756.0      0.00       0.0    4662.4                           1812534912.0000
+    0:03:09 2648402.5      0.00       0.0    4699.7                           1812520192.0000
+    0:03:09 2648402.5      0.00       0.0    4699.7                           1812520192.0000
+    0:03:09 2648402.5      0.00       0.0    4699.7                           1812520192.0000
+    0:03:09 2648402.5      0.00       0.0    4699.7                           1812520192.0000
+    0:03:09 2648402.5      0.00       0.0    4699.7                           1812520192.0000
+    0:03:09 2648402.5      0.00       0.0    4699.7                           1812520192.0000
+    0:03:09 2648402.5      0.00       0.0    4699.7                           1812520192.0000
+    0:03:09 2648402.5      0.00       0.0    4699.7                           1812520192.0000
+    0:03:09 2648402.5      0.00       0.0    4699.7                           1812520192.0000
+    0:03:09 2648402.5      0.00       0.0    4699.7                           1812520192.0000
+    0:03:09 2648402.5      0.00       0.0    4699.7                           1812520192.0000
 
   Beginning Delay Optimization
   ----------------------------
-    0:03:10 2704215.5      0.00       0.0    4295.6                           2084110720.0000
-    0:03:10 2704215.5      0.00       0.0    4295.6                           2084110720.0000
-    0:03:10 2704215.5      0.00       0.0    4295.6                           2084110720.0000
-    0:03:10 2704215.5      0.00       0.0    4295.6                           2084110720.0000
-    0:03:10 2704215.5      0.00       0.0    4295.6                           2084110720.0000
-    0:03:10 2704215.5      0.00       0.0    4295.6                           2084110720.0000
-    0:03:10 2704215.5      0.00       0.0    4295.6                           2084110720.0000
-    0:03:10 2704215.5      0.00       0.0    4295.6                           2084110720.0000
+    0:03:09 2648402.5      0.00       0.0    4699.7                           1812520192.0000
+    0:03:09 2648402.5      0.00       0.0    4699.7                           1812520192.0000
+    0:03:09 2648402.5      0.00       0.0    4699.7                           1812520192.0000
+    0:03:09 2648402.5      0.00       0.0    4699.7                           1812520192.0000
+    0:03:09 2648402.5      0.00       0.0    4699.7                           1812520192.0000
+    0:03:09 2648402.5      0.00       0.0    4699.7                           1812520192.0000
+    0:03:09 2648402.5      0.00       0.0    4699.7                           1812520192.0000
+    0:03:09 2648402.5      0.00       0.0    4699.7                           1812520192.0000
 
 
   Beginning Design Rule Fixing  (max_transition)  (max_fanout)
@@ -9644,13 +9640,14 @@ Information: There is no timing violation in design mcse_top. Delay-based auto_u
    ELAPSED            WORST NEG   SETUP    DESIGN                              LEAKAGE 
     TIME      AREA      SLACK     COST    RULE COST         ENDPOINT            POWER  
   --------- --------- --------- --------- --------- ------------------------- ---------
-    0:03:10 2704215.5      0.00       0.0    4295.6                           2084110720.0000
+    0:03:09 2648402.5      0.00       0.0    4699.7                           1812520192.0000
   Global Optimization (Phase 34)
   Global Optimization (Phase 35)
   Global Optimization (Phase 36)
-    0:03:13 2729977.9      0.00       0.0       4.3 min_sec/camellia_control/camellia_instance/CTRL/reg_kr_s[111] 2084119680.0000
-    0:03:14 2730019.3      0.00       0.0       0.0                           2084119936.0000
-    0:03:14 2730019.3      0.00       0.0       0.0                           2084119936.0000
+    0:03:13 2675259.7      0.00       0.0      36.7 net101857                 1812529920.0000
+    0:03:14 2675392.4      0.00       0.0       5.3 net95701                  1812530176.0000
+    0:03:14 2675384.1      0.00       0.0       0.8                           1812530304.0000
+    0:03:14 2675384.1      0.00       0.0       0.8                           1812530304.0000
 
 
   Beginning Leakage Power Optimization  (max_leakage_power 0)
@@ -9660,7 +9657,7 @@ Information: There is no timing violation in design mcse_top. Delay-based auto_u
    ELAPSED            WORST NEG   SETUP    DESIGN                              LEAKAGE 
     TIME      AREA      SLACK     COST    RULE COST         ENDPOINT            POWER  
   --------- --------- --------- --------- --------- ------------------------- ---------
-    0:03:14 2730019.3      0.00       0.0       0.0                           2084119936.0000
+    0:03:14 2675384.1      0.00       0.0       0.8                           1812530304.0000
   Global Optimization (Phase 37)
   Global Optimization (Phase 38)
   Global Optimization (Phase 39)
@@ -9675,53 +9672,53 @@ Information: There is no timing violation in design mcse_top. Delay-based auto_u
   Global Optimization (Phase 48)
   Global Optimization (Phase 49)
   Global Optimization (Phase 50)
-    0:03:20 2766746.8      0.00       0.0       0.0                           2041141504.0000
-    0:03:20 2766746.8      0.00       0.0       0.0                           2041141504.0000
-    0:03:20 2766746.8      0.00       0.0       0.0                           2041141504.0000
-    0:03:22 2728551.2      0.00       0.0       4.4                           2041084288.0000
-    0:03:22 2728551.2      0.00       0.0       4.4                           2041084288.0000
-    0:03:22 2728551.2      0.00       0.0       4.4                           2041084288.0000
-    0:03:22 2728551.2      0.00       0.0       4.4                           2041084288.0000
-    0:03:22 2728551.2      0.00       0.0       4.4                           2041084288.0000
-    0:03:22 2728551.2      0.00       0.0       4.4                           2041084288.0000
-    0:03:22 2728551.2      0.00       0.0       4.4                           2041084288.0000
-    0:03:22 2728551.2      0.00       0.0       4.4                           2041084288.0000
-    0:03:22 2728551.2      0.00       0.0       4.4                           2041084288.0000
-    0:03:22 2728551.2      0.00       0.0       4.4                           2041084288.0000
-    0:03:22 2728551.2      0.00       0.0       4.4                           2041084288.0000
-    0:03:22 2728551.2      0.00       0.0       4.4                           2041084288.0000
-    0:03:22 2728551.2      0.00       0.0       4.4                           2041084288.0000
-    0:03:22 2728551.2      0.00       0.0       4.4                           2041084288.0000
-    0:03:22 2728551.2      0.00       0.0       4.4                           2041084288.0000
-    0:03:22 2728551.2      0.00       0.0       4.4                           2041084288.0000
-    0:03:22 2728551.2      0.00       0.0       4.4                           2041084288.0000
-    0:03:22 2728551.2      0.00       0.0       4.4                           2041084288.0000
-    0:03:22 2728551.2      0.00       0.0       4.4                           2041084288.0000
+    0:03:21 2710369.8      0.00       0.0       0.0                           1812603136.0000
+    0:03:21 2710369.8      0.00       0.0       0.0                           1812603136.0000
+    0:03:21 2710369.8      0.00       0.0       0.0                           1812603136.0000
+    0:03:23 2672024.9      0.00       0.0       7.5                           1812545664.0000
+    0:03:23 2672024.9      0.00       0.0       7.5                           1812545664.0000
+    0:03:23 2672024.9      0.00       0.0       7.5                           1812545664.0000
+    0:03:23 2672024.9      0.00       0.0       7.5                           1812545664.0000
+    0:03:23 2672024.9      0.00       0.0       7.5                           1812545664.0000
+    0:03:23 2672024.9      0.00       0.0       7.5                           1812545664.0000
+    0:03:23 2672024.9      0.00       0.0       7.5                           1812545664.0000
+    0:03:23 2672024.9      0.00       0.0       7.5                           1812545664.0000
+    0:03:23 2672024.9      0.00       0.0       7.5                           1812545664.0000
+    0:03:23 2672024.9      0.00       0.0       7.5                           1812545664.0000
+    0:03:23 2672024.9      0.00       0.0       7.5                           1812545664.0000
+    0:03:23 2672024.9      0.00       0.0       7.5                           1812545664.0000
+    0:03:23 2672024.9      0.00       0.0       7.5                           1812545664.0000
+    0:03:23 2672024.9      0.00       0.0       7.5                           1812545664.0000
+    0:03:23 2672024.9      0.00       0.0       7.5                           1812545664.0000
+    0:03:23 2672024.9      0.00       0.0       7.5                           1812545664.0000
+    0:03:23 2672024.9      0.00       0.0       7.5                           1812545664.0000
+    0:03:23 2672024.9      0.00       0.0       7.5                           1812545664.0000
+    0:03:23 2672024.9      0.00       0.0       7.5                           1812545664.0000
 
                                   TOTAL                                                
    ELAPSED            WORST NEG   SETUP    DESIGN                              LEAKAGE 
     TIME      AREA      SLACK     COST    RULE COST         ENDPOINT            POWER  
   --------- --------- --------- --------- --------- ------------------------- ---------
-    0:03:23 2728551.2      0.00       0.0       4.4                           2041084288.0000
-    0:03:26 2710643.6      0.00       0.0       4.4                           2041074048.0000
-    0:03:26 2710643.6      0.00       0.0       4.4                           2041074048.0000
-    0:03:26 2710643.6      0.00       0.0       4.4                           2041074048.0000
-    0:03:28 2710602.2      0.00       0.0       6.3                           2041073920.0000
+    0:03:24 2672024.9      0.00       0.0       7.5                           1812545664.0000
+    0:03:27 2653312.7      0.00       0.0       9.4                           1812535936.0000
+    0:03:27 2653312.7      0.00       0.0       9.4                           1812535936.0000
+    0:03:27 2653312.7      0.00       0.0       9.4                           1812535936.0000
+    0:03:28 2653229.8      0.00       0.0      14.0                           1812535808.0000
 
   Beginning Delay Optimization HSVT Pass
   --------------------------------------
-    0:03:28 2710602.2      0.00       0.0       6.3                           2041073920.0000
-    0:03:28 2710602.2      0.00       0.0       6.3                           2041073920.0000
-    0:03:28 2710602.2      0.00       0.0       6.3                           2041073920.0000
-    0:03:28 2710602.2      0.00       0.0       6.3                           2041073920.0000
-    0:03:33 2694444.7      0.00       0.0       5.0                           2041070080.0000
-    0:03:34 2694220.7      0.00       0.0       0.0                           2041070336.0000
-    0:03:34 2694220.7      0.00       0.0       0.0                           2041070336.0000
-    0:03:34 2694220.7      0.00       0.0       0.0                           2041070336.0000
-    0:03:34 2694220.7      0.00       0.0       0.0                           2041070336.0000
-    0:03:34 2694220.7      0.00       0.0       0.0                           2041070336.0000
-    0:03:34 2694220.7      0.00       0.0       0.0                           2041070336.0000
-    0:03:35 2694046.5      0.00       0.0       0.0                           2041069952.0000
+    0:03:29 2653229.8      0.00       0.0      14.0                           1812535808.0000
+    0:03:29 2653229.8      0.00       0.0      14.0                           1812535808.0000
+    0:03:29 2653229.8      0.00       0.0      14.0                           1812535808.0000
+    0:03:29 2653229.8      0.00       0.0      14.0                           1812535808.0000
+    0:03:34 2635023.6      0.00       0.0      13.0                           1812531840.0000
+    0:03:35 2635347.1      0.00       0.0       0.0                           1812532096.0000
+    0:03:35 2635347.1      0.00       0.0       0.0                           1812532096.0000
+    0:03:35 2635347.1      0.00       0.0       0.0                           1812532096.0000
+    0:03:35 2635347.1      0.00       0.0       0.0                           1812532096.0000
+    0:03:35 2635347.1      0.00       0.0       0.0                           1812532096.0000
+    0:03:35 2635347.1      0.00       0.0       0.0                           1812532096.0000
+    0:03:36 2635230.9      0.00       0.0       0.0                           1812531968.0000
 Loading db file '/ecel/UFAD/tambiaratabassum/AISS_Phase_III_tambiara/RTL_config_100K/lec25dscc25.db'
 
 
@@ -9731,9 +9728,9 @@ Note: Symbol # after min delay cost means estimated hold TNS across all active s
   Optimization Complete
   ---------------------
 Warning: Design 'mcse_top' contains 3 high-fanout nets. A fanout number of 1000 will be used for delay calculations involving these nets. (TIM-134)
-     Net 'clk': 8066 load(s), 1 driver(s)
-     Net 'rst_n': 3929 load(s), 1 driver(s)
-     Net 'init_config_n': 2285 load(s), 1 driver(s)
+     Net 'clk': 8067 load(s), 1 driver(s)
+     Net 'rst_n': 3907 load(s), 1 driver(s)
+     Net 'init_config_n': 2283 load(s), 1 driver(s)
 Information: State dependent leakage is now switched from off to on.
 Information: Propagating switching activity (low effort zero delay simulation). (PWR-6)
 Warning: There is no defined clock in the design. (PWR-80)
@@ -9745,15 +9742,15 @@ report_area
 Report : area
 Design : mcse_top
 Version: T-2022.03-SP5
-Date   : Sun Jun  9 22:41:36 2024
+Date   : Wed Jun 19 22:06:00 2024
 ****************************************
 
 Information: Updating design information... (UID-85)
 Warning: Design 'mcse_top' contains 3 high-fanout nets. A fanout number of 1000 will be used for delay calculations involving these nets. (TIM-134)
 Information: Timing loop detected. (OPT-150)
-	U28222/DIN U28222/Q min_sec/sha_control/sha_instance/U4198/DIN1 min_sec/sha_control/sha_instance/U4198/Q 
+	U28312/DIN U28312/Q min_sec/sha_control/sha_instance/U4198/DIN1 min_sec/sha_control/sha_instance/U4198/Q 
 Information: Timing loop detected. (OPT-150)
-	min_sec/sha_control/sha_instance/U1917/DIN1 min_sec/sha_control/sha_instance/U1917/Q U35087/DIN U35087/Q 
+	min_sec/sha_control/sha_instance/U1917/DIN1 min_sec/sha_control/sha_instance/U1917/Q U35097/DIN U35097/Q 
 Warning: Disabling timing arc between pins 'DIN1' and 'Q' on cell 'min_sec/sha_control/sha_instance/U4198'
          to break a timing loop. (OPT-314)
 Warning: Disabling timing arc between pins 'DIN1' and 'Q' on cell 'min_sec/sha_control/sha_instance/U1917'
@@ -10014,6 +10011,8 @@ Warning: Disabling timing arc between pins 'DIN3' and 'Q' on cell 'min_sec/sha_c
          to break a timing loop. (OPT-314)
 Warning: Disabling timing arc between pins 'DIN3' and 'Q' on cell 'min_sec/sha_control/sha_instance/U3665'
          to break a timing loop. (OPT-314)
+Warning: Disabling timing arc between pins 'DIN2' and 'Q' on cell 'min_sec/sha_control/sha_instance/U10694'
+         to break a timing loop. (OPT-314)
 Warning: Disabling timing arc between pins 'DIN1' and 'Q' on cell 'min_sec/sha_control/sha_instance/U10691'
          to break a timing loop. (OPT-314)
 Warning: Disabling timing arc between pins 'DIN3' and 'Q' on cell 'min_sec/sha_control/sha_instance/U2420'
@@ -10021,8 +10020,6 @@ Warning: Disabling timing arc between pins 'DIN3' and 'Q' on cell 'min_sec/sha_c
 Warning: Disabling timing arc between pins 'DIN3' and 'Q' on cell 'min_sec/sha_control/sha_instance/U2420'
          to break a timing loop. (OPT-314)
 Warning: Disabling timing arc between pins 'DIN3' and 'Q' on cell 'min_sec/sha_control/sha_instance/U2420'
-         to break a timing loop. (OPT-314)
-Warning: Disabling timing arc between pins 'DIN2' and 'Q' on cell 'min_sec/sha_control/sha_instance/U10694'
          to break a timing loop. (OPT-314)
 Warning: Disabling timing arc between pins 'DIN2' and 'Q' on cell 'min_sec/sha_control/sha_instance/U6093'
          to break a timing loop. (OPT-314)
@@ -10214,9 +10211,9 @@ Warning: Disabling timing arc between pins 'DIN2' and 'Q' on cell 'min_sec/sha_c
          to break a timing loop. (OPT-314)
 Warning: Disabling timing arc between pins 'DIN2' and 'Q' on cell 'min_sec/sha_control/sha_instance/U10296'
          to break a timing loop. (OPT-314)
-Warning: Disabling timing arc between pins 'DIN2' and 'Q' on cell 'min_sec/sha_control/sha_instance/U10331'
-         to break a timing loop. (OPT-314)
 Warning: Disabling timing arc between pins 'DIN' and 'Q' on cell 'min_sec/sha_control/sha_instance/U208'
+         to break a timing loop. (OPT-314)
+Warning: Disabling timing arc between pins 'DIN2' and 'Q' on cell 'min_sec/sha_control/sha_instance/U10331'
          to break a timing loop. (OPT-314)
 Warning: Disabling timing arc between pins 'DIN1' and 'Q' on cell 'min_sec/sha_control/sha_instance/U8580'
          to break a timing loop. (OPT-314)
@@ -10498,21 +10495,21 @@ Warning: Disabling timing arc between pins 'DIN3' and 'Q' on cell 'min_sec/sha_c
          to break a timing loop. (OPT-314)
 Warning: Disabling timing arc between pins 'DIN3' and 'Q' on cell 'min_sec/sha_control/sha_instance/U1398'
          to break a timing loop. (OPT-314)
-Warning: Disabling timing arc between pins 'DIN1' and 'Q' on cell 'U26728'
+Warning: Disabling timing arc between pins 'DIN1' and 'Q' on cell 'U26732'
          to break a timing loop. (OPT-314)
-Warning: Disabling timing arc between pins 'DIN1' and 'Q' on cell 'U26738'
+Warning: Disabling timing arc between pins 'DIN1' and 'Q' on cell 'U26742'
+         to break a timing loop. (OPT-314)
+Warning: Disabling timing arc between pins 'DIN4' and 'Q' on cell 'U26744'
+         to break a timing loop. (OPT-314)
+Warning: Disabling timing arc between pins 'DIN' and 'Q' on cell 'U26743'
+         to break a timing loop. (OPT-314)
+Warning: Disabling timing arc between pins 'DIN1' and 'Q' on cell 'U26734'
+         to break a timing loop. (OPT-314)
+Warning: Disabling timing arc between pins 'DIN1' and 'Q' on cell 'U26733'
          to break a timing loop. (OPT-314)
 Warning: Disabling timing arc between pins 'DIN4' and 'Q' on cell 'U26740'
          to break a timing loop. (OPT-314)
-Warning: Disabling timing arc between pins 'DIN' and 'Q' on cell 'U26739'
-         to break a timing loop. (OPT-314)
-Warning: Disabling timing arc between pins 'DIN1' and 'Q' on cell 'U26730'
-         to break a timing loop. (OPT-314)
-Warning: Disabling timing arc between pins 'DIN1' and 'Q' on cell 'U26729'
-         to break a timing loop. (OPT-314)
-Warning: Disabling timing arc between pins 'DIN4' and 'Q' on cell 'U26736'
-         to break a timing loop. (OPT-314)
-Warning: Disabling timing arc between pins 'DIN' and 'Q' on cell 'U26733'
+Warning: Disabling timing arc between pins 'DIN' and 'Q' on cell 'U26737'
          to break a timing loop. (OPT-314)
 Warning: Disabling timing arc between pins 'DIN2' and 'Q' on cell 'min_sec/sha_control/sha_instance/U10359'
          to break a timing loop. (OPT-314)
@@ -10549,21 +10546,21 @@ Library(s) Used:
     lec25dscc25_TT (File: /ecel/UFAD/tambiaratabassum/AISS_Phase_III_tambiara/RTL_config_100K/lec25dscc25.db)
 
 Number of ports:                         1275
-Number of nets:                         36323
-Number of cells:                        32309
-Number of combinational cells:          24240
-Number of sequential cells:              8067
+Number of nets:                         36046
+Number of cells:                        30487
+Number of combinational cells:          22417
+Number of sequential cells:              8068
 Number of macros/black boxes:               0
-Number of buf/inv:                       5322
-Number of references:                      82
+Number of buf/inv:                       3427
+Number of references:                      83
 
-Combinational area:            1350535.680080
-Buf/Inv area:                   177815.351677
-Noncombinational area:         1343510.853409
+Combinational area:            1291620.552273
+Buf/Inv area:                   115366.812412
+Noncombinational area:         1343610.387375
 Macro/Black Box area:                0.000000
 Net Interconnect area:      undefined  (No wire load specified)
 
-Total cell area:               2694046.533489
+Total cell area:               2635230.939648
 Total area:                 undefined
 1
 report_hierarchy
@@ -10572,7 +10569,7 @@ report_hierarchy
 Report : hierarchy
 Design : mcse_top
 Version: T-2022.03-SP5
-Date   : Sun Jun  9 22:41:38 2024
+Date   : Wed Jun 19 22:06:01 2024
 ****************************************
 
 Attributes:
@@ -10581,21 +10578,21 @@ Attributes:
 mcse_top           r
     IO
     and2s1             lec25dscc25_TT
-    and2s2             lec25dscc25_TT
     and3s1             lec25dscc25_TT
+    and3s2             lec25dscc25_TT
     and4s1             lec25dscc25_TT
     aoai122s2          lec25dscc25_TT
     aoai1112s1         lec25dscc25_TT
     aoi13s1            lec25dscc25_TT
+    aoi13s3            lec25dscc25_TT
     aoi21s1            lec25dscc25_TT
     aoi22s1            lec25dscc25_TT
     aoi22s2            lec25dscc25_TT
     aoi22s3            lec25dscc25_TT
     aoi23s1            lec25dscc25_TT
-    aoi33s1            lec25dscc25_TT
-    aoi42s1            lec25dscc25_TT
     aoi123s1           lec25dscc25_TT
     aoi211s1           lec25dscc25_TT
+    aoi211s2           lec25dscc25_TT
     aoi221s1           lec25dscc25_TT
     aoi222s1           lec25dscc25_TT
     dffacles1          lec25dscc25_TT
@@ -10613,7 +10610,6 @@ mcse_top           r
     i1s1               lec25dscc25_TT
     i1s2               lec25dscc25_TT
     i1s3               lec25dscc25_TT
-    i1s4               lec25dscc25_TT
     ib1s1              lec25dscc25_TT
     ib1s2              lec25dscc25_TT
     mx21s1             lec25dscc25_TT
@@ -10628,9 +10624,11 @@ mcse_top           r
     nnd2s2             lec25dscc25_TT
     nnd2s3             lec25dscc25_TT
     nnd3s1             lec25dscc25_TT
+    nnd3s2             lec25dscc25_TT
     nnd4s1             lec25dscc25_TT
     nor2s1             lec25dscc25_TT
     nor2s2             lec25dscc25_TT
+    nor2s3             lec25dscc25_TT
     nor3s1             lec25dscc25_TT
     nor4s1             lec25dscc25_TT
     nor6s1             lec25dscc25_TT
@@ -10641,10 +10639,9 @@ mcse_top           r
     oai22s2            lec25dscc25_TT
     oai24s3            lec25dscc25_TT
     oai211s1           lec25dscc25_TT
-    oai211s3           lec25dscc25_TT
+    oai211s2           lec25dscc25_TT
     oai221s1           lec25dscc25_TT
     oai221s2           lec25dscc25_TT
-    oai221s3           lec25dscc25_TT
     oai222s1           lec25dscc25_TT
     oai321s1           lec25dscc25_TT
     oai322s2           lec25dscc25_TT
@@ -10656,6 +10653,7 @@ mcse_top           r
     or3s1              lec25dscc25_TT
     or3s2              lec25dscc25_TT
     or4s1              lec25dscc25_TT
+    or4s3              lec25dscc25_TT
     xnr2s1             lec25dscc25_TT
     xnr2s2             lec25dscc25_TT
     xor2s1             lec25dscc25_TT
@@ -10668,7 +10666,7 @@ report_reference
 Report : reference
 Design : mcse_top
 Version: T-2022.03-SP5
-Date   : Sun Jun  9 22:41:38 2024
+Date   : Wed Jun 19 22:06:01 2024
 ****************************************
 
 Attributes:
@@ -10686,47 +10684,47 @@ Reference          Library       Unit Area   Count    Total Area   Attributes
 -----------------------------------------------------------------------------
 IO                                0.000000       1      0.000000  b
 and2s1             lec25dscc25_TT
-                                 49.766399      58   2886.451164  
-and2s2             lec25dscc25_TT
-                                 58.060799       2    116.121597  
+                                 49.766399      72   3583.180756  
 and3s1             lec25dscc25_TT
-                                 66.355202       7    464.486412  
+                                 66.355202       6    398.131210  
+and3s2             lec25dscc25_TT
+                                 99.532799       1     99.532799  
 and4s1             lec25dscc25_TT
-                                 74.649597      18   1343.692749  
+                                 74.649597       5    373.247986  
 aoai122s2          lec25dscc25_TT
-                                 74.649597      26   1940.889526  
+                                 74.649597      20   1492.991943  
 aoai1112s1         lec25dscc25_TT
-                                 66.355202      15    995.328026  
+                                 66.355202      16   1061.683228  
 aoi13s1            lec25dscc25_TT
-                                 58.060799      45   2612.735939  
+                                 58.060799      58   3367.526321  
+aoi13s3            lec25dscc25_TT
+                                 91.238403       1     91.238403  
 aoi21s1            lec25dscc25_TT
-                                 49.766399     405  20155.391750  
+                                 49.766399     387  19259.596561  
 aoi22s1            lec25dscc25_TT
                                  58.060799      11    638.668785  
 aoi22s2            lec25dscc25_TT
-                                 58.060799    2527  146719.638176 
+                                 58.060799    4346  252332.230911 
 aoi22s3            lec25dscc25_TT
                                  82.944000       1     82.944000  
 aoi23s1            lec25dscc25_TT
-                                 66.355202       7    464.486412  
-aoi33s1            lec25dscc25_TT
-                                 74.649597       1     74.649597  
-aoi42s1            lec25dscc25_TT
-                                 74.649597       1     74.649597  
+                                 66.355202       6    398.131210  
 aoi123s1           lec25dscc25_TT
-                                 82.944000      71   5889.024017  
+                                 82.944000      56   4644.864014  
 aoi211s1           lec25dscc25_TT
-                                 58.060799     834  48422.706070  
+                                 58.060799     840  48771.070862  
+aoi211s2           lec25dscc25_TT
+                                 99.532799       1     99.532799  
 aoi221s1           lec25dscc25_TT
-                                 74.649597     451  33666.968323  
+                                 74.649597     479  35757.157043  
 aoi222s1           lec25dscc25_TT
-                                 82.944000     687  56982.528168  
+                                 82.944000     694  57563.136169  
 dffacles1          lec25dscc25_TT
                                 165.888000     451  74815.488220  n
 dffacs1            lec25dscc25_TT
-                                165.888000    5009  830932.994446 n
+                                165.888000    5012  831430.658447 n
 dffacs2            lec25dscc25_TT
-                                182.477005       8   1459.816040  n
+                                182.477005       6   1094.862030  n
 dffasles1          lec25dscc25_TT
                                 190.770996     140  26707.939453  n
 dffass1            lec25dscc25_TT
@@ -10736,27 +10734,25 @@ dffcs1             lec25dscc25_TT
 dffles1            lec25dscc25_TT
                                 199.065994       1    199.065994  n
 dffs1              lec25dscc25_TT
-                                157.593994    1773  279414.151611 n
+                                157.593994    1775  279729.339600 n
 dffs2              lec25dscc25_TT
-                                174.182007      29   5051.278198  n
+                                174.182007      27   4702.914185  n
 dsmxc31s2          lec25dscc25_TT
-                                 74.649597      24   1791.590332  
+                                 74.649597      25   1866.239929  
 fadd1s1            lec25dscc25_TT
-                                165.888000     451  74815.488220  r
+                                165.888000     449  74483.712219  r
 hi1s1              lec25dscc25_TT
-                                 33.177601    4948  164162.769058 
+                                 33.177601    2927  97110.837719  
 i1s1               lec25dscc25_TT
-                                 33.177601      60   1990.656052  
+                                 33.177601      79   2621.030468  
 i1s2               lec25dscc25_TT
-                                 41.472000      76   3151.872009  
+                                 41.472000     105   4354.560013  
 i1s3               lec25dscc25_TT
-                                 41.472000       9    373.248001  
-i1s4               lec25dscc25_TT
-                                 49.766399       1     49.766399  
+                                 41.472000       6    248.832001  
 ib1s1              lec25dscc25_TT
-                                 33.177601     174   5772.902550  
+                                 33.177601     230   7630.848198  
 ib1s2              lec25dscc25_TT
-                                 41.472000      49   2032.128006  
+                                 41.472000      76   3151.872009  
 mx21s1             lec25dscc25_TT
                                  82.944000      94   7796.736023  
 mx21s2             lec25dscc25_TT
@@ -10764,100 +10760,104 @@ mx21s2             lec25dscc25_TT
 mx41s1             lec25dscc25_TT
                                 132.710007       1    132.710007  
 mxi21s1            lec25dscc25_TT
-                                 66.355202     331  21963.571770  
+                                 66.355202     334  22162.637375  
 mxi21s2            lec25dscc25_TT
                                  66.355202       6    398.131210  
 mxi41s1            lec25dscc25_TT
-                                116.122002     217  25198.474358  
+                                116.122002     214  24850.108353  
 nb1s2              lec25dscc25_TT
-                                 49.766399       3    149.299198  
+                                 49.766399       1     49.766399  
 nb1s3              lec25dscc25_TT
-                                 66.355202       2    132.710403  
+                                 66.355202       3    199.065605  
 nnd2s1             lec25dscc25_TT
-                                 41.472000    1494  61959.168182  
+                                 41.472000    1498  62125.056183  
 nnd2s2             lec25dscc25_TT
-                                 41.472000       8    331.776001  
+                                 41.472000       7    290.304001  
 nnd2s3             lec25dscc25_TT
-                                 58.060799       7    406.425591  
+                                 58.060799       4    232.243195  
 nnd3s1             lec25dscc25_TT
-                                 49.766399     153   7614.259106  
+                                 49.766399     165   8211.455898  
+nnd3s2             lec25dscc25_TT
+                                 49.766399       1     49.766399  
 nnd4s1             lec25dscc25_TT
                                  58.060799     720  41803.775024  
 nor2s1             lec25dscc25_TT
-                                 41.472000     953  39522.816116  
+                                 41.472000     960  39813.120117  
 nor2s2             lec25dscc25_TT
-                                 58.060799       9    522.547188  
+                                 58.060799      11    638.668785  
+nor2s3             lec25dscc25_TT
+                                 74.649597       3    223.948792  
 nor3s1             lec25dscc25_TT
-                                 82.944000       5    414.720001  
+                                 82.944000       2    165.888000  
 nor4s1             lec25dscc25_TT
-                                 82.944000      17   1410.048004  
+                                 82.944000      29   2405.376007  
 nor6s1             lec25dscc25_TT
-                                107.827003     102  10998.354355  
+                                107.827003     113  12184.451393  
 oai13s2            lec25dscc25_TT
-                                 58.060799     147   8534.937401  
+                                 58.060799     159   9231.666985  
 oai21s1            lec25dscc25_TT
-                                 49.766399     861  42848.869869  
+                                 49.766399     900  44789.759445  
 oai21s2            lec25dscc25_TT
-                                 49.766399       4    199.065598  
+                                 49.766399       2     99.532799  
 oai22s1            lec25dscc25_TT
-                                 58.060799    5938  344765.022354 
+                                 58.060799    4098  237933.152847 
 oai22s2            lec25dscc25_TT
                                  58.060799     100   5806.079865  
 oai24s3            lec25dscc25_TT
                                 165.888000       2    331.776001  
 oai211s1           lec25dscc25_TT
-                                 58.060799     842  48887.192459  
-oai211s3           lec25dscc25_TT
-                                 91.238403       1     91.238403  
+                                 58.060799     859  49874.226036  
+oai211s2           lec25dscc25_TT
+                                 58.060799       1     58.060799  
 oai221s1           lec25dscc25_TT
-                                 74.649597     294  21946.981567  
+                                 74.649597     253  18886.348083  
 oai221s2           lec25dscc25_TT
-                                 74.649597      18   1343.692749  
-oai221s3           lec25dscc25_TT
-                                107.827003       1    107.827003  
+                                 74.649597      17   1269.043152  
 oai222s1           lec25dscc25_TT
-                                 82.944000     153  12690.432037  
+                                 82.944000     145  12026.880035  
 oai321s1           lec25dscc25_TT
-                                 82.944000     103   8543.232025  
+                                 82.944000      93   7713.792023  
 oai322s2           lec25dscc25_TT
-                                116.122002       1    116.122002  
+                                116.122002       2    232.244003  
 oai322s3           lec25dscc25_TT
                                 124.416000       1    124.416000  
 oai2222s1          lec25dscc25_TT
                                 132.710007     138  18313.980927  
 or2s1              lec25dscc25_TT
-                                 49.766399     220  10948.607864  
+                                 49.766399     235  11695.103855  
 or2s2              lec25dscc25_TT
-                                 58.060799       5    290.303993  
+                                 58.060799      12    696.729584  
 or2s3              lec25dscc25_TT
-                                 91.238403       1     91.238403  
+                                 91.238403       3    273.715210  
 or3s1              lec25dscc25_TT
-                                 58.060799      81   4702.924690  
+                                 58.060799      71   4122.316704  
 or3s2              lec25dscc25_TT
-                                107.827003       1    107.827003  
+                                107.827003       2    215.654007  
 or4s1              lec25dscc25_TT
-                                 82.944000      19   1575.936005  
+                                 82.944000      17   1410.048004  
+or4s3              lec25dscc25_TT
+                                132.710007       1    132.710007  
 xnr2s1             lec25dscc25_TT
-                                 82.944000     110   9123.840027  
+                                 82.944000     106   8792.064026  
 xnr2s2             lec25dscc25_TT
                                  99.532799       1     99.532799  
 xor2s1             lec25dscc25_TT
-                                 82.944000      59   4893.696014  
+                                 82.944000      68   5640.192017  
 xor2s2             lec25dscc25_TT
-                                 99.532799      47   4678.041542  
+                                 99.532799      56   5573.836731  
 xor2s3             lec25dscc25_TT
-                                116.122002       1    116.122002  
+                                116.122002       2    232.244003  
 -----------------------------------------------------------------------------
-Total 82 references                                 2694046.533489
+Total 83 references                                 2635230.939648
 1
 write -format verilog -hierarchy -output mcse_netlist.v mcse_top
 Writing verilog file '/ecel/UFAD/tambiaratabassum/AISS_Phase_III_tambiara/RTL_config_100K/mcse_netlist.v'.
 Warning: Verilog 'assign' or 'tran' statements are written out. (VO-4)
 1
 quit
-Memory usage for this session 428 Mbytes.
+Memory usage for this session 427 Mbytes.
 Memory usage for this session including child processes 610 Mbytes.
-CPU usage for this session 236 seconds ( 0.07 hours ).
+CPU usage for this session 237 seconds ( 0.07 hours ).
 Elapsed time for this session 246 seconds ( 0.07 hours ).
 
 Thank you...

@@ -9,26 +9,30 @@ module vim_scan_control#(
     output logic                            scan_unlock
 );
 
-reg [$clog2(scan_key_number):0] key_address;
-reg [scan_key_width-1:0] scan_protection_key;
+logic [$clog2(scan_key_number):0] key_address;
+logic [scan_key_width-1:0] scan_protection_key;
+
+
+(* keep = "true" *) logic scan_unlock_internal;
+
 
 always@(posedge clk, negedge rst_n) begin
     if(~rst_n) begin
-        scan_unlock <= 0 ;
+        scan_unlock_internal <= 0 ;
         key_address <= 0;
     end else begin
-        if(scan_unlock == 0) begin
+        if(scan_unlock_internal == 0) begin
             if(scan_key == scan_protection_key) begin
                 key_address <= key_address + 1;
-                // $displayh("scan protection key =", scan_protection_key);
             end
             if(key_address == scan_key_number) begin
-                scan_unlock <= 1;
+                scan_unlock_internal <= 1;
             end
         end 
     end
 end
 
+assign scan_unlock = scan_unlock_internal;
 
 always@(*) begin
     scan_protection_key = 'hEF012345;
@@ -64,6 +68,9 @@ always@(*) begin
         
         7: begin
             scan_protection_key = 'h87A5E932;
+        end
+        default: begin
+            scan_protection_key = 'hEF012345;
         end
         
     endcase

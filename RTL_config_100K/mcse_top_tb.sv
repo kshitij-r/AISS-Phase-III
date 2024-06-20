@@ -426,12 +426,16 @@ module mcse_top_tb;
         end
 
          @(posedge clk);
+         $display("[MCSE] Scan unlock status: %x",scan_unlock);
+
         
         // Enable scan for few clock cycles and stream scan_out
         $display("[TB_TOP] Enabling scan chain for few clock cycles to stream scan out");
         for (int i = 0; i < 5; i++) begin
             scan_enable = 1;
             if (scan_unlock == 1) begin
+                @(posedge clk);
+                @(posedge clk);
                 $display("[MCSE] Scan unlock successful");
                 $display("[MCSE] Scan unlock status: %x",scan_unlock);
                 $displayh("[TB_TOP] Extracting Scan Out = ", scan_out);
@@ -462,7 +466,7 @@ module mcse_top_tb;
             I_hreadyout = 1;
             @(posedge clk);
         end 
-
+ 
 
         key_temp = 512'h87A5E932FA1BC49DFF8A0B2C3D4E5F607891ABCDEF0123456789ABCDEF012345; // input challenge key for vimscan
 
@@ -470,6 +474,9 @@ module mcse_top_tb;
         $display("[TB_TOP] Deasserting global reset and initial MCSE configuration");
         rst_n = 1;
         init_config_n = 1;
+
+        $dumpfile("tb.vcd");
+        $dumpvars(0, mcse_top_tb);
 
         @(posedge clk);
         @(posedge clk); 
