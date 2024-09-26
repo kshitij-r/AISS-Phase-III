@@ -1,8 +1,9 @@
 // scan protection key = 256'h87A5E932FA1BC49DFF8A0B2C3D4E5F607891ABCDEF0123456789ABCDEF012345;
+`include "mcse_def.svh"
 
 module vim_scan_control#(    
-    parameter scan_key_width = 32,
-    parameter scan_key_number = 8
+    parameter scan_key_width = `SCAN_KEY_WIDTH,
+    parameter scan_key_number = `SCAN_KEY_NUMBER
 )(
     input  logic                             clk, 
     input  logic                             rst_n,
@@ -13,23 +14,26 @@ module vim_scan_control#(
 reg [$clog2(scan_key_number):0] key_address;
 reg [scan_key_width-1:0] scan_protection_key;
 
+(* keep = "true" *) logic scan_unlock_internal;
+
 always@(posedge clk, negedge rst_n) begin
     if(~rst_n) begin
-        scan_unlock <= 0 ;
+        scan_unlock_internal <= 0 ;
         key_address <= 0;
     end else begin
-        if(scan_unlock == 0) begin
+        if(scan_unlock_internal == 0) begin
             if(scan_key == scan_protection_key) begin
                 key_address <= key_address + 1;
                 // $displayh("scan protection key =", scan_protection_key);
             end
             if(key_address == scan_key_number) begin
-                scan_unlock <= 1;
+                scan_unlock_internal <= 1;
             end
         end 
     end
 end
 
+assign scan_unlock = scan_unlock_internal;
 
 always@(*) begin
     scan_protection_key = 'hEF012345;

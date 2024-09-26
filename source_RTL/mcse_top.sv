@@ -1,4 +1,3 @@
-`define         AHB_DATA_WIDTH_BITS                 32
 `include "mcse_def.svh"
 
 module mcse_top # (
@@ -9,11 +8,11 @@ module mcse_top # (
     parameter gpio_AW            = 32,
     parameter gpio_PW            = 2*gpio_AW+40,
     parameter ipid_N             = `IPID_N,
-    parameter ipid_width         = 256,
+    parameter ipid_width         = `IPID_WIDTH,
     parameter fw_image_N         = `FW_N,
-    parameter fw_block_width     = 256,
-    parameter scan_key_width     = 32,
-    parameter scan_key_number    = 8,
+    parameter fw_block_width     = `FW_WIDTH,
+    parameter scan_key_width     = `SCAN_KEY_WIDTH,
+    parameter scan_key_number    = `SCAN_KEY_NUMBER,
     parameter pAHB_DATA_WIDTH    = `AHB_DATA_WIDTH_BITS,
     parameter pAHB_HRESP_WIDTH   = 2,
     parameter pAHB_ADDR_WIDTH    = 32,
@@ -160,7 +159,12 @@ module mcse_top # (
     .pPAYLOAD_SIZE_BITS(pPAYLOAD_SIZE_BITS), .fw_image_N(fw_image_N), .fw_block_width(fw_block_width), .scan_key_width(scan_key_width), .scan_key_number(scan_key_number))
     control_unit (.*);
 
-    logic scan_in = 1; // scan_in will be driven from scan chain original data
+    logic scan_in; // scan_in will be driven from scan chain original data
+    
+
+    always_comb begin
+        scan_in = 1;
+    end
    
 //    Scan output control using Scan protection
     always_ff @(posedge clk or negedge rst_n) begin

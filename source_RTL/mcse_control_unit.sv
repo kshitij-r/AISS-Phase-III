@@ -8,11 +8,11 @@ module mcse_control_unit #(
     parameter gpio_AW               = 32,
     parameter gpio_PW               = 2*gpio_AW+40,
     parameter ipid_N                = `IPID_N,
-    parameter ipid_width            = 256,
+    parameter ipid_width            = `IPID_WIDTH,
     parameter fw_image_N            = `FW_N,
-    parameter fw_block_width        = 256,
-    parameter scan_key_width        = 32,
-    parameter scan_key_number       = 8,
+    parameter fw_block_width        = `FW_WIDTH,
+    parameter scan_key_width        = `SCAN_KEY_WIDTH,
+    parameter scan_key_number       = `SCAN_KEY_NUMBER,
     parameter pAHB_ADDR_WIDTH       = 32,
     parameter pPAYLOAD_SIZE_BITS    = 128
 
@@ -108,8 +108,8 @@ module mcse_control_unit #(
 
 );
 
-    localparam memory_width = 256;
-    localparam memory_length = 16;
+    localparam memory_width = `SECURE_MEMORY_WIDTH;
+    localparam memory_length = `SECURE_MEMORY_LENGTH;
 
     wire lc_transition_request;
     wire [255:0] lc_identifier;

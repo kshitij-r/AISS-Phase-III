@@ -1,7 +1,8 @@
-//TODO Buffer/Fifo
+`include "mcse_def.svh"
+
 module secure_memory #(
-    parameter WIDTH = 256,
-    parameter LENGTH = 16
+    parameter WIDTH = `SECURE_MEMORY_WIDTH,
+    parameter LENGTH = `SECURE_MEMORY_LENGTH
 )
 (
     input  logic                      clk,
@@ -24,14 +25,15 @@ always @(posedge clk, negedge rst_n) begin
 	if (~rst_n) begin
 		rdData <= 0;
 
-		//ram[0] <= 0;
-		//ram[1] <= 0; 
-		ram[2] <= 256'h49361d1ee0abd2c572b0edf565a9984c3ed4923ab2f88cd6b0eaa30d0c13ef1b; // secure communication key 
-		ram[10] <= 256'h431909d9da263164ab4d39614e0c50a32774a49b3390a53ffa63e8d74b8e7c0b; // current owner ID-Manufacture & testing
-		ram[11] <= 256'h8e30701845bea3e44d0aed1ba6d4893a0de91fea6f42571d3714a3c6daa39978; // current owner ID-Packaging & OEM
-		ram[12] <= 256'hd995f5ddfb1625e3a33b0ee123b6672f35df88d6652eaec51d26f3a50b030ad8; // current owner ID-Deployment
-		ram[13] <= 256'hdf0f326b1bf6611d944491d7a0618af56ac57e391ba38425f9f33cafdd7439a9; // current owner ID-Recall
-		ram[6] <= 256'h3F7A81E6B9F934FB8F6D4C9E3426A1D7E61D97B597F7DBB7E61D2A4FCC4A596D; // signing key
+		//ram[0] <= 0; // Chip ID 
+		//ram[1] <= 0; // Watermark (Placeholder)
+		ram[2] <= 256'h49361d1ee0abd2c572b0edf565a9984c3ed4923ab2f88cd6b0eaa30d0c13ef1b; // Secure communication key 
+		ram[3] <= 256'h3F7A81E6B9F934FB8F6D4C9E3426A1D7E61D97B597F7DBB7E61D2A4FCC4A596D; // Firmware signing key
+		ram[4] <= 256'h431909d9da263164ab4d39614e0c50a32774a49b3390a53ffa63e8d74b8e7c0b; // Current owner ID-Manufacture & testing
+		ram[5] <= 256'h8e30701845bea3e44d0aed1ba6d4893a0de91fea6f42571d3714a3c6daa39978; // Current owner ID-Packaging & OEM
+		ram[6] <= 256'hd995f5ddfb1625e3a33b0ee123b6672f35df88d6652eaec51d26f3a50b030ad8; // Current owner ID-Deployment
+		ram[7] <= 256'hdf0f326b1bf6611d944491d7a0618af56ac57e391ba38425f9f33cafdd7439a9; // Current owner ID-Recall
+		
  
 
 

@@ -13,11 +13,11 @@ module mcse_top_tb;
     localparam gpio_AW = 32;
     localparam gpio_PW = 2*gpio_AW+40;
     localparam ipid_N = `IPID_N;
-    localparam ipid_width = 256;
+    localparam ipid_width = `IPID_WIDTH;
     localparam fw_image_N = `FW_N;
-    localparam fw_block_width = 256;
-    localparam scan_key_width = 32;
-    localparam scan_key_number = 8;
+    localparam fw_block_width = `FW_WIDTH;
+    localparam scan_key_width = `SCAN_KEY_WIDTH;
+    localparam scan_key_number = `SCAN_KEY_NUMBER;
 
     localparam    pAHB_ADDR_WIDTH                     = 32;
     localparam    pAHB_DATA_WIDTH                     = `AHB_DATA_WIDTH_BITS;
@@ -94,57 +94,6 @@ module mcse_top_tb;
     int k = 0;
 
     
-    
-    task ipid_send();
-        $display("[MCSE] Sending IP ID trigger..."); 
-        while (gpio_out[12] != 1) begin // wait for first ip id trigger    
-            @(posedge clk); 
-        end
-
-        k =0;
-        gpio_in = 0; 
-        for (logic [4:0] i = 0; i < ipid_N; i++) begin
-            gpio_in[13] = 1;
-            $displayh("[TB_TOP] IP ID trigger received...Sending IP ID from address ", gpio_out[11:8]); 
-            for (int j = 0; j < 18; j++) begin
-                if (j == 0) begin 
-                    gpio_in[31:16] = 16'h7A7A;
-                    $displayh("[TB_TOP] GPIO_IN[31:16] = ", gpio_in[31:16]);
-                    @(posedge clk);
-                    continue;
-                end 
-                else if (j == 17) begin
-                    gpio_in[31:16] = 16'hB9B9;
-                    $displayh("[TB_TOP] GPIO_IN[31:16] = ", gpio_in[31:16]);
-                    @(posedge clk);
-                    continue;
-                end else begin 
-                gpio_in[31:16] = ipid_array[k];
-                //gpio_in[31:16] = $urandom_range(0,65536);
-                k = k+1;
-                $displayh("[TB_TOP] GPIO_IN[31:16] = ", gpio_in[31:16]);
-                @(posedge clk); 
-                end  
-            end 
-
-            //$display("[TB_TOP] Waiting for IP ID trigger deassert.."); 
-            gpio_in[13] = 0; 
-            while (gpio_out[12] != 0) begin
-                @(posedge clk); 
-            end 
-            //$display("[TB_TOP] IP ID trigger deasserted");
-      
-            $displayh("[MCSE] IP ID ", i[3:0], " = " , mcse.control_unit.secure_boot.ipid_r[i]);
-            if (i != ipid_N-1) begin 
-                //$display("[TB_TOP] Waiting for IP ID trigger...");
-                $display("[MCSE] Sending IP ID trigger...");
-                while (gpio_out[12] != 1) begin
-                    @(posedge clk); 
-                end 
-            end 
-           
-        end
-    endtask
 
     task bus_wakeup_handshake();
         $display("[MCSE] Sending bus wakeup signal...");
@@ -165,8 +114,7 @@ module mcse_top_tb;
         $displayh("[MCSE] MCSE ID generation complete, MCSE ID = ", mcse.control_unit.secure_boot.mcse_id_r); 
         $display("[MCSE] Proceeding with IP ID generation and bus wakeup handshake");
         bus_wakeup_handshake(); 
-       
-        //ipid_send();   
+         
         ipid_bus_stream();
         $display("[MCSE] IP ID extraction complete...Generating Composite IP ID...");
 
@@ -185,11 +133,7 @@ module mcse_top_tb;
 
     endtask
 
-    task initialize_array();
-        for (int i = 0; i < 256; i++) begin
-            ipid_array[i] = $urandom_range(0,65536);
-        end 
-    endtask 
+    
 
     task chipid_auth();
         chipid_generation(); 
@@ -289,11 +233,12 @@ module mcse_top_tb;
     logic [255:0] lc_authentication_id_endoflife = 256'hdf0f326b1bf6611d944491d7a0618af56ac57e391ba38425f9f33cafdd7439a9;
 
     task testing_lifecycle_first_boot();
-        // $displayh("[MCSE] Current Lifecycle State = ", mcse.control_unit.secure_boot.lc_state); 
+        $display("[MCSE] Booting into Manufacture & Test lifecycle");
         $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
         if (mcse.control_unit.secure_boot.first_boot_flag_r) begin
             $display("[MCSE] Proceeding with Chip ID generation...");
         end 
+
         
         chipid_generation(); 
 
@@ -309,7 +254,6 @@ module mcse_top_tb;
     endtask 
 
     task oem_lifecycle_first_boot();
-        // $displayh("[MCSE] Current Lifecycle State = ", mcse.control_unit.secure_boot.lc_state); 
         $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
         lifecycle_auth(lc_authentication_id_oem); 
         chipid_auth(); 
@@ -380,7 +324,6 @@ module mcse_top_tb;
     endtask
 
     task recall_lifecycle_first_boot();
-        // $displayh("[MCSE] Current lifecycle state = ", mcse.control_unit.secure_boot.lc_state); 
         $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
         lifecycle_auth(lc_authentication_id_recall); 
         chipid_auth(); 
@@ -393,41 +336,12 @@ module mcse_top_tb;
     endtask 
 
     task endoflife_lifecycle_first_boot();
-        // $displayh("[MCSE] Current Lifecycle State = ", mcse.control_unit.secure_boot.lc_state); 
         $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
         lifecycle_auth(lc_authentication_id_endoflife);
     endtask 
 
     // task to show first boot at each lifecycle and transition between each 
-    task full_bootflow();
-        reset_handshake();
-        testing_lifecycle_first_boot();
-        lifecycle_transition_request(lc_transition_id_testing); 
-        reset_handshake(); 
-      
-        // boot in OEM
-        reset_handshake(); 
-        oem_lifecycle_first_boot(); 
-        operation_release_handshake();
-        lifecycle_transition_request(lc_transition_id_oem);
-        reset_handshake(); 
-        // // boot in deployment
-        reset_handshake();
-        deployment_lifecycle_first_boot();
-        operation_release_handshake();
-        lifecycle_transition_request(lc_transition_id_deployment);
-        reset_handshake(); 
-        
-        // // boot in recall
-        reset_handshake(); 
-        recall_lifecycle_first_boot();
-        operation_release_handshake();
-        lifecycle_transition_request(lc_transition_id_recall);
-        reset_handshake(); 
-        // // boot in end of life 
-        reset_handshake();
-        endoflife_lifecycle_first_boot(); 
-    endtask 
+    
 
     task testing_lifecycle_subsequent_boot(); 
         reset_handshake();
@@ -441,7 +355,6 @@ module mcse_top_tb;
         @(posedge clk);
         reset_handshake(); 
         $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
-        scan_control();
         lifecycle_transition_request(lc_transition_id_testing); 
         reset_handshake(); 
     endtask 
@@ -526,7 +439,7 @@ module mcse_top_tb;
  
     endtask 
 
-    logic [32:0] array_bus [(ipid_N * 8)-1:0]; 
+    logic [31:0] array_bus [(ipid_N * 8)-1:0]; 
     task initialize_array_bus();
         for (int i =0; i < ipid_N * (pPAYLOAD_SIZE_BITS / pAHB_DATA_WIDTH); i++) begin 
             array_bus[i] = $urandom_range(1,2147483647);
@@ -652,42 +565,51 @@ module mcse_top_tb;
     task scan_control();
         integer i= 0;
 
-        $display("[TB_TOP] Testing the unlock status before key-loading process.\n");
-        $display("[MCSE] The Unlock status: %x.\n",scan_unlock);
-        $display("[TB_TOP] Starting the Key Loading process.\n");
+        $display("[TB_TOP] Testing scan unlock status before key-loading process.");
+        $display("[MCSE] Scan unlock status: %x",scan_unlock);
+        $display("[TB_TOP] Starting scan input Key Loading process.");
 
         for (i = 0; i < scan_key_number; i = i + 1) begin
             scan_key = key_temp[(i*32) +: 32];  // Extract 32 bits at a time
-            $display("[MCSE] Checking key sequence: %d.\n", i+1);
-            // $displayh("scan_key = ", scan_key);
-            // $displayh("scan_protection_key = ", mcse.control_unit.scan_control.scan_protection_key);
+            $display("[MCSE] Checking scan key sequence: %d", i+1);
             @(posedge clk);
         end
 
          @(posedge clk);
+         $display("[MCSE] Scan unlock status: %x",scan_unlock);
+
         
         // Enable scan for few clock cycles and stream scan_out
-        for (int i = 0; i < 10; i++) begin
+        $display("[TB_TOP] Enabling scan chain for few clock cycles to stream scan out");
+        for (int i = 0; i < 5; i++) begin
             scan_enable = 1;
             if (scan_unlock == 1) begin
+                @(posedge clk);
+                @(posedge clk);
                 $display("[MCSE] Scan unlock successful");
-                $display("[MCSE] The Unlock status: %x.\n",scan_unlock);
-                $displayh("[MCSE] Extracting Scan Out = ", scan_out);
+                $display("[MCSE] Scan unlock status: %x",scan_unlock);
+                $displayh("[TB_TOP] Extracting Scan Out = ", scan_out);
             end
             else begin
                 $display("[MCSE] Scan unlock failed");
-                $display("[MCSE] The Unlock status: %x.\n",scan_unlock);
-                $displayh("[MCSE] Extracting Scan Out = ", scan_out);
+                $display("[MCSE] Scan unlock status: %x",scan_unlock);
+                $displayh("[TB_TOP] Extracting Scan Out = ", scan_out);
             end
             @(posedge clk);
         end
     
         scan_enable = 0;
 
-        $display("[MCSE] Terminating vimscan simulation.\n");
+        $display("[MCSE] Terminating vimscan simulation.");
     endtask 
 
+    
+
     initial begin : drive_inputs
+        $dumpfile("mcse.vcd");
+        $dumpvars(0, mcse_top_tb);
+
+        initialize_array_bus();
        
         $display("[TB_TOP] Asserting global reset and initializing MCSE configuration");
         for (integer i = 0; i < 10; i=i+1) begin
@@ -714,13 +636,9 @@ module mcse_top_tb;
 
         key_temp = 256'h87A5E932FA1BC49DFF8A0B2C3D4E5F607891ABCDEF0123456789ABCDEF012345; // input challenge key for vimscan
 
-        initialize_array();
-        initialize_array_bus();
         $display("[TB_TOP] Deasserting global reset and initial MCSE configuration");
         rst_n = 1;
         init_config_n = 1;
-
-
 
         @(posedge clk);
         @(posedge clk); 
@@ -729,9 +647,11 @@ module mcse_top_tb;
 
         
         // full_bootflow with firmware and scan control
-        testing_lifecycle_subsequent_boot(); // this has scan included in its routine
+        testing_lifecycle_subsequent_boot(); 
+        
         
         oem_lifecycle_first_boot();
+        scan_control();
         lifecycle_transition_request(lc_transition_id_oem);
         reset_handshake();
 

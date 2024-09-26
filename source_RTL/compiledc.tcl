@@ -20,12 +20,13 @@ set my_toplevel mcse_top
 elaborate $my_toplevel
 
 set_max_area 0
-compile -area_effort high -map_effort high
+
 
 ungroup -all -flatten -force
 compile_ultra
 
 report_area
+report_power
 report_hierarchy
 report_reference
 

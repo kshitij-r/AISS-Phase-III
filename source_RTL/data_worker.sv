@@ -24,18 +24,9 @@
 // `timescale 1ns/1ns
 `default_nettype none
 
+`include "mcse_def.svh"
 
 
-`define         AHB_TRANS_IDLE                      2'b00
-`define         AHB_DATA_WIDTH_BITS                 32
-
-// Added ELP Macros 
-`define			ELP_AHB_TRANS_IDLE 					2'b00
-`define 		ELP_AHB_TRANS_BUSY 					2'b01
-`define 		ELP_AHB_TRANS_NONSEQ				2'b10
-`define 		ELP_AHB_TRANS_SEQ 					2'b11
-`define 		ELP_AHB_READ						1'b0
-`define 		ELP_AHB_WRITE						1'b1
 
 module data_worker
 #(

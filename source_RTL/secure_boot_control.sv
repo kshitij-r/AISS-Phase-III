@@ -1,6 +1,4 @@
-//TODO Configurability  
-//TODO GPIO ILAT, GPIO EN, and PCM
-//TODO optimize hashing registers for odd numbers and different IPID configurations
+
 
 `include "mcse_def.svh"
 
@@ -12,10 +10,10 @@ module secure_boot_control # (
     parameter gpio_N                = 32,
     parameter gpio_AW               = 32,
     parameter gpio_PW               = 2*gpio_AW+40,
-    parameter memory_width          = 256,
-    parameter memory_length         = 16,
+    parameter memory_width          = `SECURE_MEMORY_WIDTH,
+    parameter memory_length         = `SECURE_MEMORY_LENGTH,
     parameter ipid_N                = `IPID_N,
-    parameter ipid_width            = 256,
+    parameter ipid_width            = `IPID_WIDTH,
     parameter pAHB_ADDR_WIDTH       = 32,
     parameter pPAYLOAD_SIZE_BITS    = 128
 )
@@ -158,9 +156,6 @@ logic [puf_sig_length-1:0]           pcm_puf_in_next;
 logic                                pcm_puf_in_valid_next;
 logic [$clog2(ipid_N)-1:0]           pcm_ipid_number_next;
 
-`define IDLE 2'b00
-`define PROVISION 2'b01 
-`define CORRECT_SIGNATURE 2'b10
 
 function void encryption(input bit [255:0] data_input, input bit [255:0] key_input);
     
@@ -216,104 +211,7 @@ logic ipid_extraction_done_r, ipid_extraction_done_next;
 logic [15:0] ipid_temp_r [15:0];
 logic [15:0] ipid_temp_next [15:0]; 
 
-function void ipid_extraction();
-    if (~ipid_extraction_done_r) begin
-        case (ipid_handshake_counter_r)
-            2'b00 : begin // bus wake up
-                gpio_wrData_next = `SYS_BUS_WAKEUP;
-                gpio_RW_next = 1'b1;
-                gpio_data_type_next = `GPIO_ODATA;
-                gpio_reg_access_next = 1; 
-                ipid_handshake_counter_next = ipid_handshake_counter_r + 1; 
-            end 
-            2'b01 : begin // wait for bus wake up ack
-                gpio_data_type_next = `GPIO_IDATA; 
-                gpio_RW_next = 0;
-                if (gpio_reg_rdata[7]) begin
-                    ipid_handshake_counter_next = ipid_handshake_counter_r + 1;
-                end 
-            end
-            2'b10 : begin // ip id extraction 
-                if (ipid_counter_r >= ipid_N) begin
-                    ipid_extraction_done_next = 1; 
-                    ipid_counter_next = 0; 
-                    ipid_handshake_counter_next = 0;
-                end 
-                else begin
-                    case (ipid_trigger_r) 
-                        1'b0 : begin // trigger ip id extraction 
-                            gpio_wrData_next = {19'b0, 1'b1, ipid_counter_r[3:0], 8'b0}; // constructs ip id packet and with ip id trigger
-                            gpio_data_type_next = `GPIO_ODATA; 
-                            gpio_RW_next = 1; 
-                            ipid_trigger_next = 1; 
-                        end
-                        1'b1 : begin // take in ip ids
-                            gpio_data_type_next = `GPIO_IDATA;
-                            gpio_wrData_next = 0; 
-                            gpio_RW_next = 0; 
-                            case (ipid_valid_r) 
-                                2'b00 : begin
-                                    if (gpio_reg_rdata[31:16] == `IPID_START_BITS && gpio_reg_rdata[13]) begin // wait to receive start bits
-                                        ipid_valid_next = ipid_valid_r + 1; 
-                                    end 
-                                end 
-                                2'b01 : begin 
-                                    if (ipid_index_r < 16) begin
-                                        if (gpio_reg_rdata[13]) begin //ip id packet 
-                                            if (gpio_reg_rdata[31:16] != `IPID_STOP_BITS) begin
-                                                ipid_temp_next[ipid_index_r] = gpio_reg_rdata[31:16];
-                                                ipid_index_next = ipid_index_r + 1; 
-                                            end 
-                                            else begin
-                                                gpio_data_type_next = `GPIO_ODATA; 
-                                                gpio_wrData_next = 0;
-                                                gpio_RW_next = 1; 
-                                                ipid_index_next = 0;
-                                                ipid_valid_next = 0; 
-                                                ipid_trigger_next = 0; 
-                                            end 
-                                        end 
-                                    end 
-                                    else begin
-                                        if (gpio_reg_rdata[13]) begin
-                                            if (gpio_reg_rdata[31:16] == `IPID_STOP_BITS) begin // if received stop bits, store the ipid
-                                                ipid_next[ipid_counter_r] = {ipid_temp_r[15], ipid_temp_r[14], ipid_temp_r[13],
-                                                ipid_temp_r[12], ipid_temp_r[11], ipid_temp_r[10], ipid_temp_r[9], ipid_temp_r[8],
-                                                ipid_temp_r[7], ipid_temp_r[6], ipid_temp_r[5], ipid_temp_r[4], ipid_temp_r[3], 
-                                                ipid_temp_r[2], ipid_temp_r[1], ipid_temp_r[0]}; 
-                                                ipid_counter_next = ipid_counter_r + 1; 
-                                                gpio_data_type_next = `GPIO_ODATA; 
-                                                gpio_wrData_next = 0;
-                                                gpio_RW_next = 1; 
-                                                ipid_index_next = 0;
-                                                ipid_valid_next = 0; 
-                                                ipid_trigger_next = 0;
-                                            end 
-                                            else begin 
-                                                gpio_data_type_next = `GPIO_ODATA; 
-                                                gpio_wrData_next = 0;
-                                                gpio_RW_next = 1; 
-                                                ipid_index_next = 0;
-                                                ipid_valid_next = 0; 
-                                                ipid_trigger_next = 0;
-                                            end 
-                                        end 
-                                    end 
-                                end
-                                default : begin
 
-                                end 
-                            endcase 
-                        end 
-                    endcase
-                end 
-            end
-            default : begin
-
-            end  
-        endcase 
-    end 
-endfunction 
 
 logic [1:0] bus_wakeup_counter_r, bus_wakeup_counter_next; 
 logic bus_wakeup_handshake_done_r, bus_wakeup_handshake_done_next; 
@@ -1183,7 +1081,7 @@ always_comb begin
                 // gpio_in[14] is the fw authentication request from TA2 to MCSE
                 // gpio_out[15] is the ack from MCSE to TA2 about successful authentication
                 // gpio_out[16] is the ack from MCSE to TA2 about failed authentication
-                // gpio_in[17] is the acknowledgement from TA2 to MCSE about receiving firmare update ack
+                // gpio_in[17] is the acknowledgement from TA2 to MCSE about receiving firmare authentication ack
                 if (fw_auth_result) begin
                     case (fw_update_counter_r)
                         2'b00 : begin
@@ -1252,7 +1150,7 @@ always_comb begin
                     lc_transition_done_next = 0;
                 end 
                 else begin
-                    if (lc_state == 3'b010) begin
+                    if (lc_state == 3'b011 || lc_state == 3'b100) begin
                         state_next = LC_FW_POLL; 
                     end 
                     else begin

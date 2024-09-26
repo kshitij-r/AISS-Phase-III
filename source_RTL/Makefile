@@ -20,12 +20,12 @@ AHBtest: clean
 NETLISTtest: clean
 	vcs  $(FLAGS) $(SRC_FILES_NETLIST) 
 	
-
 synthesis: clean 
 	dc_shell -f compiledc.tcl
+
+clean: 
+	rm -rf simv.daidir/ $(WORK_DIR) WORK/
 
 .PHONY: MCSEtest AHBtest NETLISTtest synthesis
 
 .PHONY: clean
-clean: 
-	rm -rf simv.daidir/ $(WORK_DIR) WORK/

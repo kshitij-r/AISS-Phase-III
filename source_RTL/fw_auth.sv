@@ -8,9 +8,9 @@ module fw_authentication # (
     parameter pAHB_ADDR_WIDTH       = 32,
     parameter pPAYLOAD_SIZE_BITS    = 128,
     parameter fw_image_N            = `FW_N, 
-    parameter fw_block_width        = 256,
-    parameter memory_width          = 256,
-    parameter memory_length         = 16
+    parameter fw_block_width        = `FW_WIDTH,
+    parameter memory_width          = `SECURE_MEMORY_WIDTH,
+    parameter memory_length         = `SECURE_MEMORY_LENGTH
 )
 (
     input                            clk,
