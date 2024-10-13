@@ -14,3 +14,5 @@
 
 `define SCAN_KEY_WIDTH 64
 `define SCAN_KEY_NUMBER 8
+
+`define         AHB_DATA_WIDTH_BITS                 32

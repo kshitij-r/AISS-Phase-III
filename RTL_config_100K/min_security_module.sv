@@ -38,6 +38,7 @@ module min_security_module  #(
     // Global signals for minimum security module
     input clk, 
     input rst,
+    
 
     /*
     IO interface for CAMELLIA inside the minimum security module

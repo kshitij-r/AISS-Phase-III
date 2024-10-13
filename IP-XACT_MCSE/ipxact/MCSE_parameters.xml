@@ -1,0 +1,21 @@
+
+
+
+  <!-- parameters ------------------------------------------------------------------------------ -->
+
+  <ipxact:parameters>
+
+      <ipxact:parameter>
+          <ipxact:name>pUSE_HARDWARE_CRYPTO</ipxact:name>
+          <ipxact:value ipxact:resolve="user" ipxact:order="1">1</ipxact:value>
+      </ipxact:parameter>
+
+      <ipxact:parameter>
+          <ipxact:name>pUSE_HARDWARE_CRYPTO_AISS</ipxact:name>
+          <ipxact:value ipxact:resolve="user" ipxact:order="1">1</ipxact:value>
+      </ipxact:parameter>
+
+      <ipxact:parameter>
+          <ipxact:name>pSEMC_KEY_SIZE</ipxact:name>
+          <ipxact:value ipxact:resolve="user" ipxact:order="1">1</ipxact:value>
+      </ipxact:parameter>

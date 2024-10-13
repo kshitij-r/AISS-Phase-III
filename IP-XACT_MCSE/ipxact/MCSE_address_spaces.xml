@@ -1,0 +1,16 @@
+
+
+
+  <!-- addressSpaces --------------------------------------------------------------------------- -->
+
+  <ipxact:addressSpaces>
+
+    <ipxact:addressSpace>
+      <ipxact:name>sys_ctrl</ipxact:name>
+      <ipxact:displayName>SYS_CTRL</ipxact:displayName>
+      <ipxact:description>System requestor address space</ipxact:description>
+      <ipxact:range ipxact:format="long" ipxact:resolve="user" ipxact:minimum="4096" ipxact:rangeType="long">4294967296</ipxact:range>
+      <ipxact:width ipxact:format="long" ipxact:resolve="user">32</ipxact:width>
+    </ipxact:addressSpace>
+
+  </ipxact:addressSpaces>

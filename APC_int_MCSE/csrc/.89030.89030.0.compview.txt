@@ -1,0 +1,9 @@
+{"vcs1":{"timestamp_begin":1728800440.446176502, "rt":42.90, "ut":40.57, "st":0.68}}
+{"vcselab":{"timestamp_begin":1728800483.405635267, "rt":14.62, "ut":11.89, "st":0.19}}
+{"link":{"timestamp_begin":1728800498.076477882, "rt":1.65, "ut":0.25, "st":0.16}}
+{"SNPS_VCS_INTERNAL_ROOT_START_TIME": 1728800439.577514972}
+{"VCS_COMP_START_TIME": 1728800439.577514972}
+{"VCS_COMP_END_TIME": 1728800509.393455285}
+{"VCS_USER_OPTIONS": "-sverilog -suppress -R +vcs+vcdpluson +neg_tchk -timescale=1ns/1ps mcse_top.sv mcse_control_unit.sv secure_memory.sv secure_boot_control.sv lifecycle_protection.sv lc_memory.sv fw_auth.sv scan_protection.sv min_security_module.sv sha_top.sv sha256_puf_256.v camellia_top.sv camellia.v gpio.v gpio_regmap.v oh_dsync.v io.v packet2emesh.v c1908.v primitives.v NCL_gates.v NCL_signals.pkg.sv MTNCL_gates.v MTNCL_treecomps.sv BOOLEAN_gates.v MTD3L_gates.v MTD3L_completion.sv poly_trans_gates.v cell_in_behavioral.v MTD3L_to_sync_p2s_bit_vector_AES_v4.sv MTD3L_to_sync_p2s_bit_vector_SHA3_v4.sv sync_to_MTD3L_s2p_bit_vector_v4.sv polymorphic_top_Synopsys.v polymorphic_top_w_wrapper.v apc_wrapper.sv puf.v bus_translation.sv data_worker.sv error_correction.v mcse_top_tb.sv lec25dscc25.v"}
+{"vcs1": {"peak_mem": 648336}}
+{"stitch_vcselab": {"peak_mem": 398732}}

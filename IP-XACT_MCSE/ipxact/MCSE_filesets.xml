@@ -1,0 +1,17 @@
+  <ipxact:fileSets>
+    <ipxact:fileSet>
+      <ipxact:name>Hdl</ipxact:name>
+        <ipxact:file>
+          <ipxact:name>src/MCSE_sequencer.v</ipxact:name>
+          <ipxact:fileType>verilogSource</ipxact:fileType>
+        </ipxact:file>
+        <ipxact:file>
+          <ipxact:name>src/MCSE_crypto.v</ipxact:name>
+          <ipxact:fileType>verilogSource</ipxact:fileType>
+        </ipxact:file>
+        <ipxact:file>
+          <ipxact:name>src/MCSE.v</ipxact:name>
+          <ipxact:fileType>verilogSource</ipxact:fileType>
+        </ipxact:file>
+    </ipxact:fileSet>
+  </ipxact:fileSets>

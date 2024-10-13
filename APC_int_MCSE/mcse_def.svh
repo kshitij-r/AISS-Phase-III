@@ -1,0 +1,55 @@
+`define GPIO_IDATA 6'h5
+`define GPIO_ODATA 6'h0
+
+`define SYS_BUS_WAKEUP 24'b1000000
+`define RST_Request 24'b1
+`define Operation_Release_to_Host 24'b10000
+`define Fw_AUTH_SUCCESS_ACK_to_Host 24'b1000000000000000
+`define Fw_AUTH_FAILURE_ACK_to_Host 24'b10000000000000000
+
+`define IPID_START_BITS 16'h7A7A
+`define IPID_STOP_BITS 16'hB9B9
+
+`define CHIP_ID_ADDR 'h0
+`define SECURE_COMMUNICATION_KEY_ADDR 'h2
+
+`define LC_AUTHENTICATION_ID_ADDR_START 'h2 // end at 'h7
+
+`define IPID_ADDR_MAP {32'h43C00000}
+
+`define IPID_N 1
+`define IPID_WIDTH 256
+
+`define FW_N 9
+`define FW_WIDTH 256
+
+`define FW_ADDR_MAP {32'h68D00000, 32'h72500001, 32'hD5200001, 32'h34D00001, 32'h35D00002, 32'h36D00003, 32'h38D00004, 32'h37D00005, 32'h49D00006}
+
+`define GPIO_IDATA 6'h5
+`define GPIO_ODATA 6'h0
+
+`define FW_SIGNING_KEY_ADDR 'h3
+
+`define IPAD {32{'h36}}
+`define OPAD {32{'h5C}}
+
+`define SCAN_KEY_WIDTH 32
+`define SCAN_KEY_NUMBER 8
+
+`define SECURE_MEMORY_WIDTH 256
+`define SECURE_MEMORY_LENGTH 8
+
+`define         AHB_DATA_WIDTH_BITS                 32
+`define         AHB_TRANS_IDLE                      2'b00
+
+// Added ELP Macros 
+`define			ELP_AHB_TRANS_IDLE 					2'b00
+`define 		ELP_AHB_TRANS_BUSY 					2'b01
+`define 		ELP_AHB_TRANS_NONSEQ				2'b10
+`define 		ELP_AHB_TRANS_SEQ 					2'b11
+`define 		ELP_AHB_READ						1'b0
+`define 		ELP_AHB_WRITE						1'b1
+
+`define IDLE 2'b00
+`define PROVISION 2'b01 
+`define CORRECT_SIGNATURE 2'b10

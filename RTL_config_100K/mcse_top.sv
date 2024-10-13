@@ -1,4 +1,4 @@
-`define         AHB_DATA_WIDTH_BITS                 32
+
 `include "mcse_def.svh"
 
 module mcse_top # (

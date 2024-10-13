@@ -1,0 +1,9 @@
+<!-- MCSE IP-XACT created on 2024-07-26_011529 -->
+<?xml version="1.0" encoding="utf-8"?>
+<ipxact:component xmlns:ipxact="http://www.accellera.org/XMLSchema/IPXACT/1685-2014" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:snps="http://www.synopsys.com/SPIRIT-snps" xsi:schemaLocation="http://www.accellera.org/XMLSchema/IPXACT/1685-2014 http://www.accellera.org/XMLSchema/IPXACT/1685-2014/index.xsd">
+
+
+    <ipxact:vendor>MCSE</ipxact:vendor>
+    <ipxact:library>MCSE</ipxact:library>
+    <ipxact:name>MCSE</ipxact:name>
+    <ipxact:version>MCSE</ipxact:version>

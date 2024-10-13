@@ -1,6 +1,6 @@
 #@ # 
 #@ # Running dc_shell Version T-2022.03-SP5 for linux64 -- Oct 11, 2022
-#@ # Date:   Wed Jun 19 22:01:58 2024
+#@ # Date:   Mon Sep  9 07:24:26 2024
 #@ # Run by: tambiaratabassum@ece-lnx-07
 #@ 
 
@@ -8720,6 +8720,7 @@ source -echo -verbose /ecel/UFAD/tambiaratabassum/AISS_Phase_III_tambiara/RTL_co
 #@ 
 #@ elaborate $my_toplevel
 #@ 
+#@ 
 #@ set_max_area 0
 #@ 
 #@ ungroup -all -flatten -force
@@ -8727,6 +8728,7 @@ source -echo -verbose /ecel/UFAD/tambiaratabassum/AISS_Phase_III_tambiara/RTL_co
 #@ 
 #@ 
 #@ report_area
+#@ report_power
 #@ report_hierarchy
 #@ report_reference
 #@ 

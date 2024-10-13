@@ -1,0 +1,228 @@
+
+
+
+  <!-- model ----------------------------------------------------------------------------------- -->
+
+  <ipxact:model>
+
+    <ipxact:views>
+        <ipxact:view>
+            <ipxact:name>RTL</ipxact:name>
+            <ipxact:componentInstantiationRef>RTL</ipxact:componentInstantiationRef>
+        </ipxact:view>
+    </ipxact:views>
+
+    <ipxact:instantiations>
+        <ipxact:componentInstantiation>
+            <ipxact:name>RTL</ipxact:name>
+            <ipxact:language>sverilog</ipxact:language>
+            <ipxact:moduleName>sentry</ipxact:moduleName>
+            <ipxact:fileSetRef>
+                <ipxact:localName>Hdl</ipxact:localName>
+            </ipxact:fileSetRef>
+        </ipxact:componentInstantiation>
+    </ipxact:instantiations>
+
+    <ipxact:ports>
+
+<!-- I_did_hw_devid [31 : 0] -->
+            <ipxact:port>
+              <ipxact:name>I_did_hw_devid</ipxact:name>
+              <ipxact:wire>
+                <ipxact:direction>in</ipxact:direction>
+                <ipxact:vectors>
+                  <ipxact:vector>
+                    <ipxact:left>31</ipxact:left>
+                    <ipxact:right>0</ipxact:right>
+                  </ipxact:vector>
+                </ipxact:vectors>
+              </ipxact:wire>
+            </ipxact:port>
+
+<!-- I_did_hw_valid -->
+            <ipxact:port>
+              <ipxact:name>I_did_hw_valid</ipxact:name>
+              <ipxact:wire>
+                <ipxact:direction>in</ipxact:direction>
+              </ipxact:wire>
+            </ipxact:port>
+
+<!-- sys_ctrl_hclk_out -->
+            <ipxact:port>
+              <ipxact:name>sys_ctrl_hclk_out</ipxact:name>
+              <ipxact:wire>
+                <ipxact:direction>out</ipxact:direction>
+              </ipxact:wire>
+            </ipxact:port>
+
+<!-- sys_ctrl_haddr [31 : 0] -->
+            <ipxact:port>
+              <ipxact:name>sys_ctrl_haddr</ipxact:name>
+              <ipxact:wire>
+                <ipxact:direction>out</ipxact:direction>
+                <ipxact:vectors>
+                  <ipxact:vector>
+                    <ipxact:left>31</ipxact:left>
+                    <ipxact:right>0</ipxact:right>
+                  </ipxact:vector>
+                </ipxact:vectors>
+              </ipxact:wire>
+            </ipxact:port>
+
+<!-- sys_ctrl_hburst [2 : 0] -->
+            <ipxact:port>
+              <ipxact:name>sys_ctrl_hburst</ipxact:name>
+              <ipxact:wire>
+                <ipxact:direction>out</ipxact:direction>
+                <ipxact:vectors>
+                  <ipxact:vector>
+                    <ipxact:left>2</ipxact:left>
+                    <ipxact:right>0</ipxact:right>
+                  </ipxact:vector>
+                </ipxact:vectors>
+              </ipxact:wire>
+            </ipxact:port>
+
+<!-- sys_ctrl_hmastlock -->
+            <ipxact:port>
+              <ipxact:name>sys_ctrl_hmastlock</ipxact:name>
+              <ipxact:wire>
+                <ipxact:direction>out</ipxact:direction>
+              </ipxact:wire>
+            </ipxact:port>
+
+<!-- sys_ctrl_hprot [3 : 0] -->
+            <ipxact:port>
+              <ipxact:name>sys_ctrl_hprot</ipxact:name>
+              <ipxact:wire>
+                <ipxact:direction>out</ipxact:direction>
+                <ipxact:vectors>
+                  <ipxact:vector>
+                    <ipxact:left>3</ipxact:left>
+                    <ipxact:right>0</ipxact:right>
+                  </ipxact:vector>
+                </ipxact:vectors>
+              </ipxact:wire>
+            </ipxact:port>
+
+<!-- sys_ctrl_hnonsec -->
+            <ipxact:port>
+              <ipxact:name>sys_ctrl_hnonsec</ipxact:name>
+              <ipxact:wire>
+                <ipxact:direction>out</ipxact:direction>
+              </ipxact:wire>
+            </ipxact:port>
+
+<!-- sys_ctrl_hsize [2 : 0] -->
+            <ipxact:port>
+              <ipxact:name>sys_ctrl_hsize</ipxact:name>
+              <ipxact:wire>
+                <ipxact:direction>out</ipxact:direction>
+                <ipxact:vectors>
+                  <ipxact:vector>
+                    <ipxact:left>2</ipxact:left>
+                    <ipxact:right>0</ipxact:right>
+                  </ipxact:vector>
+                </ipxact:vectors>
+              </ipxact:wire>
+            </ipxact:port>
+
+<!-- sys_ctrl_htrans [1 : 0] -->
+            <ipxact:port>
+              <ipxact:name>sys_ctrl_htrans</ipxact:name>
+              <ipxact:wire>
+                <ipxact:direction>out</ipxact:direction>
+                <ipxact:vectors>
+                  <ipxact:vector>
+                    <ipxact:left>1</ipxact:left>
+                    <ipxact:right>0</ipxact:right>
+                  </ipxact:vector>
+                </ipxact:vectors>
+              </ipxact:wire>
+            </ipxact:port>
+
+<!-- sys_ctrl_hwdata [31 : 0] -->
+            <ipxact:port>
+              <ipxact:name>sys_ctrl_hwdata</ipxact:name>
+              <ipxact:wire>
+                <ipxact:direction>out</ipxact:direction>
+                <ipxact:vectors>
+                  <ipxact:vector>
+                    <ipxact:left>31</ipxact:left>
+                    <ipxact:right>0</ipxact:right>
+                  </ipxact:vector>
+                </ipxact:vectors>
+              </ipxact:wire>
+            </ipxact:port>
+
+<!-- sys_ctrl_hwrite -->
+            <ipxact:port>
+              <ipxact:name>sys_ctrl_hwrite</ipxact:name>
+              <ipxact:wire>
+                <ipxact:direction>out</ipxact:direction>
+              </ipxact:wire>
+            </ipxact:port>
+
+<!-- sys_ctrl_hrdata [31 : 0] -->
+            <ipxact:port>
+              <ipxact:name>sys_ctrl_hrdata</ipxact:name>
+              <ipxact:wire>
+                <ipxact:direction>in</ipxact:direction>
+                <ipxact:vectors>
+                  <ipxact:vector>
+                    <ipxact:left>31</ipxact:left>
+                    <ipxact:right>0</ipxact:right>
+                  </ipxact:vector>
+                </ipxact:vectors>
+              </ipxact:wire>
+            </ipxact:port>
+
+<!-- sys_ctrl_hready -->
+            <ipxact:port>
+              <ipxact:name>sys_ctrl_hready</ipxact:name>
+              <ipxact:wire>
+                <ipxact:direction>in</ipxact:direction>
+              </ipxact:wire>
+            </ipxact:port>
+
+<!-- sys_ctrl_hresp -->
+            <ipxact:port>
+              <ipxact:name>sys_ctrl_hresp</ipxact:name>
+              <ipxact:wire>
+                <ipxact:direction>in</ipxact:direction>
+              </ipxact:wire>
+            </ipxact:port>
+
+<!-- O_sysctl_secure_boot_done -->
+            <ipxact:port>
+              <ipxact:name>O_sysctl_secure_boot_done</ipxact:name>
+              <ipxact:wire>
+                <ipxact:direction>out</ipxact:direction>
+              </ipxact:wire>
+            </ipxact:port>
+
+<!-- clk_in -->
+            <ipxact:port>
+              <ipxact:name>clk_in</ipxact:name>
+              <ipxact:wire>
+                <ipxact:direction>in</ipxact:direction>
+              </ipxact:wire>
+            </ipxact:port>
+
+<!-- rst_n -->
+            <ipxact:port>
+              <ipxact:name>rst_n</ipxact:name>
+              <ipxact:wire>
+                <ipxact:direction>in</ipxact:direction>
+              </ipxact:wire>
+            </ipxact:port>
+
+
+
+
+    </ipxact:ports>
+
+  </ipxact:model>
+
+
+

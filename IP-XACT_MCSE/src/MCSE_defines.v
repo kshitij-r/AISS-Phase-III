@@ -1,0 +1,14 @@
+
+`ifndef `define SENTRY_DEFINES_VH
+`define `define SENTRY_DEFINES_VH
+
+`define DEVICE_ID_SIZE_BITS                 32
+`define SENTRY_SYS_CTRL_ADDR_SIZE_BITS      32
+`define SENTRY_SYS_CTRL_HBURST_SIZE_BITS     3
+`define SENTRY_SYS_CTRL_HPROT_SIZE_BITS      4
+`define SENTRY_SYS_CTRL_HSIZE_SIZE_BITS      3
+`define SENTRY_SYS_CTRL_HTRANS_SIZE_BITS     2
+`define SENTRY_SYS_CTRL_DATA_SIZE_BITS      32
+
+`endif // `define SENTRY_DEFINES_VH
+

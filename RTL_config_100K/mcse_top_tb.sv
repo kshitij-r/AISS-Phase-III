@@ -454,6 +454,9 @@ module mcse_top_tb;
     endtask 
 
     initial begin : drive_inputs
+
+        $dumpfile("mcse.vcd");
+        $dumpvars(0, mcse_top_tb);
        
         $display("[TB_TOP] Asserting global reset and initializing MCSE configuration");
         for (integer i = 0; i < 10; i=i+1) begin
@@ -475,8 +478,6 @@ module mcse_top_tb;
         rst_n = 1;
         init_config_n = 1;
 
-        $dumpfile("tb.vcd");
-        $dumpvars(0, mcse_top_tb);
 
         @(posedge clk);
         @(posedge clk); 

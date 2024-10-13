@@ -1,0 +1,228 @@
+
+
+
+  <ipxact:busInterfaces>
+
+
+
+<!-- SYS_CTRL AHB ------------------------------------------------------------------------------ -->
+
+    <ipxact:busInterface>
+
+      <ipxact:name>sys_ctrl</ipxact:name>
+      <ipxact:displayName>System requestor</ipxact:displayName>
+      <ipxact:description>System requestor interface</ipxact:description>
+      <ipxact:busType vendor="amba.com" library="AMBA2" name="AHB" version="r3p0_1"/>
+
+      <ipxact:abstractionTypes>
+        <ipxact:abstractionType>
+          <ipxact:abstractionRef vendor="amba.com" library="AMBA2" name="AHB_rtl" version="r3p0_1"/>
+        </ipxact:abstractionType>
+      </ipxact:abstractionTypes>
+
+      <ipxact:master>
+        <ipxact:addressSpaceRef ipxact:addressSpaceRef="sys_ctrl"/>
+      </ipxact:master>
+
+      <ipxact:portMaps>
+
+            <ipxact:portMap>
+              <ipxact:logicalPort>
+                <ipxact:name>HADDR</ipxact:name>
+              </ipxact:logicalPort>
+              <ipxact:physicalPort>
+                <ipxact:name>sys_ctrl_haddr</ipxact:name>
+              </ipxact:physicalPort>
+            </ipxact:portMap>
+
+            <ipxact:portMap>
+              <ipxact:logicalPort>
+                <ipxact:name>HBURST</ipxact:name>
+              </ipxact:logicalPort>
+              <ipxact:physicalPort>
+                <ipxact:name>sys_ctrl_hburst</ipxact:name>
+              </ipxact:physicalPort>
+            </ipxact:portMap>
+
+            <ipxact:portMap>
+              <ipxact:logicalPort>
+                <ipxact:name>HMASTLOCK</ipxact:name>
+              </ipxact:logicalPort>
+              <ipxact:physicalPort>
+                <ipxact:name>sys_ctrl_hmastlock</ipxact:name>
+              </ipxact:physicalPort>
+            </ipxact:portMap>
+
+            <ipxact:portMap>
+              <ipxact:logicalPort>
+                <ipxact:name>HPROT</ipxact:name>
+              </ipxact:logicalPort>
+              <ipxact:physicalPort>
+                <ipxact:name>sys_ctrl_hprot</ipxact:name>
+              </ipxact:physicalPort>
+            </ipxact:portMap>
+
+            <ipxact:portMap>
+              <ipxact:logicalPort>
+                <ipxact:name>HSIZE</ipxact:name>
+              </ipxact:logicalPort>
+              <ipxact:physicalPort>
+                <ipxact:name>sys_ctrl_hsize</ipxact:name>
+              </ipxact:physicalPort>
+            </ipxact:portMap>
+
+            <ipxact:portMap>
+              <ipxact:logicalPort>
+                <ipxact:name>HNONSEC</ipxact:name>
+              </ipxact:logicalPort>
+              <ipxact:physicalPort>
+                <ipxact:name>sys_ctrl_hnonsec</ipxact:name>
+              </ipxact:physicalPort>
+            </ipxact:portMap>
+
+            <ipxact:portMap>
+              <ipxact:logicalPort>
+                <ipxact:name>HTRANS</ipxact:name>
+              </ipxact:logicalPort>
+              <ipxact:physicalPort>
+                <ipxact:name>sys_ctrl_htrans</ipxact:name>
+              </ipxact:physicalPort>
+            </ipxact:portMap>
+
+            <ipxact:portMap>
+              <ipxact:logicalPort>
+                <ipxact:name>HWDATA</ipxact:name>
+              </ipxact:logicalPort>
+              <ipxact:physicalPort>
+                <ipxact:name>sys_ctrl_hwdata</ipxact:name>
+              </ipxact:physicalPort>
+            </ipxact:portMap>
+
+            <ipxact:portMap>
+              <ipxact:logicalPort>
+                <ipxact:name>HWRITE</ipxact:name>
+              </ipxact:logicalPort>
+              <ipxact:physicalPort>
+                <ipxact:name>sys_ctrl_hwrite</ipxact:name>
+              </ipxact:physicalPort>
+            </ipxact:portMap>
+
+            <ipxact:portMap>
+              <ipxact:logicalPort>
+                <ipxact:name>HRDATA</ipxact:name>
+              </ipxact:logicalPort>
+              <ipxact:physicalPort>
+                <ipxact:name>sys_ctrl_hrdata</ipxact:name>
+              </ipxact:physicalPort>
+            </ipxact:portMap>
+
+            <ipxact:portMap>
+              <ipxact:logicalPort>
+                <ipxact:name>HREADY</ipxact:name>
+              </ipxact:logicalPort>
+              <ipxact:physicalPort>
+                <ipxact:name>sys_ctrl_hready</ipxact:name>
+              </ipxact:physicalPort>
+            </ipxact:portMap>
+
+            <ipxact:portMap>
+              <ipxact:logicalPort>
+                <ipxact:name>HRESP</ipxact:name>
+              </ipxact:logicalPort>
+              <ipxact:physicalPort>
+                <ipxact:name>sys_ctrl_hresp</ipxact:name>
+              </ipxact:physicalPort>
+            </ipxact:portMap>
+
+          </ipxact:portMaps>
+
+        </ipxact:abstractionType>
+
+      </ipxact:abstractionTypes>
+
+    </ipxact:busInterface>
+
+
+
+<!-- Device ID --------------------------------------------------------------------------------- -->
+
+    <ipxact:busInterface>
+      <ipxact:name>device_id</ipxact:name>
+      <ipxact:displayName>Device ID</ipxact:displayName>
+      <ipxact:description>Device ID interface</ipxact:description>
+      <ipxact:busType ipxact:vendor="NGC" ipxact:library="user" ipxact:name="device_id" ipxact:version="1.0"/>
+      <ipxact:abstractionType ipxact:vendor="NGC" ipxact:library="user" ipxact:name="device_id_rtl" ipxact:version="1.0"/>
+      <ipxact:slave/>
+      
+      <ipxact:portMaps>
+
+        <ipxact:portMap>
+          <ipxact:logicalPort>
+            <ipxact:name>I_did_hw_devid</ipxact:name>
+          </ipxact:logicalPort>
+          <ipxact:physicalPort>
+            <ipxact:name>I_did_hw_devid</ipxact:name>
+          </ipxact:physicalPort>
+        </ipxact:portMap>
+
+        <ipxact:portMap>
+          <ipxact:logicalPort>
+            <ipxact:name>I_did_hw_valid</ipxact:name>
+          </ipxact:logicalPort>
+          <ipxact:physicalPort>
+            <ipxact:name>I_did_hw_valid</ipxact:name>
+          </ipxact:physicalPort>
+        </ipxact:portMap>
+      </ipxact:portMaps>
+
+    </ipxact:busInterface>
+
+
+
+    <ipxact:busInterface>
+      <ipxact:name>HCLK</ipxact:name>
+      <ipxact:description>Clock signal for AHB targets</ipxact:description>
+      <ipxact:busType vendor="Synopsys" library="DesignWareLibrary" name="DW-SoC::AHB-Clock" version="7.4"/>
+      <ipxact:abstractionTypes>
+        <ipxact:abstractionType>
+          <ipxact:abstractionRef vendor="Synopsys" library="DesignWareLibrary" name="DW-SoC::AHB-Clock_rtl" version="7.4"/>
+          <ipxact:portMaps>
+            <ipxact:portMap>
+              <ipxact:logicalPort>
+                <ipxact:name>hclk</ipxact:name>
+              </ipxact:logicalPort>
+              <ipxact:physicalPort>
+                <ipxact:name>ahb_extp_hclk</ipxact:name>
+              </ipxact:physicalPort>
+            </ipxact:portMap>
+          </ipxact:portMaps>
+        </ipxact:abstractionType>
+      </ipxact:abstractionTypes>
+      <ipxact:slave/>
+    </ipxact:busInterface>
+
+    <ipxact:busInterface>
+      <ipxact:name>HRESETn</ipxact:name>
+      <ipxact:description>Reset signal for AHB targets</ipxact:description>
+      <ipxact:busType vendor="Synopsys" library="DesignWareLibrary" name="DW-SoC::AHB-Reset" version="7.4"/>
+      <ipxact:abstractionTypes>
+        <ipxact:abstractionType>
+          <ipxact:abstractionRef vendor="Synopsys" library="DesignWareLibrary" name="DW-SoC::AHB-Reset_rtl" version="7.4"/>
+          <ipxact:portMaps>
+            <ipxact:portMap>
+              <ipxact:logicalPort>
+                <ipxact:name>hresetn</ipxact:name>
+              </ipxact:logicalPort>
+              <ipxact:physicalPort>
+                <ipxact:name>ahb_extp_hresetn</ipxact:name>
+              </ipxact:physicalPort>
+            </ipxact:portMap>
+          </ipxact:portMaps>
+        </ipxact:abstractionType>
+      </ipxact:abstractionTypes>
+      <ipxact:slave/>
+    </ipxact:busInterface>
+
+  </ipxact:busInterfaces>
+
+

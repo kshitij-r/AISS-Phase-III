@@ -17,7 +17,7 @@ module secure_boot_control # (
     input                                       init_config_n, 
 
     // Camellia to Boot Control
-    input [127:0]                               cam_data_out,
+    (* dont_touch = "true" *)input [127:0]                               cam_data_out,
     input                                       cam_data_acq,
     input                                       cam_key_acq,
     input                                       cam_output_rdy,
@@ -56,8 +56,8 @@ module secure_boot_control # (
 
 
     // Boot control to Camellia 
-    output logic [127:0]                        cam_data_in,
-    output logic [255:0]                        cam_key,
+   (* dont_touch = "true" *) output logic [127:0]                        cam_data_in,
+   (* dont_touch = "true" *) output logic [255:0]                        cam_key,
     output logic [1:0]                          cam_k_len,
     output logic                                cam_enc_dec,
     output logic                                cam_data_rdy,
@@ -89,7 +89,7 @@ module secure_boot_control # (
 );
 
 
-reg [255:0] encryption_output_r, encryption_output_next; 
+(* dont_touch = "true" *) reg [255:0] encryption_output_r, encryption_output_next; 
 reg half_r, half_next; 
 reg encryption_done_r, encryption_done_next;
 
@@ -98,8 +98,8 @@ LC_FW_POLL, FW_AUTH, NORM_OP_RELEASE, ABORT } state_t;
 
 state_t state_r, state_next;
 
-logic [127:0]                    cam_data_in_next;
-logic [255:0]                    cam_key_next;
+(* dont_touch = "true" *) logic [127:0]                    cam_data_in_next;
+(* dont_touch = "true" *) logic [255:0]                    cam_key_next;
 logic [1:0]                      cam_k_len_next;
 logic                           cam_enc_dec_next;
 logic                           cam_data_rdy_next;
@@ -112,7 +112,7 @@ logic [memory_width/2-1:0] wrData_next;
 
 
 
-function void encryption(input bit [255:0] data_input, input bit [255:0] key_input);
+(* dont_touch = "true" *) function void encryption(input bit [255:0] data_input, input bit [255:0] key_input);
     
     cam_enc_dec_next = 1;
     cam_k_len_next = 2'b10; 
@@ -214,6 +214,7 @@ logic memory_write_done_r, memory_write_done_next;
 logic memory_write_counter_r, memory_write_counter_next; 
 
 function void memory_write(input bit [$clog2(memory_length-1):0] writeAddress, input bit [memory_width/2-1:0] writeData);
+// function void memory_write(input bit [$clog2(memory_length-1):0] writeAddress, input bit [memory_width-1:0] writeData);
     if (~memory_write_done_r) begin
         case (memory_write_counter_r) 
             1'b0 : begin
@@ -234,7 +235,7 @@ function void memory_write(input bit [$clog2(memory_length-1):0] writeAddress, i
     end 
 endfunction 
 
-logic [255:0] mcse_id_r, mcse_id_next;
+(* dont_touch = "true" *)logic [255:0] mcse_id_r, mcse_id_next;
 logic [1:0] mcse_id_generation_counter_r, mcse_id_generation_counter_next; 
 logic mcse_id_done_r, mcse_id_done_next; 
 
@@ -251,7 +252,7 @@ endfunction
 
 logic [1:0] chip_id_generation_counter_r, chip_id_generation_counter_next; 
 logic chip_id_generation_done_r, chip_id_generation_done_next;
-logic [255:0] chip_id_r, chip_id_next; 
+(* dont_touch = "true" *)logic [255:0] chip_id_r, chip_id_next; 
 
 function void chip_id_generation(); 
     if (~chip_id_generation_done_r) begin

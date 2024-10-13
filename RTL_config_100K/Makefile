@@ -19,8 +19,9 @@ synthesis: clean
 NETLISTtest:
 	vcs $(SRC_FILES_NETLIST) $(FLAGS)
 
+clean: 
+	rm -rf simv.daidir/ $(WORK_DIR) WORK/
+
 .PHONY: MCSEtest synthesis NETLISTtest
 
 .PHONY: clean
-clean: 
-	rm -rf simv.daidir/ $(WORK_DIR) WORK/

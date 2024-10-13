@@ -19,6 +19,7 @@ set my_toplevel mcse_top
 
 elaborate $my_toplevel
 
+
 set_max_area 0
 
 ungroup -all -flatten -force
@@ -26,6 +27,7 @@ compile_ultra
 
 
 report_area
+report_power
 report_hierarchy
 report_reference
 

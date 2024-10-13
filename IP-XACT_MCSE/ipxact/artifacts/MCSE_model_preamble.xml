@@ -1,0 +1,27 @@
+
+
+
+  <!-- model ----------------------------------------------------------------------------------- -->
+
+  <ipxact:model>
+
+    <ipxact:views>
+        <ipxact:view>
+            <ipxact:name>RTL</ipxact:name>
+            <ipxact:componentInstantiationRef>RTL</ipxact:componentInstantiationRef>
+        </ipxact:view>
+    </ipxact:views>
+
+    <ipxact:instantiations>
+        <ipxact:componentInstantiation>
+            <ipxact:name>RTL</ipxact:name>
+            <ipxact:language>sverilog</ipxact:language>
+            <ipxact:moduleName>sentry</ipxact:moduleName>
+            <ipxact:fileSetRef>
+                <ipxact:localName>Hdl</ipxact:localName>
+            </ipxact:fileSetRef>
+        </ipxact:componentInstantiation>
+    </ipxact:instantiations>
+
+    <ipxact:ports>
+
