@@ -1,0 +1,37 @@
+SRC_FILES := mcse_top.sv mcse_control_unit.sv secure_memory.sv secure_boot_control.sv lifecycle_protection.sv lc_memory.sv fw_auth.sv scan_protection.sv \
+             min_security_module.sv sha_top.sv sha256_puf_256.v camellia.v camellia_top.sv \
+             gpio.v gpio_regmap.v oh_dsync.v io.v packet2emesh.v c1908.v primitives.v \
+			 NCL_gates.v NCL_signals.pkg.sv MTNCL_gates.v MTNCL_treecomps.sv BOOLEAN_gates.v MTD3L_gates.v MTD3L_completion.sv poly_trans_gates.v cell_in_behavioral.v \
+			 MTD3L_to_sync_p2s_bit_vector_AES_v4.sv MTD3L_to_sync_p2s_bit_vector_SHA3_v4.sv \
+			 sync_to_MTD3L_s2p_bit_vector_v4.sv polymorphic_top_Synopsys.v  \
+			 polymorphic_top_w_wrapper.v apc_wrapper.sv \
+             puf.v bus_translation.sv data_worker.sv error_correction.v mcse_top_tb.sv lec25dscc25.v
+
+
+SRC_FILES_NETLIST := mcse_netlist.v mcse_top_netlist_tb.sv lec25dscc25.v
+
+FLAGS := -sverilog -suppress -R +vcs+vcdpluson +neg_tchk -timescale=1ns/1ps
+
+TCL_SCRIPT = compiledc.tcl
+
+MCSEtest: clean mcse_configuration
+	vcs $(SRC_FILES) $(FLAGS) 
+
+MCSEtest_wrong: clean mcse_configuration
+	vcs $(SRC_WRONG_FILES) $(FLAGS) 
+
+NETLISTtest: clean
+	vcs  $(FLAGS) $(SRC_FILES_NETLIST) 
+	
+synthesis: clean 
+	dc_shell -f compiledc.tcl
+
+mcse_configuration:
+	python mcse_configuration.py 
+
+clean: 
+	rm -rf simv.daidir/ $(WORK_DIR) WORK/
+
+.PHONY: MCSEtest NETLISTtest synthesis
+
+.PHONY: clean

@@ -1,0 +1,707 @@
+//`timescale 1 ns / 100 ps
+`include "mcse_def.svh"
+
+
+module mcse_top_tb;
+
+
+    localparam pcm_data_width = 32;
+    localparam pcm_addr_width = 32;
+    localparam puf_sig_length = `IPID_WIDTH;
+    localparam gpio_N = 32;
+    localparam gpio_AW = 32;
+    localparam gpio_PW = 2*gpio_AW+40;
+    localparam ipid_N = `IPID_N;
+    localparam ipid_width = `IPID_WIDTH;
+    localparam fw_image_N = `FW_N;
+    localparam fw_block_width = `FW_WIDTH;
+    localparam scan_key_width = `SCAN_KEY_WIDTH;
+    localparam scan_key_number = `SCAN_KEY_NUMBER;
+    parameter memory_width          = `SECURE_MEMORY_WIDTH;
+    parameter memory_length         = `SECURE_MEMORY_LENGTH;
+    parameter lc_memory_width          = `LC_MEMORY_WIDTH;
+
+    localparam    pAHB_ADDR_WIDTH                     = 32;
+    localparam    pAHB_DATA_WIDTH                     = `AHB_DATA_WIDTH_BITS;
+    localparam    pAHB_BURST_WIDTH                    = 3;
+    localparam    pAHB_PROT_WIDTH                     = 4;
+    localparam    pAHB_SIZE_WIDTH                     = 3;
+    localparam    pAHB_TRANS_WIDTH                    = 2;
+    localparam    pAHB_HRESP_WIDTH                    = 2;
+
+    localparam    pAHB_HPROT_VALUE                    = (     1 << 0  // [0] : 1 = data access        ( 0 = op code access            )
+                                                        |   1 << 1  // [1] : 1 = privileged access  ( 0 = user access               )
+                                                        |   0 << 2  // [2] : 0 = not bufferable     ( 1 = bufferable                )
+                                                        |   0 << 3); // [3] : 0 = not cacheable      ( 1 = cacheable                 )
+    localparam    pAHB_HSIZE_VALUE                    =       (`AHB_DATA_WIDTH_BITS == 32 ) ? 3'b010  // (010 = 32-bit    )
+                                                        :   (`AHB_DATA_WIDTH_BITS == 64 ) ? 3'b011  // (011 = 64-bit    )
+                                                        :   (`AHB_DATA_WIDTH_BITS == 128) ? 3'b110  // (110 = 128-bit   )
+                                                        :   3'b010; // Default to 32-bit
+    localparam    pAHB_HBURST_VALUE                   = 3'b011;       // 011 = 4 beat incrementing    ( 111 = 16 beat incrementing    )
+    localparam    pAHB_HMASTLOCK_VALUE                = 1'b1;         // 1 = locked transfer          ( 0 = unlocked transfer         )
+    localparam    pAHB_HNONSEC_VALUE                  = 1'b0;         // 0 = Secure transfer          ( 1 = non secure transfer       )
+
+    localparam   pPAYLOAD_SIZE_BITS                  = `IPID_WIDTH;
+    localparam    pMAX_TRANSFER_WAIT_COUNT            = 16;
+    localparam    pREVERSE_WORD_ORDER                 = 1;
+    localparam   pREVERSE_BYTE_ORDER                 = 0;
+
+    localparam [pAHB_ADDR_WIDTH-1:0]  ipid_address [0:ipid_N-1] = `IPID_ADDR_MAP;
+
+
+    logic   [pAHB_ADDR_WIDTH-1        :0]   O_haddr;
+    logic   [pAHB_BURST_WIDTH-1       :0]   O_hburst;
+    logic                                   O_hmastlock;
+    logic   [pAHB_PROT_WIDTH-1        :0]   O_hprot;
+    logic                                   O_hnonsec;
+    logic   [pAHB_SIZE_WIDTH-1        :0]   O_hsize;
+    logic   [pAHB_TRANS_WIDTH-1       :0]   O_htrans;
+    logic   [pAHB_DATA_WIDTH-1        :0]   O_hwdata;
+    logic                                   O_hwrite;
+    logic    [pAHB_DATA_WIDTH-1        :0]   I_hrdata;
+    logic                                    I_hready;
+    logic    [pAHB_HRESP_WIDTH-1       :0]   I_hresp;
+    logic                                    I_hreadyout;
+
+
+    logic                 clk=0;
+    logic                 rst_n;
+    logic                 init_config_n; 
+    logic  [gpio_N-1:0]   gpio_in;
+    logic  [`LC_MEMORY_WIDTH-1:0]        lc_transition_id;
+    logic                                    lc_transition_request_in;
+    logic  [`SECURE_MEMORY_WIDTH-1:0]        lc_authentication_id;
+    logic                 lc_authentication_valid;
+  
+    logic [gpio_N-1:0]   gpio_out;
+
+
+
+    logic [scan_key_width-1:0]           scan_key;
+    logic                                scan_enable;
+    logic                                scan_unlock;
+    logic                                scan_out;
+
+    initial begin :generate_clock
+        while (1)
+            #5 clk = ~clk;
+    end 
+
+    mcse_top #(.pcm_data_width(pcm_data_width), .pcm_addr_width(pcm_addr_width), . puf_sig_length(puf_sig_length),
+    .gpio_N(gpio_N), .gpio_AW(gpio_AW), .gpio_PW(gpio_PW), .ipid_N(ipid_N), .ipid_width(ipid_width), .fw_image_N(fw_image_N), .fw_block_width(fw_block_width),
+    .scan_key_width(scan_key_width), .scan_key_number(scan_key_number) )
+    mcse ( .* );
+
+    int k = 0;
+
+    
+
+    task bus_wakeup_handshake();
+        $display("[MCSE] Sending bus wakeup signal...");
+        while (gpio_out[6] != 1) begin // bus wakeup
+            @(posedge clk); 
+        end 
+
+        $display("[TB_TOP] Bus wakeup received...Sending bus wakeup ACK");
+        gpio_in[7] = 1; // bus wakeup ack
+        @(posedge clk); 
+    endtask
+
+    task chipid_generation(); 
+        $display("[MCSE] Calculating MCSE Silicon ID..."); 
+        while (~mcse.control_unit.secure_boot.mcse_id_done_r) begin
+            @(posedge clk); 
+        end 
+        $displayh("[MCSE] Silicon ID generation complete, MCSE Silicon ID = ", mcse.control_unit.secure_boot.mcse_id_r); 
+        $display("[MCSE] Proceeding with IP ID generation and bus wakeup handshake");
+        bus_wakeup_handshake(); 
+         
+        ipid_bus_stream();
+        $display("[MCSE] IP ID extraction complete...Generating Composite IP ID...");
+
+        while (~mcse.control_unit.secure_boot.hash_done_r) begin
+            @(posedge clk); 
+        end 
+        $displayh("[MCSE] Composite IP ID generation complete, Composite IP ID = ", mcse.control_unit.secure_boot.ipid_hash_r);  
+        $display("[MCSE] Generating Chip ID...");
+        while (~mcse.control_unit.secure_boot.chip_id_generation_done_r) begin
+            @(posedge clk); 
+        end 
+        // $display("[MCSE] Chip ID generation complete");
+        @(posedge clk); 
+   
+
+    endtask
+
+    
+
+    task chipid_auth();
+        chipid_generation(); 
+
+        while (~mcse.control_unit.secure_boot.chip_id_challenge_done_r) begin
+            @(posedge clk); 
+        end
+        
+        $displayh("[MCSE] Golden Chip ID = ", mcse.control_unit.mem.ram[0]);
+        // $displayh("[MCSE] Generated Chip ID = " , mcse.control_unit.secure_boot.encryption_output_r);
+        $displayh("[MCSE] Authentic Chip ID Value = ", mcse.control_unit.secure_boot.authentic_chip_id_r); 
+    endtask
+
+    task lifecycle_transition_request(input bit [`LC_MEMORY_WIDTH-1:0] id); 
+        $display("[TB_TOP] Requesting a lifecycle transition..."); 
+        $displayh("[TB_TOP] Lifecycle transition ID = ", id);
+        $display("[MCSE] Servicing lifecycle transition request..."); 
+
+
+        while (mcse.control_unit.secure_boot.lc_transition_request) begin
+            $display("Stall until internal lifecycle transition request signal is deasserted...");
+            @(posedge clk); 
+        end 
+
+        lc_transition_request_in = 1;
+        lc_transition_id = id; 
+
+        while (mcse.control_unit.secure_boot.lc_transition_done_r==0) begin
+            @(posedge clk);
+        end
+        lc_transition_request_in = 0;
+        lc_transition_id = 0;
+        // $displayh("[MCSE] LC Transition Success Value = ", mcse.control_unit.secure_boot.lc_transition_success_r);
+        if (mcse.control_unit.secure_boot.lc_transition_success_r) begin
+            $display("[MCSE] Lifecycle transition successful");
+        end 
+        else begin
+            $display("[MCSE] Lifecycle transition failed");
+        end 
+
+        if (mcse.control_unit.secure_boot.lc_state == 3'b001) begin
+            $display("[MCSE] Booting into Manufacture and Test lifecycle");
+        end 
+        else if (mcse.control_unit.secure_boot.lc_state == 3'b010) begin
+            $display("[MCSE] Booting into Packaging/OEM lifecycle");
+        end 
+        else if (mcse.control_unit.secure_boot.lc_state == 3'b011) begin
+            $display("[MCSE] Booting into Deployment lifecycle");
+        end 
+        else if (mcse.control_unit.secure_boot.lc_state == 3'b100) begin
+            $display("[MCSE] Booting into Recall lifecycle");
+        end 
+        else if (mcse.control_unit.secure_boot.lc_state == 3'b101) begin
+            $display("[MCSE] Booting into End of Life lifecycle");
+        end
+
+    endtask   
+
+    task lifecycle_auth(input bit [`SECURE_MEMORY_WIDTH-1:0] id);
+
+        $display("[TB_TOP] Requesting Lifecycle Authentication...");   
+        $displayh("[TB_TOP] Lifecycle authentication Key = ", id);       
+
+        lc_authentication_valid = 1; 
+        lc_authentication_id = id;
+
+        while (~mcse.control_unit.secure_boot.lifecycle_authentication_done_r) begin
+            @(posedge clk);
+        end
+        
+        $display("[MCSE] Lifecycle Authentication Complete"); 
+        // $displayh("[MCSE] Lifecycle Authentication Value = ", mcse.control_unit.secure_boot.lifecycle_authentication_value_r);
+        if (mcse.control_unit.secure_boot.lifecycle_authentication_value_r) begin
+            $display("[MCSE] Lifecycle authentication successful");
+        end
+        else begin
+            $display("[MCSE] Lifecycle authentication failed");
+        end 
+
+        while (mcse.control_unit.secure_boot.lifecycle_authentication_done_r) begin
+            @(posedge clk); 
+        end 
+        
+        lc_authentication_valid = 0; 
+        lc_authentication_id = 0; 
+
+    endtask 
+
+    
+    logic [`LC_MEMORY_WIDTH-1:0] lc_transition_id_testing = {`LC_MEMORY_WIDTH/32{32'h33a344a3}};
+    logic [`SECURE_MEMORY_WIDTH-1:0] lc_authentication_id_oem = {`SECURE_MEMORY_WIDTH/32{32'h431909d9}};
+    logic [`LC_MEMORY_WIDTH-1:0] lc_transition_id_oem = {`LC_MEMORY_WIDTH/32{32'h988b6a57}};
+    logic [`SECURE_MEMORY_WIDTH-1:0] lc_authentication_id_deployment = {`SECURE_MEMORY_WIDTH/32{32'h8e307018}};
+    logic [`LC_MEMORY_WIDTH-1:0] lc_transition_id_deployment = {`LC_MEMORY_WIDTH/32{32'h4893565d}};
+    logic [`SECURE_MEMORY_WIDTH-1:0] lc_authentication_id_recall = {`SECURE_MEMORY_WIDTH/32{32'hd995f5dd}};
+    logic [`LC_MEMORY_WIDTH-1:0] lc_transition_id_recall = {`LC_MEMORY_WIDTH/32{32'hcabc36e4}};
+    logic [`SECURE_MEMORY_WIDTH-1:0] lc_authentication_id_endoflife = {`SECURE_MEMORY_WIDTH/32{32'hdf0f326b}};
+    
+    task testing_lifecycle_first_boot();
+        // reset_handshake();
+        $display("[MCSE] Booting into Manufacture & Test lifecycle");
+        $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
+
+        if (mcse.control_unit.secure_boot.first_boot_flag_r) begin
+            $display("[MCSE] Proceeding with Chip ID generation...");
+        end 
+
+        
+        chipid_generation(); 
+
+        while ( ~mcse.control_unit.secure_boot.memory_write_done_r) begin
+            @(posedge clk); 
+        end 
+        gpio_in = 0; 
+        @(posedge clk); 
+        $display("[MCSE] Encrypting Chip ID and storing into memory..."); 
+        $displayh("[MCSE] Chip ID Stored in memory = ", mcse.control_unit.mem.ram[0]); 
+        $display("[MCSE] Chip ID generation complete...");
+        $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
+        // lifecycle_transition_request(lc_transition_id_testing);
+        // reset_handshake();
+    endtask 
+
+    task oem_lifecycle_first_boot();
+        reset_handshake();
+        $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
+        lifecycle_auth(lc_authentication_id_oem); 
+        chipid_auth(); 
+        if (mcse.control_unit.secure_boot.lifecycle_authentication_value_r && mcse.control_unit.secure_boot.authentic_chip_id_r) begin
+            $display("[MCSE] Succesfully completed Lifecycle and Chip ID authentication...");
+        end
+        gpio_in = 0; 
+        @(posedge clk); 
+        $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
+        operation_release_handshake();
+        scan_control();
+        lifecycle_transition_request(lc_transition_id_oem);
+        reset_handshake();
+    endtask 
+
+    task operation_release_handshake();
+        //$display("Waiting for operation release trigger");
+        while (gpio_out[4] != 1) begin // sending reset
+            @(posedge clk); 
+        end 
+
+        $display("[TB_TOP] Normal operation release trigger received...Sending host normal operation release ACK...");
+
+        gpio_in[5] = 1; // host ack
+
+        // Wait for the completion of the reset routine
+        while (~mcse.control_unit.secure_boot.operation_release_done_r) begin
+            @(posedge clk);
+        end
+
+        $display("[MCSE] Normal operation release ACK recieved...Normal operation release completed");
+    endtask
+
+    task deployment_lifecycle_first_boot();
+        reset_handshake();
+        $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
+        lifecycle_auth(lc_authentication_id_deployment); 
+        chipid_auth(); 
+        if (mcse.control_unit.secure_boot.lifecycle_authentication_value_r && mcse.control_unit.secure_boot.authentic_chip_id_r) begin
+            $display("[MCSE] Succesfully completed Lifecycle and Chip ID authentication...");
+        end
+        @(posedge clk); 
+        $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
+
+        operation_release_handshake(); 
+        fw_signature_authentication_request();
+        lifecycle_transition_request(lc_transition_id_deployment);
+        reset_handshake();
+
+    endtask 
+    
+    task reset_handshake();
+        while (gpio_out[0] != 1) begin // sending reset
+            @(posedge clk); 
+        end 
+    
+        $display("[TB_TOP] Reset request received...Sending host ACK");
+
+        gpio_in[1] = 1; // host ack
+        @(posedge clk); 
+        
+        // Wait for the completion of the reset routine
+        while (~mcse.control_unit.secure_boot.reset_routine_done_r) begin
+            @(posedge clk);
+        end
+
+        gpio_in[1] = 0;
+        if (mcse.control_unit.secure_boot.gpio_reg_rdata[1]) begin
+            $display("[MCSE] Host SoC reset ACK received...Host SoC reset routine completed");
+        end 
+        else begin
+            $display("[MCSE] Host SoC reset ACK not received");
+        end 
+    endtask
+
+    task recall_lifecycle_first_boot();
+        reset_handshake();
+        $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
+        lifecycle_auth(lc_authentication_id_recall); 
+        chipid_auth(); 
+        if (mcse.control_unit.secure_boot.lifecycle_authentication_value_r && mcse.control_unit.secure_boot.authentic_chip_id_r) begin
+            $display("[MCSE] Succesfully completed Lifecycle and Chip ID authentication...");
+        end
+        @(posedge clk); 
+        $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
+        operation_release_handshake();
+        lifecycle_transition_request(lc_transition_id_recall);
+        reset_handshake();
+    endtask 
+
+    task endoflife_lifecycle_first_boot();
+        reset_handshake();
+        $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
+        lifecycle_auth(lc_authentication_id_endoflife);
+    endtask 
+
+
+    task testing_lifecycle_subsequent_boot(); 
+        reset_handshake();
+        testing_lifecycle_first_boot();
+
+        // global reset to test subsquent boots
+        rst_n = 0; 
+        @(posedge clk);
+        rst_n = 1; 
+        @(posedge clk);
+        // reset_handshake(); 
+        while (gpio_out[0] != 1) begin // sending reset
+            @(posedge clk); 
+        end 
+    
+        // $display("[TB_TOP] Reset request received...Sending host ACK");
+
+        gpio_in[1] = 1; // host ack
+        @(posedge clk); 
+        
+        // Wait for the completion of the reset routine
+        while (~mcse.control_unit.secure_boot.reset_routine_done_r) begin
+            @(posedge clk);
+        end
+
+        gpio_in[1] = 0;
+        if (mcse.control_unit.secure_boot.gpio_reg_rdata[1]) begin
+            // $display("[MCSE] Host SoC reset ACK received...Host SoC reset routine completed");
+        end 
+        else begin
+            // $display("[MCSE] Host SoC reset ACK not received");
+        end 
+
+
+        // $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
+        lifecycle_transition_request(lc_transition_id_testing); 
+        reset_handshake(); 
+    endtask 
+
+    task oem_lifecycle_subsequent_boot();
+        $display("[MCSE] Initializing MCSE and sending Host SoC reset signal...");
+        reset_handshake();
+
+        oem_lifecycle_first_boot();
+
+        // global reset to test subsquent boots
+        rst_n = 0; 
+        @(posedge clk);
+        rst_n = 1; 
+        @(posedge clk);
+        $display("[MCSE] Initializing MCSE and sending Host SoC reset signal...");
+        reset_handshake(); 
+        $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
+        operation_release_handshake();
+
+        lifecycle_transition_request(lc_transition_id_oem);
+        reset_handshake(); 
+    endtask
+
+    task deployment_lifecycle_subsequent_boot();
+        $display("[MCSE] Initializing MCSE and sending Host SoC reset signal...");
+        reset_handshake();
+        deployment_lifecycle_first_boot();
+
+        // $display("[TB_TOP] Power cycling chip...");
+        rst_n = 0; 
+        @(posedge clk);
+        rst_n = 1; 
+        @(posedge clk);
+        $display("[MCSE] Initializing MCSE and sending Host SoC reset signal...");
+        reset_handshake();
+        $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
+        operation_release_handshake();
+        fw_signature_authentication_request();
+
+        lifecycle_transition_request(lc_transition_id_deployment);
+        reset_handshake(); 
+
+    endtask 
+
+    task recall_lifecycle_subsequent_boot();
+        $display("[MCSE] Initializing MCSE and sending Host SoC reset signal...");
+        reset_handshake();
+        recall_lifecycle_first_boot();
+
+        // global reset to test subsquent boots
+        rst_n = 0; 
+        @(posedge clk);
+        rst_n = 1; 
+        @(posedge clk);
+        $display("[MCSE] Initializing MCSE and sending Host SoC reset signal...");
+        reset_handshake();
+        $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
+        operation_release_handshake();
+
+        lifecycle_transition_request(lc_transition_id_recall);
+        reset_handshake();
+    endtask 
+
+    task endoflife_lifecycle_subsequent_boot();
+        $display("[MCSE] Initializing MCSE and sending Host SoC reset signal...");
+        reset_handshake();
+        endoflife_lifecycle_first_boot();
+
+
+        // global reset to test subsquent boots
+        rst_n = 0; 
+        @(posedge clk);
+        rst_n = 1; 
+        @(posedge clk);
+        $display("[MCSE] Initializing MCSE and sending Host SoC reset signal...");
+        reset_handshake();
+        $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
+ 
+    endtask 
+    
+
+    logic [31:0] array_bus [(ipid_N * (pPAYLOAD_SIZE_BITS / pAHB_DATA_WIDTH))-1:0]; 
+    task initialize_array_bus();
+        for (int i =0; i < ipid_N * (pPAYLOAD_SIZE_BITS / pAHB_DATA_WIDTH); i++) begin 
+            array_bus[i] = $urandom_range(1,2147483647);
+        end 
+    endtask 
+
+    task individual_ipid_stream(input bit [ipid_N-1:0] ipid_index);
+        // for (int i = 0; i < 16; i++) begin
+        for (int i = 0; i < (pPAYLOAD_SIZE_BITS / pAHB_DATA_WIDTH); i++) begin
+            I_hrdata = array_bus[(ipid_index*(pPAYLOAD_SIZE_BITS / pAHB_DATA_WIDTH)) + i];
+            $displayh("[TB_TOP] O_haddr = ", O_haddr, " and I_hrdata = ", I_hrdata); 
+            @(posedge clk); 
+        end 
+    endtask 
+
+
+    task ipid_bus_stream();  
+        while (~mcse.control_unit.secure_boot.ipid_extraction_done_r) begin 
+            for (bit [ipid_N-1:0] k = 0; k < ipid_N; k++) begin
+                if (O_haddr == ipid_address[k] && O_htrans == 2'b10) begin
+                    $displayh("[TB_TOP] Providing IPID values for address ", O_haddr); 
+                    individual_ipid_stream(k); 
+                end 
+            end  
+            @(posedge clk); 
+        end 
+        for (int i =0 ; i < ipid_N; i++) begin
+            $displayh("[MCSE] IPID ",  i[3:0], " = ", mcse.control_unit.secure_boot.ipid_r[i]);
+        end 
+    endtask 
+    
+
+    localparam [pAHB_ADDR_WIDTH-1:0]   fw_address [0:fw_image_N-1] = `FW_ADDR_MAP;
+
+    logic [255:0] fw_image [fw_image_N-1:0];
+    logic [31:0] fw_array_bus[(fw_image_N * 8)-1:0];
+    task initialize_fw_array();
+        for (int i=0; i < fw_image_N ; i++) begin
+            for (int j = 0 ; j < fw_image_N-1 ; j++) begin
+                fw_array_bus[i*8 + j] = fw_image[i] >> (256 - (j+1) * 32);
+            end
+        end
+    endtask 
+
+    task fw_block_stream(input bit [fw_image_N-1:0] fw_index);
+        for (int i = 0; i < 8; i++) begin
+            // I_hrdata = fw_array_bus[(fw_index*(pPAYLOAD_SIZE_BITS / pAHB_DATA_WIDTH)) + i];
+            I_hrdata = fw_array_bus[(fw_index*8) + i];
+            $displayh("[TB_TOP] O_haddr = ", O_haddr, " and I_hrdata = ", I_hrdata); 
+            @(posedge clk); 
+        end 
+    endtask 
+
+    task fw_image_stream();  
+        $display("[TB_TOP] Starting Firmware image extraction");
+        while (~mcse.control_unit.fw_auth.fw_extraction_done_r) begin
+            for (bit [fw_image_N-1:0] k = 0; k < fw_image_N; k++) begin
+                if (O_haddr == fw_address[k] && O_htrans == 2'b10) begin
+                    $displayh("[TB_TOP] Providing Firmware image values for address ", O_haddr); 
+                    fw_block_stream(k); 
+                end 
+            end  
+            @(posedge clk); 
+        end 
+        for (int i =0 ; i < fw_image_N; i++) begin
+            // $displayh("[MCSE] Firmware Block ",  i[3:0], " = ", mcse.control_unit.fw_auth.fw_r[i]);
+        end 
+    endtask 
+
+
+    task fw_hash();
+        $display("starting fw hash");
+        while (~mcse.control_unit.fw_auth.hash_done_r) begin
+            @(posedge clk);
+        end
+    endtask 
+
+    task fw_auth();
+        while (~mcse.control_unit.fw_auth.fw_authentication_done_r) begin 
+            @(posedge clk);
+        end
+
+        if (mcse.control_unit.fw_auth.fw_authentication_value_next) begin
+            $display("[MCSE] Firmware is authentic");
+        end
+        else begin
+            $display("[MCSE] Firmware is not authentic");
+        end
+    endtask 
+
+    task fw_signature_authentication_request();
+    
+        gpio_in[14] = 1;
+
+        initialize_fw_array();
+        fw_image_stream();
+        fw_auth();
+
+        gpio_in[14] = 0;
+
+        gpio_in[17] = 1;
+
+        while (mcse.control_unit.secure_boot.fw_update_counter_r != 2) begin
+            @(posedge clk);
+        end
+
+        if (gpio_out[15]) begin
+            $display("[MCSE] Firmware signature authentication successful...Sending FW upgrade ACK");
+            end
+        else if (gpio_out[16]) begin
+            $display("[MCSE] Firmware signature authentication failed...Sending failure message");
+        end
+        $display("[MCSE] Waiting for TA2 acknowledgement");
+
+
+        while (~mcse.control_unit.secure_boot.gpio_reg_rdata[17]) begin
+            @(posedge clk); 
+        end 
+        $display("[MCSE] Received TA2 acknowledgement");
+
+    endtask
+    
+    logic [(`SCAN_KEY_NUMBER*`SCAN_KEY_WIDTH-1):0] key_temp;
+
+    task scan_control();
+        integer i= 0;
+
+        $display("[TB_TOP] Testing scan unlock status before key-loading process.");
+        $display("[MCSE] Scan unlock status: %x",scan_unlock);
+        $display("[TB_TOP] Starting scan input Key Loading process.");
+
+        for (i = 0; i < scan_key_number; i = i + 1) begin
+            scan_key = key_temp[(i*32) +: 32];  // Extract 32 bits at a time
+            $display("[MCSE] Checking scan key sequence: %d", i+1);
+            $displayh("[TB_TOP] Scan key: ", scan_key);
+            @(posedge clk);
+        end
+
+         @(posedge clk);
+         $display("[MCSE] Scan unlock status: %x",scan_unlock);
+
+        
+        // Enable scan for few clock cycles and stream scan_out
+        $display("[TB_TOP] Enabling scan chain for few clock cycles to stream scan out");
+        for (int i = 0; i < 5; i++) begin
+            scan_enable = 1;
+            if (scan_unlock == 1) begin
+                @(posedge clk);
+                @(posedge clk);
+                $display("[MCSE] Scan unlock successful");
+                $display("[MCSE] Scan unlock status: %x",scan_unlock);
+                $displayh("[TB_TOP] Extracting Scan Out = ", scan_out);
+            end
+            else begin
+                $display("[MCSE] Scan unlock failed");
+                $display("[MCSE] Scan unlock status: %x",scan_unlock);
+                $displayh("[TB_TOP] Extracting Scan Out = ", scan_out);
+            end
+            @(posedge clk);
+        end
+    
+        scan_enable = 0;
+
+        $display("[MCSE] Terminating vimscan simulation.");
+    endtask 
+
+    
+
+    initial begin : drive_inputs
+        $dumpfile("mcse.vcd");
+        $dumpvars(0, mcse_top_tb);
+
+        
+       
+        $display("[TB_TOP] Asserting global reset and initializing MCSE configuration");
+        for (integer i = 0; i < 100; i=i+1) begin
+            rst_n = 0;
+            init_config_n =0; 
+            gpio_in = 0; 
+            I_hrdata = 0;
+            I_hready = 1;
+            I_hresp = 0;
+            I_hreadyout = 1;
+            @(posedge clk);
+        end 
+
+        initialize_array_bus();
+
+        fw_image = {  256'h3F8D42ABE9A7E09DAB743FA1F3E67839CA1FC4F22BC526CCFF9E2F74B3447561,
+                      256'h79050A0F7F87BEBD3D253A83C9F3E205BCBB8A76FA7DF79BB345F859366B2D9E, 
+                      256'h6A195890AE4F30F88F7A6730578C209F2C7CE3F12A5EEDBFCE0657BDB8F140D5, 
+                      256'h1F20967289AEBDB7F9564B96C3B9D6FED4E328EC10EBB2D20C21CB1776A934D9, 
+                      256'h4053D28E9563E5A87498B056D078A9D8B02F4D43CC26D0A8A6740A3842F34571, 
+                      256'h2B8FD78103B1C8919AF80FDB2E14A1BC61FD8E4004902F90C6A5F0C4BB6A13D2, 
+                      256'h45C575D8C76D92BCF4DC0B8F73AC6D65F78EF13D7BDF23903C8C6A77AB7BCDDA, 
+                      256'h7E694B750F0CBFC7842E92F45DE89E5BDC9D105037A5903C4C4F2B4B0C2DD1E7, 
+                      256'hb753e040b6807fa87701830ed2dca2235b8269a964a2add39c1e28b39f041820};
+
+
+        key_temp = 256'h87A5E932FA1BC49DFF8A0B2C3D4E5F607891ABCDEF0123456789ABCDEF012345; // input challenge key for vimscan
+
+        $display("[TB_TOP] Deasserting global reset and initial MCSE configuration");
+        rst_n = 1;
+        init_config_n = 1;
+
+        @(posedge clk);
+        @(posedge clk); 
+        @(posedge clk); 
+        $display("[MCSE] Initializing MCSE and sending Host SoC reset signal...");
+
+        
+        // full_bootflow with firmware and scan control
+        
+        // testing_lifecycle_first_boot(); 
+        
+
+        testing_lifecycle_subsequent_boot();
+        
+        
+        oem_lifecycle_first_boot();
+        
+        deployment_lifecycle_first_boot();
+        
+        recall_lifecycle_first_boot();
+       
+        endoflife_lifecycle_first_boot();
+
+    
+        $finish; 
+    end 
+
+endmodule 

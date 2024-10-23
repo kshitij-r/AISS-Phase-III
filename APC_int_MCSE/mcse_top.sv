@@ -85,7 +85,10 @@ module mcse_top # (
     wire                      apc_data_out_valid_aes;
     wire                      apc_data_out_aes;
     wire                      core_reset;
-    // APC inputd
+    wire                      apc_sleep_out_sha3;
+    wire                      apc_data_out_valid_sha3;
+    wire                      apc_data_out_sha3;
+    // APC inputs
     wire                          apc_data_in;
     wire                          apc_data_in_valid;
     wire                          apc_word_en;
