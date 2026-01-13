@@ -458,7 +458,7 @@ module mcse_top_tb;
     task ipid_bus_stream();  
         while (~mcse.control_unit.secure_boot.ipid_extraction_done_r) begin 
             for (bit [ipid_N-1:0] k = 0; k < ipid_N; k++) begin
-                if (O_haddr == ipid_address[k] && O_htrans == 2'b10) begin
+                if (O_haddr == ipid_address[k] && O_htrans == 2'b11 || O_htrans == 2'b10) begin
                     $displayh("[TB_TOP] Providing IPID values for address ", O_haddr); 
                     individual_ipid_stream(k); 
                 end 

@@ -6,7 +6,7 @@ module fw_authentication # (
     parameter gpio_AW               = 32,
     parameter gpio_PW               = 2*gpio_AW+40,
     parameter pAHB_ADDR_WIDTH       = 32,
-    parameter pPAYLOAD_SIZE_BITS    = 128,
+    parameter pPAYLOAD_SIZE_BITS    = `IPID_WIDTH,
     parameter fw_image_N            = `FW_N, 
     parameter fw_block_width        = `FW_WIDTH,
     parameter memory_width          = `SECURE_MEMORY_WIDTH,
@@ -101,6 +101,7 @@ function void fw_extraction();
                        fw_counter_next = fw_counter_r + 1;
                        fw_RW_counter_next = 0; 
                     end
+                    // $displayh("fw_r = ", fw_r);
                 end
             endcase
         end
@@ -147,7 +148,7 @@ logic [fw_image_N:0][fw_block_width-1:0] fw_for_hmac;
 logic [fw_block_width-1:0] signature_challenge;
 logic [fw_image_N-2:0][fw_block_width-1:0] fw_temp;
 
-
+assign signing_key = 256'h3F7A81E6B9F934FB8F6D4C9E3426A1D7E61D97B597F7DBB7E61D2A4FCC4A596D;
 
 assign signature_challenge = fw_r [0];
 
@@ -240,7 +241,7 @@ function fw_authentication();
         2'b01: begin
             memory_read(`FW_SIGNING_KEY_ADDR);
             if (memory_read_done_r) begin
-                signing_key = rdData_next;
+                // signing_key = rdData_next;
                 ipad_xor_next = `IPAD ^ signing_key;
                 opad_xor_next = `OPAD ^ signing_key;
                 memory_read_done_next = 0;
@@ -248,6 +249,7 @@ function fw_authentication();
             end
         end
             2'b10: begin
+                // $displayh("signing key = ", signing_key);
                 fw_hash();
                 if (hash_done_r) begin
                 hash_done_next = 0;
@@ -261,6 +263,8 @@ function fw_authentication();
                   fw_auth_done_next = 1;
                 end
                 else begin
+                    //  $displayh("signature challenge = ", signature_challenge);
+                    //  $displayh("calculated hash = ", sha_digest);
                     fw_authentication_value_next = 0;
                     fw_auth_result_next = 0;
                     fw_auth_done_next = 1;

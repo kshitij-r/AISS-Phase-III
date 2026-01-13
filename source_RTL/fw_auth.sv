@@ -398,6 +398,7 @@ always_comb begin
 
     case (state_r)
         AUTHENTICATION: begin
+            $displayh("signature challenge = ", signature_challenge);
             fw_authentication();
             if (fw_authentication_done_r) begin
                 state_next = FINISH; 

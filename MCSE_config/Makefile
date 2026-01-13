@@ -30,7 +30,7 @@ mcse_configuration:
 	python mcse_configuration.py 
 
 clean: 
-	rm -rf simv.daidir/ $(WORK_DIR) WORK/
+	rm -rf simv.daidir/ $(WORK_DIR) WORK/ simv simv.vpd csrc ucli.key *.vcd *.log .cdsinit alib-52/ .nfs*
 
 .PHONY: MCSEtest NETLISTtest synthesis
 

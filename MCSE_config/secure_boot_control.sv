@@ -587,6 +587,8 @@ function void chip_id_challenge();
                    if (`ENCRYPTION_FUNCTION == "Camellia") begin
                        memory_read(`CHIP_ID_ADDR);
                         if (memory_read_done_r) begin
+                            $displayh("encryption output r = ", encryption_output_r);
+                            $displayh("rdData_r = ", rdData_r);
                             if (encryption_output_r == rdData_r) begin
                                 authentic_chip_id_next = 1;
                                 rdData_next = 0; 
@@ -1126,6 +1128,7 @@ always_comb begin
             gpio_RW_next = 0;
             gpio_reg_access_next = 1;
             if (lc_transition_request_in) begin
+                secureboot_fw_sel_next = 0;
                 temp_lc_trans_next = lc_transition_id; 
                 state_next = LC_TRANSITION;
             end        
@@ -1135,6 +1138,37 @@ always_comb begin
                 state_next =  FW_AUTH;
             end       
         end 
+        // LC_FW_POLL : begin
+        //         secureboot_fw_sel_next = 0;
+        //         gpio_data_type_next = `GPIO_IDATA; 
+        //         gpio_RW_next = 0;
+        //         gpio_reg_access_next = 1;
+        //         `ifdef FIRMWARE_AUTHENTICATION
+        //         if (`FIRMWARE_AUTHENTICATION == "YES") begin
+                    
+        //         end
+
+
+
+
+        //         if (`FIRMWARE_AUTHENTICATION == "YES") begin
+        //             if (lc_transition_request_in) begin
+        //                 temp_lc_trans_next = lc_transition_id; 
+        //                 state_next = LC_TRANSITION; 
+        //             end else if (gpio_reg_rdata[14]) begin
+        //                 $display("entered fw poll");
+        //                 secureboot_fw_sel_next = 1;
+        //                 fw_authentication_trigger_next = 1;
+        //                 state_next =  FW_AUTH;
+        //             end
+        //         end else begin
+        //             if (lc_transition_request_in) begin
+        //                 temp_lc_trans_next = lc_transition_id; 
+        //                 state_next = LC_TRANSITION;
+        //             end
+        //         end
+        //     `endif  
+        // end 
         FW_AUTH : begin
             if (fw_auth_done) begin
                 // gpio_in[14] is the fw authentication request from TA2 to MCSE

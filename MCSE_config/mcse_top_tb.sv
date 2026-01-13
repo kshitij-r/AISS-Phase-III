@@ -304,9 +304,12 @@ module mcse_top_tb;
         $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
 
         operation_release_handshake(); 
-        fw_signature_authentication_request();
+        `ifdef FIRMWARE_AUTHENTICATION
+            fw_signature_authentication_request();
+        `endif 
         lifecycle_transition_request(lc_transition_id_deployment);
         reset_handshake();
+        // fw_signature_authentication_request();
 
     endtask 
     
@@ -428,7 +431,7 @@ module mcse_top_tb;
         reset_handshake();
         $displayh("[MCSE] First boot flag value = ", mcse.control_unit.secure_boot.first_boot_flag_r);
         operation_release_handshake();
-        fw_signature_authentication_request();
+        // fw_signature_authentication_request();
 
         lifecycle_transition_request(lc_transition_id_deployment);
         reset_handshake(); 
@@ -503,7 +506,8 @@ module mcse_top_tb;
             $displayh("[MCSE] IPID ",  i[3:0], " = ", mcse.control_unit.secure_boot.ipid_r[i]);
         end 
     endtask 
-    
+
+    // /// /////// Comment this portion out if firmware_authentication=NO //////////////////////////////////
 
     localparam [pAHB_ADDR_WIDTH-1:0]   fw_address [0:fw_image_N-1] = `FW_ADDR_MAP;
 
@@ -594,6 +598,8 @@ module mcse_top_tb;
         $display("[MCSE] Received TA2 acknowledgement");
 
     endtask
+
+    // //////////////// up until this /////////////////////
     
     logic [(`SCAN_KEY_NUMBER*`SCAN_KEY_WIDTH-1):0] key_temp;
 
@@ -661,6 +667,8 @@ module mcse_top_tb;
 
         initialize_array_bus();
 
+        // ///  Comment fw_image out if firmware_authentication=NO //////////////////////////////////
+
         fw_image = {  256'h3F8D42ABE9A7E09DAB743FA1F3E67839CA1FC4F22BC526CCFF9E2F74B3447561,
                       256'h79050A0F7F87BEBD3D253A83C9F3E205BCBB8A76FA7DF79BB345F859366B2D9E, 
                       256'h6A195890AE4F30F88F7A6730578C209F2C7CE3F12A5EEDBFCE0657BDB8F140D5, 
@@ -671,6 +679,7 @@ module mcse_top_tb;
                       256'h7E694B750F0CBFC7842E92F45DE89E5BDC9D105037A5903C4C4F2B4B0C2DD1E7, 
                       256'hb753e040b6807fa87701830ed2dca2235b8269a964a2add39c1e28b39f041820};
 
+        // //////////////// up until this /////////////////////
 
         key_temp = 256'h87A5E932FA1BC49DFF8A0B2C3D4E5F607891ABCDEF0123456789ABCDEF012345; // input challenge key for vimscan
 

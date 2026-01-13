@@ -197,8 +197,6 @@ module mcse_control_unit #(
     logic                                      fw_auth_done;
 
 
-
-
     secure_memory #(.WIDTH(memory_width), .LENGTH(memory_length) ) mem (.rst_n(init_config_n), .*);
 
     secure_boot_control #(.pcm_data_width(pcm_data_width), .pcm_addr_width(pcm_addr_width), .puf_sig_length(puf_sig_length), 
@@ -209,17 +207,24 @@ module mcse_control_unit #(
     .bootControl_bus_RW(secureboot_bootControl_bus_RW), .bootControl_bus_write(secureboot_bootControl_bus_write),
     .sha_block(secureboot_sha_block), .sha_init(secureboot_sha_init), .sha_next(secureboot_sha_next), .sha_sel(secureboot_sha_sel),
     .pcm_puf_in(pcm_puf_in),
-     .* );
-
-    fw_authentication #(.gpio_N(gpio_N), .gpio_AW(gpio_AW), .gpio_PW(gpio_PW),
-    .fw_image_N(fw_image_N), .fw_block_width(fw_block_width),
-    .pAHB_ADDR_WIDTH(pAHB_ADDR_WIDTH), .pPAYLOAD_SIZE_BITS(pPAYLOAD_SIZE_BITS), .memory_width(memory_width), .memory_length(memory_length))
-    fw_auth ( .* );
+    .* );
 
     vim_scan_control #(.scan_key_width(scan_key_width), .scan_key_number(scan_key_number)) scan_control ( .* );
 
-    apc_wrapper apc ( .* );
+    // apc_wrapper apc ( .* );
 
+
+
+    `ifdef FIRMWARE_AUTHENTICATION
+        
+        fw_authentication #(.gpio_N(gpio_N), .gpio_AW(gpio_AW), .gpio_PW(gpio_PW),
+        .fw_image_N(fw_image_N), .fw_block_width(fw_block_width),
+        .pAHB_ADDR_WIDTH(pAHB_ADDR_WIDTH), .pPAYLOAD_SIZE_BITS(pPAYLOAD_SIZE_BITS), .memory_width(memory_width), .memory_length(memory_length))
+        fw_auth ( .* );
+        
+    `endif
+
+   
     
     always_comb begin
         if ( ~secureboot_fw_sel) begin

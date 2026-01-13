@@ -10,6 +10,7 @@ with open('mcse_config.json', 'r') as json_file:
     lifecycle_authentication_key = config_data['lifecycle_authentication_key']
     lifecycle_transition_key = config_data['lifecycle_transition_key']
     encryption_function = config_data['encryption_function']
+    firmware_authentication = config_data['firmware_authentication']
 
 # Update mcse_def.svh file
 with open('mcse_def.svh', 'r') as svh_file:
@@ -31,6 +32,12 @@ with open('mcse_def.svh', 'r') as svh_file:
             lines[i] = '`define LC_MEMORY_WIDTH {}\n' .format(lifecycle_transition_key)
         elif '`define ENCRYPTION_FUNCTION' in line:
             lines[i] = '`define ENCRYPTION_FUNCTION "{}"\n' .format(encryption_function)
+        elif '`define FIRMWARE_AUTHENTICATION' in line or '//@define FIRMWARE_AUTHENTICATION' in line:
+            if firmware_authentication == "YES":
+                lines[i] = '`define FIRMWARE_AUTHENTICATION\n'
+            else:
+                # Comment it out so `ifdef returns false
+                lines[i] = '//@define FIRMWARE_AUTHENTICATION\n'
         
 
 # Write updated content back to mcse_def.svh

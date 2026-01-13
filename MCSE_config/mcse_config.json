@@ -2,10 +2,11 @@
     "ipid_N": 1, 
     "puf_size": 256,
     "ipid_address_map": [
-        "32'h49800020"
+        "32'h40000000"
     ],
-    "scan_key_width" : 32,
+    "scan_key_width" : 256,
     "lifecycle_authentication_key" : 256,
     "lifecycle_transition_key" : 256,
-    "encryption_function"   : "APC"
+    "encryption_function"   : "Camellia",
+    "firmware_authentication" : "YES"
 }
